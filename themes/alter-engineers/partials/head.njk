@@ -52,8 +52,10 @@
     <link rel="stylesheet" href="{{ "/assets/css/swiper-bundle.min.css" | url }}" />
     <link rel="stylesheet" href="{{ "/assets/css/theme.min.css" | url }}" />
     <link rel="stylesheet" href="{{ "/assets/css/main.css" | url }}" />
+    {% if site.features.image_zoom != false %}
     <!-- PhotoSwipe lightbox -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css" />
+    {% endif %}
 
     <!-- Visualizer stylesheets (auto-generated from lib/visualizers/) -->
     {% for vis in visualizers %}{% if vis.hasCss %}

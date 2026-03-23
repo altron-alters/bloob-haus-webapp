@@ -8,7 +8,9 @@
 <!-- Bloob Haus: internal link pills -->
 <script src="{{ "/assets/js/internal-links.js" | url }}"></script>
 
-<!-- PhotoSwipe lightbox for content images (body images wrapped with class="pswp-gallery__item") -->
+{# Image zoom — PhotoSwipe 5, on by default (opt-out via features.image_zoom: false) #}
+{# Part of the universal Bloob Haus theme contract — see docs/architecture/settings-registry.md #}
+{% if site.features.image_zoom != false %}
 <script type="module">
 import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe-lightbox.esm.js';
 const lightbox = new PhotoSwipeLightbox({
@@ -20,6 +22,7 @@ const lightbox = new PhotoSwipeLightbox({
 });
 lightbox.init();
 </script>
+{% endif %}
 <!-- Visualizer JS (auto-generated) -->
 {% for vis in visualizers %}{% if vis.hasJs %}
 <script src="{{ ("/assets/js/visualizers/" + vis.name + ".js") | url }}"></script>
