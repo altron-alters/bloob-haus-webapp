@@ -481,6 +481,16 @@ show_count: true
 
 **Theme selection:** Set `theme: [theme-name]` in `_bloob-settings.md` in the content repo.
 
+### Section pages: content always wins
+
+Themes can ship default section index pages (e.g. `pages/sections/recipes/index.njk`) to give folder listing pages a nice layout out of the box. But if the content vault provides its own `index.md` for that folder, **content wins** — the theme's `index.njk` is automatically removed after preprocessing.
+
+This is handled by a cleanup pass in `build-site.js` (between preprocess and OG image generation): any `src/[folder]/index.njk` that has a corresponding `src/[folder]/index.md` is deleted. The same cleanup is not yet in `dev-local.js` — if you hit a `DuplicatePermalinkOutputError` in dev, that's why.
+
+**Implication for theme authors:** Do not put critical logic (visualizer fences, data fetching) inside section `index.njk` files. If a user provides their own index, your section page silently disappears. Section pages are default fallbacks only — treat them as optional decoration, not load-bearing structure.
+
+**Which themes are affected:** Only warm-kitchen has section pages today (`notes/`, `recipes/`, `resources/`, `lists-of-favorites/`). marbles-pouch and alter-engineers have no section pages so they never encounter this.
+
 ---
 
 ## Future Considerations
