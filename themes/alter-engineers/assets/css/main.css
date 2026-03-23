@@ -77,9 +77,12 @@ html { margin-top: 0 !important; }
    PROJECT SINGLE — BODY TEXT & IMAGES
    ============================================================ */
 
-/* Paragraph text: compact reading size */
+/* Paragraph text: compact reading size, tight line rhythm */
 .projects-single__text p {
   font-size: 0.65rem;
+  line-height: 1.5;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 /* Headings inside body text keep theme.min.css sizing but scale down a tier */
@@ -111,14 +114,36 @@ html { margin-top: 0 !important; }
 }
 
 /* ============================================================
-   PROJECT SINGLE — METADATA TABLE
-   Reduce padding/margin on each detail row by ~60%
+   PROJECT SINGLE — METADATA TABLE (rebuilt as <dl>)
+   Uses .project-meta / .project-meta__row so we own all spacing.
    ============================================================ */
-.projects-single__project-detail {
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
-  margin-top: 4px !important;
-  margin-bottom: 4px !important;
+.project-meta {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.project-meta__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.project-meta__row:first-child {
+  border-top: 1px solid var(--border-color);
+}
+.project-meta dt {
+  margin: 0;
+  padding: 0;
+  /* inherits .label styles (letter-spacing, uppercase, green bg) from theme.min.css */
+}
+.project-meta dd {
+  margin: 0;
+  padding: 0;
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--text-color);
 }
 
 /* ============================================================

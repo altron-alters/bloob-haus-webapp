@@ -64,38 +64,38 @@ body_class: "single single-projects"
         </div>
 
         {% if Role or Owner or sqft or Target or photo_credit %}
-        <div class="projects-single__project-info">
+        <dl class="project-meta">
           {% if Role %}
-          <div class="projects-single__project-detail">
-            <div class="projects-single__label"><p class="label">ROLE</p></div>
-            <p class="projects-single__detail-info">{{ Role }}</p>
+          <div class="project-meta__row">
+            <dt class="label">ROLE</dt>
+            <dd>{{ Role }}</dd>
           </div>
           {% endif %}
           {% if Owner %}
-          <div class="projects-single__project-detail">
-            <div class="projects-single__label"><p class="label">OWNER</p></div>
-            <p class="projects-single__detail-info">{{ Owner }}</p>
+          <div class="project-meta__row">
+            <dt class="label">OWNER</dt>
+            <dd>{{ Owner }}</dd>
           </div>
           {% endif %}
           {% if sqft %}
-          <div class="projects-single__project-detail">
-            <div class="projects-single__label"><p class="label">BUILDING SQUARE FOOTAGE</p></div>
-            <p class="projects-single__detail-info">{{ sqft }}</p>
+          <div class="project-meta__row">
+            <dt class="label">BUILDING SQUARE FOOTAGE</dt>
+            <dd>{{ sqft }}</dd>
           </div>
           {% endif %}
           {% if Target %}
-          <div class="projects-single__project-detail">
-            <div class="projects-single__label"><p class="label">TARGET EXISTING BUILDING EUI REDUCTION</p></div>
-            <p class="projects-single__detail-info">{{ Target }}</p>
+          <div class="project-meta__row">
+            <dt class="label">TARGET</dt>
+            <dd>{{ Target }}</dd>
           </div>
           {% endif %}
           {% if photo_credit %}
-          <div class="projects-single__project-detail">
-            <div class="projects-single__label"><p class="label">PHOTO CREDIT</p></div>
-            <p class="projects-single__detail-info">{{ photo_credit }}</p>
+          <div class="project-meta__row">
+            <dt class="label">PHOTO CREDIT</dt>
+            <dd>{{ photo_credit }}</dd>
           </div>
           {% endif %}
-        </div>
+        </dl>
         {% endif %}
 
       </div>
