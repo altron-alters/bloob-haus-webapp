@@ -79,7 +79,7 @@ html { margin-top: 0 !important; }
 
 /* Paragraph text: compact reading size, tight line rhythm */
 .projects-single__text p {
-  font-size: 0.65rem;
+  font-size: 1.1rem;
   line-height: 1.5;
   margin-top: 0;
   margin-bottom: 0.5rem;
@@ -90,12 +90,12 @@ html { margin-top: 0 !important; }
 .projects-single__text h3 { font-size: 0.85rem; }
 .projects-single__text h4 { font-size: 0.75rem; }
 
-/* Body images (below title): 30% width, left-aligned, block so text flows above/below */
+/* Body images (below title): 70% width, left-aligned, block so text flows above/below */
 .projects-single__text img,
 .projects-single__text picture {
   display: block;
-  width: 30%;
-  max-width: 30%;
+  width: 70%;
+  max-width: 70%;
   height: auto;
   margin: 1rem 0;
 }
@@ -103,8 +103,8 @@ html { margin-top: 0 !important; }
 /* PhotoSwipe wrapper around body images should match the picture sizing */
 .projects-single__text .pswp-gallery__item {
   display: inline-block;
-  width: 30%;
-  max-width: 30%;
+  width: 70%;
+  max-width: 70%;
   margin: 1rem 0;
 }
 .projects-single__text .pswp-gallery__item picture,
@@ -125,24 +125,27 @@ html { margin-top: 0 !important; }
 .project-meta__row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 1rem;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #5b5dd3;
 }
 .project-meta__row:first-child {
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid #5b5dd3;
 }
+/* Label: green highlight chip, matches original .projects-single__label */
 .project-meta dt {
   margin: 0;
-  padding: 0;
-  /* inherits .label styles (letter-spacing, uppercase, green bg) from theme.min.css */
+  padding: 2px 6px;
+  background-color: #b6fad1;
+  display: inline-block;
+  /* letter-spacing / uppercase / font-weight inherited from .label in theme.min.css */
 }
 .project-meta dd {
   margin: 0;
   padding: 0;
   text-align: right;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: var(--text-color);
 }
 
@@ -151,5 +154,5 @@ html { margin-top: 0 !important; }
    Reduce by 80%
    ============================================================ */
 .articles.more-projects {
-  padding-bottom: 0.8rem !important;
+  padding-bottom: 3rem !important;
 }

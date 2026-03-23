@@ -20,7 +20,7 @@ body_class: "single single-projects"
 #}
 
 {% set heroImages = content | extractHeroImages %}
-{% set bodyContent = content | stripFirstH1 | stripHeroImages %}
+{% set bodyContent = content | stripHeroImages | stripFirstH1 %}
 {% set titleHtml = content | extractFirstH1 %}
 
 <div class="projects-single">
