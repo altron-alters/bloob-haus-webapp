@@ -100,10 +100,18 @@ export async function assembleSrc(config, contentDir = null) {
 
         // Skip theme section index if vault has its own page that would produce the same permalink.
         // Covers: section/index.md, section.md, or Section.md at vault root.
-        // Also covers preprocessor-generated stubs already written to src/ (Step 9.5).
+        // Also covers vault folders whose name slugifies to the section name — the preprocessor
+        // (Step 9.5) will generate a stub index.md for them, so we must not copy index.njk here.
+        // Note: assemble runs before preprocess, so we check contentDir (the cloned vault), not src/.
         const capitalized = section.charAt(0).toUpperCase() + section.slice(1);
+        const toSlug = (s) => s.toLowerCase().replace(/\s+/g, "-");
+        const contentDirFolders = contentDir
+          ? (await fs.readdir(contentDir, { withFileTypes: true }))
+              .filter((e) => e.isDirectory())
+              .map((e) => toSlug(e.name))
+          : [];
         const vaultHasSectionIndex =
-          fs.existsSync(path.join(SRC_DIR, section, "index.md")) ||
+          contentDirFolders.includes(section) ||
           (contentDir &&
             (fs.existsSync(path.join(contentDir, section, "index.md")) ||
               fs.existsSync(path.join(contentDir, section + ".md")) ||
