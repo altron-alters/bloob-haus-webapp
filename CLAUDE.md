@@ -10,6 +10,7 @@ This file is read automatically by Claude Code at session start. It contains dev
 2. **`docs/TECH-DEBT.md`** — known debt to avoid making worse
 3. **`docs/architecture/visualizers.md`** — before touching `lib/visualizers/`, `scripts/utils/inject-container-raw.js`, or any `:::` container / code fence behavior. Pay special attention to: `data-vis-raw` pipeline, `browser.js` ownership convention, settings flow, and `inject-container-raw.js` utility.
 4. **`docs/architecture/themes.md`** — before touching `themes/` or CSS tokens
+5. **`docs/architecture/settings-registry.md`** — before adding any new per-page frontmatter or site-wide setting to any theme. This is the authoritative list of all settings across all themes (universal vs theme-specific).
 
 The session checklists below are a reminder for the END of the session.
 
@@ -49,6 +50,7 @@ The product vision, values, room concepts, and engineering reports live in a sep
 - [ ] Update `docs/CLAUDE_CONTEXT.md` if project structure or status changed
 - [ ] Update `docs/TECH-DEBT.md` if new debt was introduced or old debt resolved
 - [ ] Update `docs/architecture/` if new architectural patterns were introduced
+- [ ] **If new per-page or site-wide settings were added to any theme:** update `docs/architecture/settings-registry.md` — add a row under the correct theme (or Universal if it applies to all). This is the single source of truth for all settings.
 - [ ] **If new features or settings were added:** manually update the "All Possible Settings" table in `_bloob-settings.md` in both vault repos (`bloob-haus-marbles` and `buffbaby`). This is handwritten until a magic machine automates it.
 - [ ] Run tests: `npm test`
 
@@ -67,6 +69,7 @@ The product vision, values, room concepts, and engineering reports live in a sep
 - Technical debt → `docs/TECH-DEBT.md`
 - Project status → `docs/CLAUDE_CONTEXT.md`
 - Architecture patterns → `docs/architecture/` (visualizers, magic-machines, search, etc.)
+- New or changed settings (any theme) → `docs/architecture/settings-registry.md`
 
 ## File Identity Convention
 - Files are identified by filename (slug). URLs derive from filenames, not titles.

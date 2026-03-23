@@ -403,7 +403,9 @@ docs/
 ├── architecture/               ← How systems work
 │   ├── visualizers.md          ← Read/display components
 │   ├── magic-machines.md       ← Write/transform AI tools
-│   └── search.md              ← Search, tags, and Pagefind
+│   ├── search.md              ← Search, tags, and Pagefind
+│   ├── themes.md              ← Theme contract, CSS tokens, bloob-objects system
+│   └── settings-registry.md   ← ALL settings (universal + per-theme). Update when adding any new setting.
 │
 └── implementation-plans/
     ├── ROADMAP.md              ← Phase overview & priorities
@@ -440,6 +442,7 @@ When making changes, update the relevant docs:
 |-------------|--------|
 | New folder structure in codebase | Update "Project Structure" in this file |
 | New/changed architecture (visualizers, magic machines, etc.) | Update `architecture/` docs |
+| New or changed setting in any theme | Update `architecture/settings-registry.md` |
 | Implementation work on a phase | Update the plan in `phases/<phase-N>/` |
 | Completed a session | Add to `CHANGELOG.md` |
 | Significant technical decision | Add to `DECISIONS.md` |
