@@ -150,8 +150,23 @@ html { margin-top: 0 !important; }
 }
 
 /* ============================================================
+   PROJECT SINGLE — MOBILE: metadata table above body text
+   On mobile, make the main container a flex column and push
+   .project-meta to the top via order: -1.
+   ============================================================ */
+@media (max-width: 768px) {
+  .projects-single__main-container {
+    display: flex;
+    flex-direction: column;
+  }
+  .project-meta {
+    order: -1;
+  }
+}
+
+/* ============================================================
    MORE PROJECTS — BOTTOM PADDING
-   Reduce by 80%
+   ~50% of original theme desktop bottom padding (~6rem)
    ============================================================ */
 .articles.more-projects {
   padding-bottom: 3rem !important;

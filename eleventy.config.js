@@ -547,7 +547,12 @@ export default async function (eleventyConfig) {
             for (const img of images) {
               const basename = img.url.split("/").pop();
               const siteFile = join(siteOptDir, basename);
-              if (!existsSync(siteFile)) copyFileSync(join(MEDIA_CACHE_DIR, basename), siteFile);
+              if (!existsSync(siteFile)) {
+                // Use img.outputPath (the actual written file) rather than a reconstructed path.
+                // Reconstructed paths can miss on Windows if the cache dir is missing.
+                const cachedFile = img.outputPath || join(MEDIA_CACHE_DIR, basename);
+                if (existsSync(cachedFile)) copyFileSync(cachedFile, siteFile);
+              }
             }
           }
 
