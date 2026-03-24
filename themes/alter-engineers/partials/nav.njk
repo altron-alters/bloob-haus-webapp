@@ -1,3 +1,15 @@
+{#
+  nav.njk — Site navigation.
+
+  All nav links are homepage section anchors (#projects, #about-us, …).
+  On the homepage they scroll in place. On any other page they navigate
+  to the homepage first, then the browser jumps to the section.
+
+  homePrefix: "" on "/" → pure anchor scroll (no navigation)
+              "/" on all other pages → /#section navigates home then scrolls
+#}
+{% set homePrefix = "" if page.url == "/" else "/" %}
+
 <header id="masthead" class="site-header">
     <div class="header-navigation-bar">
         <div class="header-navigation-bar__mobile">
@@ -12,12 +24,12 @@
         </div>
         <div class="header-navigation-bar__mobile-nav-items">
             <ul class="menu">
-                <li class="menu-item"><a href="#projects">PROJECTS</a></li>
-                <li class="menu-item"><a href="#about-us">WHAT DRIVES US</a></li>
-                <li class="menu-item"><a href="#services">OUR SERVICES</a></li>
-                <li class="menu-item"><a href="#team">OUR TEAM</a></li>
-                <li class="menu-item"><a href="#musings">MUSINGS</a></li>
-                <li class="menu-item"><a href="#footer">CONTACT US</a></li>
+                <li class="menu-item"><a href="{{ homePrefix }}#projects">PROJECTS</a></li>
+                <li class="menu-item"><a href="{{ homePrefix }}#about-us">WHAT DRIVES US</a></li>
+                <li class="menu-item"><a href="{{ homePrefix }}#services">OUR SERVICES</a></li>
+                <li class="menu-item"><a href="{{ homePrefix }}#team">OUR TEAM</a></li>
+                <li class="menu-item"><a href="{{ homePrefix }}#musings">MUSINGS</a></li>
+                <li class="menu-item"><a href="{{ homePrefix }}#footer">CONTACT US</a></li>
             </ul>
             <ul class="menu">
                 <li class="menu-item"><a href="https://www.linkedin.com/company/alterengineers">LinkedIn</a></li>
@@ -31,12 +43,12 @@
             </div>
             <div class="header-navigation-bar__desktop-nav-items">
                 <ul class="menu">
-                    <li class="menu-item"><a href="#projects">PROJECTS</a></li>
-                    <li class="menu-item"><a href="#about-us">WHAT DRIVES US</a></li>
-                    <li class="menu-item"><a href="#services">OUR SERVICES</a></li>
-                    <li class="menu-item"><a href="#team">OUR TEAM</a></li>
-                    <li class="menu-item"><a href="#musings">MUSINGS</a></li>
-                    <li class="menu-item"><a href="#footer">CONTACT US</a></li>
+                    <li class="menu-item"><a href="{{ homePrefix }}#projects">PROJECTS</a></li>
+                    <li class="menu-item"><a href="{{ homePrefix }}#about-us">WHAT DRIVES US</a></li>
+                    <li class="menu-item"><a href="{{ homePrefix }}#services">OUR SERVICES</a></li>
+                    <li class="menu-item"><a href="{{ homePrefix }}#team">OUR TEAM</a></li>
+                    <li class="menu-item"><a href="{{ homePrefix }}#musings">MUSINGS</a></li>
+                    <li class="menu-item"><a href="{{ homePrefix }}#footer">CONTACT US</a></li>
                 </ul>
             </div>
         </div>
