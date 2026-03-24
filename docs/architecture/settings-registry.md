@@ -95,6 +95,53 @@ The image optimizer (`eleventy.config.js`) automatically wraps `/media/` images 
 | `alter-engineers` | ✓ | ✓ |
 | `warm-kitchen` | ✗ missing | ✗ missing |
 
+### `bg=` / `color=` — Section Color Pairs
+
+Any `:::` visualizer fence that accepts a `bg=` parameter uses the shared **color pair system** (`lib/visualizers/_utils/bg-color.js`). This system maps a background token or hex value to a coordinated background + text + heading color set.
+
+**Named tokens** → resolved to a `.bg-*` CSS class. The class sets three CSS custom properties defined in the theme's `main.css`:
+
+| Token | Background | `--pair-title` | `--pair-text` |
+|-------|-----------|----------------|---------------|
+| `white` | `#ffffff` | `--text-color` | `--text-color` |
+| `muted` | `#f5f5f5` | `--text-color` | `--text-color` |
+| `green` | `#b6fad1` | `--accent-color` | `--accent-color` |
+| `dark` | `#1a1a1a` | `#ffffff` | `#ffffff` |
+| `accent` | `--accent-color` | `#ffffff` | `#ffffff` |
+
+**Custom hex** → emits `style="background:#…;color:#…;--pair-title:#…;--pair-text:#…"` inline, bypassing the class system. The same CSS variable names are used so heading/text cascade works identically.
+
+**Fence syntax examples:**
+```
+::: heading-and-paragraph bg=green          → named token, .bg-green class
+::: services bg=dark                        → named token, .bg-dark class
+::: heading-and-paragraph bg=#1a1a1a        → hex bg only (text inherits)
+::: heading-and-paragraph bg=#1a1a1a color=#ffffff  → full custom pair
+```
+
+**How `resolveBg()` works (for renderer authors):**
+```js
+import { resolveBg } from "../_utils/bg-color.js";
+const { extraClass, style } = resolveBg(settings);
+const styleAttr = style ? ` style="${style}"` : "";
+return `<section class="my-section${extraClass}"${styleAttr}>...</section>`;
+```
+
+**Theme contract:** Every theme must define `--pair-bg`, `--pair-title`, `--pair-text` for each `.bg-*` token class and apply them universally (see `themes.md` → Color Pair Contract). The apply rules look like:
+```css
+.bg-white, .bg-muted, .bg-green, .bg-dark, .bg-accent {
+  background: var(--pair-bg) !important;
+  color: var(--pair-text);
+}
+.bg-white h1, .bg-white h2, ... { color: var(--pair-title); }
+```
+
+**Visualizers that support `bg=` / `color=`:**
+| Visualizer | bg= | color= |
+|-----------|-----|--------|
+| `heading-and-paragraph` | ✓ | ✓ |
+| `services` | ✓ | ✓ |
+
 ---
 
 ## Theme-Specific Settings

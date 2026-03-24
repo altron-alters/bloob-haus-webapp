@@ -372,6 +372,56 @@ Visualizers must use CSS custom properties for all colors and spacing, never har
 
 ---
 
+### Color Pair Contract (Tier 1 — Required)
+
+Every theme must implement the **color pair system** for section background tokens. Visualizers use `resolveBg()` from `lib/visualizers/_utils/bg-color.js` which emits either a `.bg-*` class (named token) or inline `style=` (hex). The theme's CSS must handle both paths.
+
+**Required: define `--pair-bg`, `--pair-title`, `--pair-text` per token, then apply universally.**
+
+Minimum implementation for any theme's `main.css`:
+
+```css
+/* 1. Define pairs per token */
+.bg-white  { --pair-bg: #ffffff;             --pair-title: var(--text-color);   --pair-text: var(--text-color); }
+.bg-muted  { --pair-bg: #f5f5f5;             --pair-title: var(--text-color);   --pair-text: var(--text-color); }
+.bg-green  { --pair-bg: #b6fad1;             --pair-title: var(--accent-color); --pair-text: var(--accent-color); }
+.bg-dark   { --pair-bg: #1a1a1a;             --pair-title: #ffffff;             --pair-text: #ffffff; }
+.bg-accent { --pair-bg: var(--accent-color); --pair-title: #ffffff;             --pair-text: #ffffff; }
+
+/* 2. Apply universally */
+.bg-white, .bg-muted, .bg-green, .bg-dark, .bg-accent {
+  background: var(--pair-bg) !important;
+  color: var(--pair-text);
+}
+.bg-white h1, .bg-white h2, .bg-white h3, .bg-white h4,
+.bg-muted  h1, .bg-muted  h2, .bg-muted  h3, .bg-muted  h4,
+.bg-green  h1, .bg-green  h2, .bg-green  h3, .bg-green  h4,
+.bg-dark   h1, .bg-dark   h2, .bg-dark   h3, .bg-dark   h4,
+.bg-accent h1, .bg-accent h2, .bg-accent h3, .bg-accent h4 {
+  color: var(--pair-title);
+}
+```
+
+**For hex inline styles** (when user writes `bg=#1a1a1a color=#ffffff`): `resolveBg()` emits `style="background:#1a1a1a;color:#fff;--pair-title:#fff;--pair-text:#fff"`. The heading cascade rule `h1 { color: var(--pair-title) }` should be globally defined so it works inside inline-styled sections too:
+
+```css
+/* Global fallback — headings inherit --pair-title if set */
+h1, h2, h3, h4 {
+  color: var(--pair-title, var(--text-color));
+}
+```
+
+**Theme implementation status:**
+| Theme | `.bg-*` pairs | apply rules | global h cascade |
+|-------|--------------|-------------|------------------|
+| `alter-engineers` | ✓ | ✓ | (inherits from theme.min.css) |
+| `marbles-pouch` | ✗ not yet | ✗ | ✗ |
+| `warm-kitchen` | ✗ not yet | ✗ | ✗ |
+
+See `docs/architecture/settings-registry.md` → "bg= / color= — Section Color Pairs" for full usage docs and fence syntax.
+
+---
+
 ## Collapsible Sections Visualizer
 
 **Syntax in markdown (author-facing):**
