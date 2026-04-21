@@ -63,18 +63,18 @@ body_class: "single single-projects"
           <a class="button-1">READ MORE </a>
         </div>
 
-        {% if Role or Owner or sqft or Target or photo_credit %}
+        {% if role or owner or sqft or target or photo_credit %}
         <dl class="project-meta">
-          {% if Role %}
+          {% if role %}
           <div class="project-meta__row">
             <dt class="label">ROLE</dt>
-            <dd>{{ Role }}</dd>
+            <dd>{{ role }}</dd>
           </div>
           {% endif %}
-          {% if Owner %}
+          {% if owner %}
           <div class="project-meta__row">
             <dt class="label">OWNER</dt>
-            <dd>{{ Owner }}</dd>
+            <dd>{{ owner }}</dd>
           </div>
           {% endif %}
           {% if sqft %}
@@ -83,10 +83,10 @@ body_class: "single single-projects"
             <dd>{{ sqft }}</dd>
           </div>
           {% endif %}
-          {% if Target %}
+          {% if target %}
           <div class="project-meta__row">
             <dt class="label">TARGET</dt>
-            <dd>{{ Target }}</dd>
+            <dd>{{ target }}</dd>
           </div>
           {% endif %}
           {% if photo_credit %}

@@ -44,6 +44,7 @@ async function devLocal() {
   console.log(`[config] Site: ${config.site?.name || siteName}`);
   console.log(`[config] Theme: ${config.theme}`);
   process.env.SITE_NAME = siteName;
+  process.env.CONTENT_DIR = contentDir;
 
   // Pass config to preprocessor
   process.env.CONTENT_REPO = config.content.repo;

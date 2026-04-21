@@ -1,0 +1,49 @@
+.slideshow {
+  padding: var(--spacing-md) 0;
+  overflow: hidden;
+}
+
+.slideshow__header {
+  margin-bottom: var(--spacing-sm);
+}
+
+.slideshow__title {
+  /* Inherits .label styles from theme.min.css (small, uppercase, letter-spaced).
+     No overrides needed — standard section label appearance. */
+}
+
+.slideshow__track {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Items are duplicated in the renderer — translateX(-50%) lands exactly at
+   the start of the second copy, making the loop seamless. */
+.slideshow__items {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  width: max-content;
+  animation: slideshow-scroll var(--slideshow-duration, 30s) linear infinite;
+}
+
+.slideshow__track--reverse .slideshow__items {
+  animation-direction: reverse;
+}
+
+.slideshow__track:hover .slideshow__items {
+  animation-play-state: paused;
+}
+
+@keyframes slideshow-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.slideshow__logo {
+  height: var(--slideshow-height, 60px);
+  width: auto;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}

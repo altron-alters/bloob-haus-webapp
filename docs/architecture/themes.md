@@ -203,6 +203,73 @@ Themes that want to style the zoom overlay must define:
 ```
 If not defined, `_base` defaults are used.
 
+### Color Pair Contract (Tier 1 — required)
+
+Every theme's `main.css` must define `bg-*` color pair classes with four CSS custom properties per token. This is the theme's **design token source of truth** — the equivalent of a brand spec in code.
+
+```css
+/* Each token declares four color roles: */
+.bg-[token] {
+  --pair-bg:    /* section background */;
+  --pair-title: /* h1–h4 heading color */;
+  --pair-text:  /* body text (p, li) color */;
+  --pair-label: /* small label (.label class) — teal on dark, accent on light */;
+}
+```
+
+**Why four roles, not three:** Labels (section markers like "OUR SOLUTIONS", "MUSINGS") are visually distinct from headings. On dark/orange backgrounds, headings stay white but labels use the brand teal `#b6fad1` for hierarchy. Collapsing label into title would lose this distinction.
+
+**Fallback:** `.label { color: var(--pair-label, var(--accent-color)); }` — when no bg token is active (default white page), labels fall back to the brand accent color automatically.
+
+**Usage in visualizer renderers:** `resolveBg(settings)` returns the `bg-*` class; the four custom properties cascade to all child elements. No hardcoded colors in visualizer CSS.
+
+**Usage in markdown:**
+```
+::: image-text bg=orange   → sets all four --pair-* vars for that section
+::: heading-and-paragraph  → no bg, falls back to defaults
+```
+
+### `.button` CSS class contract (Tier 1 — required)
+
+Every theme **must** define a `.button` class in its `main.css`. This is the universal CTA button style, applied in markdown via `markdown-it-attrs`:
+
+```markdown
+[CONTACT US](#footer){.button}
+[READ MORE](/projects){.button}
+```
+
+Which renders as:
+```html
+<a href="#footer" class="button">CONTACT US</a>
+```
+
+In Obsidian, `{.button}` is ignored — the link renders normally. In Eleventy, `markdown-it-attrs` applies the class at build time.
+
+**Contract:** `.button` must be defined in every theme's `main.css`. The visual treatment is theme-specific. Authors can extend with additional classes: `{.button .button-outline}`, `{.button .button-sm}`, etc.
+
+**Minimum required definition:**
+```css
+.button {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: none;
+  /* brand colors — theme's choice */
+  color: var(--accent-color);
+  border: 2px solid var(--accent-color);
+  transition: all 0.2s ease;
+}
+.button:hover {
+  background: var(--accent-color);
+  color: #ffffff;
+}
+```
+
+**alter-engineers** theme: mint/teal background (`#b6fad1`) with purple text, sliding to purple background on hover (matches original site `image-text__contact-us` style).
+
+**warm-kitchen / marbles-pouch** themes: add `.button` definitions to their `main.css` following this contract when needed.
+
 ---
 
 ## Baseline Features Contract

@@ -8,7 +8,7 @@
 
 **User-facing settings** live in `_bloob-settings.md` in each content repo. This file is the *developer* reference: what exists, what scope it has, which themes implement it, and HOW to wire it into a new theme.
 
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-04-21
 
 ---
 
@@ -99,15 +99,18 @@ The image optimizer (`eleventy.config.js`) automatically wraps `/media/` images 
 
 Any `:::` visualizer fence that accepts a `bg=` parameter uses the shared **color pair system** (`lib/visualizers/_utils/bg-color.js`). This system maps a background token or hex value to a coordinated background + text + heading color set.
 
-**Named tokens** → resolved to a `.bg-*` CSS class. The class sets three CSS custom properties defined in the theme's `main.css`:
+**Named tokens** → resolved to a `.bg-*` CSS class. The class sets four CSS custom properties defined in the theme's `main.css`:
 
-| Token | Background | `--pair-title` | `--pair-text` |
-|-------|-----------|----------------|---------------|
-| `white` | `#ffffff` | `--text-color` | `--text-color` |
-| `muted` | `#f5f5f5` | `--text-color` | `--text-color` |
-| `green` | `#b6fad1` | `--accent-color` | `--accent-color` |
-| `dark` | `#1a1a1a` | `#ffffff` | `#ffffff` |
-| `accent` | `--accent-color` | `#ffffff` | `#ffffff` |
+| Token | Background | `--pair-title` | `--pair-text` | `--pair-label` |
+|-------|-----------|----------------|---------------|----------------|
+| `white` | `#ffffff` | `--text-color` | `--text-color` | `--accent-color` (purple) |
+| `muted` | `#f5f5f5` | `--text-color` | `--text-color` | `--accent-color` (purple) |
+| `green` | `#b6fad1` | `--accent-color` | `--accent-color` | `--accent-color` (purple) |
+| `dark` | `#1a1a1a` | `#ffffff` | `#ffffff` | `#b6fad1` (teal) |
+| `accent` | `--accent-color` | `#ffffff` | `#ffffff` | `#b6fad1` (teal) |
+| `orange` | `#e08a37` | `#ffffff` | `#ffffff` | `#b6fad1` (teal) |
+
+**`--pair-label`** is used by `.label { color: var(--pair-label, var(--accent-color)) }` so section labels (e.g. "ARTICLES", "OUR PARTNERS") automatically pick the right contrast color for the background without per-section overrides.
 
 **Custom hex** → emits `style="background:#…;color:#…;--pair-title:#…;--pair-text:#…"` inline, bypassing the class system. The same CSS variable names are used so heading/text cascade works identically.
 
@@ -141,6 +144,39 @@ return `<section class="my-section${extraClass}"${styleAttr}>...</section>`;
 |-----------|-----|--------|
 | `heading-and-paragraph` | ✓ | ✓ |
 | `services` | ✓ | ✓ |
+| `image-text` | ✓ | ✓ |
+| `slideshow` | ✓ | ✓ |
+| `folder-preview` (slider-cards only) | ✓ | ✓ |
+
+---
+
+## Visualizer Settings
+
+Settings that apply to specific visualizers regardless of theme.
+
+### `musings` code fence
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `limit` | int | `null` (show all) | Max cards visible before "MORE MUSINGS" button |
+| `infinite_scroll` | bool | `true` | When `false`, Swiper stops at the last card instead of looping. Swiper is always rendered; this only controls `loop`. |
+| `quotes[].quote` | string | — | Quote text |
+| `quotes[].name` | string | — | Speaker name |
+| `quotes[].date` | string | — | Display date |
+| `quotes[].color` | string | — | Card color variant (`red`, `white`, `green`) |
+
+### `folder-preview` code fence
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `folder` | string | (from URL path) | Folder name to list pages from. Required on homepage (URL-based detection fails on `/`). |
+| `sort` | string | `alpha` | Sort order: `alpha`, `reverse-alpha`, `recent` |
+| `limit` | int | `∞` | Max number of pages to show |
+| `style` | string | `list` | Layout: `list` (default) or `slider-cards` (Swiper carousel) |
+| `title` | string | `ARTICLES` | Section label shown above slider-cards |
+| `id` | string | `articles` | HTML `id` on the section element (slider-cards only) |
+| `bg` | token/hex | — | Background color for slider-cards section. Supports named tokens and hex. (slider-cards only) |
+| `color` | hex | — | Foreground color override (hex). Used with `bg=hex`. (slider-cards only) |
 
 ---
 

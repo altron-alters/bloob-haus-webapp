@@ -95,6 +95,7 @@ async function buildSite() {
 
     // Pass config values to preprocessor via env vars
     // (preprocessor reads these — keeps its interface unchanged)
+    process.env.CONTENT_DIR = contentDir;
     process.env.CONTENT_REPO = config.content.repo;
     process.env.PUBLISH_MODE = config.content.publish_mode;
     process.env.BLOCKLIST_TAG = config.content.blocklist_tag;

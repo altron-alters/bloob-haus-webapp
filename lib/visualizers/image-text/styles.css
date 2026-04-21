@@ -1,0 +1,42 @@
+/*
+ * image-text visualizer styles
+ *
+ * theme.min.css already handles most styling for .image-text via the original
+ * WordPress theme rules: background color, top offset, flex layout, image
+ * dimensions, and text-container width.
+ *
+ * This file only adds what theme.min.css doesn't cover — mainly ensuring the
+ * image fills its container and the image column has position context.
+ */
+
+/* Container clips the image at the theme-defined dimensions */
+.image-text__image-container {
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* object-fit only — do NOT override width/height; theme.min.css sets those
+   per breakpoint (e.g. width:33.375rem height:37.25rem at desktop). */
+.image-text__image {
+  display: block;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .image-text__wrapper {
+    flex-direction: column;
+    direction: ltr;
+    top: 0 !important;
+  }
+
+  /* Mobile: let image fill the column width and cap height */
+  .image-text__image {
+    width: 100%;
+    height: auto;
+    max-height: 60vw;
+  }
+
+  .image-text__text-container {
+    width: 100% !important;
+  }
+}

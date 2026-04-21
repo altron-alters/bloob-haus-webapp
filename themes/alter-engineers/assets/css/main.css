@@ -36,22 +36,31 @@
      --pair-title  → color for headings (h1–h4) inside the section
      --pair-text   → color for body text (p, li, etc.) inside the section
 
-   Token    Background          Title / Text
-   ──────   ──────────          ────────────
-   white    #ffffff             --text-color (#1a1a1a)
-   muted    #f5f5f5             --text-color
-   green    #b6fad1             --accent-color (#5b5dd3) — mint/lime, heading-and-paragraph default
-   dark     #1a1a1a             #ffffff
-   accent   #5b5dd3             #ffffff
-*/
-.bg-white  { --pair-bg: #ffffff;             --pair-title: var(--text-color);   --pair-text: var(--text-color); }
-.bg-muted  { --pair-bg: #f5f5f5;             --pair-title: var(--text-color);   --pair-text: var(--text-color); }
-.bg-green  { --pair-bg: #b6fad1;             --pair-title: var(--accent-color); --pair-text: var(--accent-color); }
-.bg-dark   { --pair-bg: #1a1a1a;             --pair-title: #ffffff;             --pair-text: #ffffff; }
-.bg-accent { --pair-bg: var(--accent-color); --pair-title: #ffffff;             --pair-text: #ffffff; }
+   Four color roles per background token:
+     --pair-bg     → section background
+     --pair-title  → h1–h4 headings
+     --pair-text   → body text (p, li)
+     --pair-label  → small section labels (.label class) — distinct from headings:
+                     light bg → brand accent (purple); dark bg → brand teal (#b6fad1)
 
-/* Apply pair universally — background, body text, and heading cascade */
-.bg-white, .bg-muted, .bg-green, .bg-dark, .bg-accent {
+   Token    Bg          Title       Text        Label
+   ──────   ──          ─────       ────        ─────
+   white    #ffffff     text-color  text-color  accent (#5b5dd3)
+   muted    #f5f5f5     text-color  text-color  accent
+   green    #b6fad1     accent      accent      accent
+   dark     #1a1a1a     #ffffff     #ffffff     #b6fad1 (teal — readable on dark)
+   accent   #5b5dd3     #ffffff     #ffffff     #b6fad1
+   orange   #e0643d     #ffffff     #ffffff     #b6fad1
+*/
+.bg-white  { --pair-bg: #ffffff;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
+.bg-muted  { --pair-bg: #f5f5f5;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
+.bg-green  { --pair-bg: #b6fad1;             --pair-title: var(--accent-color); --pair-text: var(--accent-color); --pair-label: var(--accent-color); }
+.bg-dark   { --pair-bg: #1a1a1a;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+.bg-accent { --pair-bg: var(--accent-color); --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+.bg-orange { --pair-bg: #e0643d;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+
+/* Apply pair universally — background, body text, heading, and label cascade */
+.bg-white, .bg-muted, .bg-green, .bg-dark, .bg-accent, .bg-orange {
   background: var(--pair-bg) !important;
   color: var(--pair-text);
 }
@@ -59,8 +68,20 @@
 .bg-muted  h1, .bg-muted  h2, .bg-muted  h3, .bg-muted  h4,
 .bg-green  h1, .bg-green  h2, .bg-green  h3, .bg-green  h4,
 .bg-dark   h1, .bg-dark   h2, .bg-dark   h3, .bg-dark   h4,
-.bg-accent h1, .bg-accent h2, .bg-accent h3, .bg-accent h4 {
+.bg-accent h1, .bg-accent h2, .bg-accent h3, .bg-accent h4,
+.bg-orange h1, .bg-orange h2, .bg-orange h3, .bg-orange h4 {
   color: var(--pair-title);
+}
+
+/* ============================================================
+   LABEL — SECTION MARKERS
+   Overrides theme.min.css .label (0.625rem mobile, 1.375rem desktop).
+   Uses --pair-label so color adapts automatically to any bg-* token.
+   Falls back to accent color when no bg token is set (default white page).
+   ============================================================ */
+.label {
+  font-size: 0.875rem;
+  color: var(--pair-label, var(--accent-color));
 }
 
 /* ============================================================
@@ -86,7 +107,19 @@ html { margin-top: 0 !important; }
 .heading-and-paragraph,
 .heading-and-paragraph h1,
 .heading-and-paragraph p {
-  color: #5b5dd3;
+  color: var(--accent-color);
+}
+
+/* ============================================================
+   TEAM SECTION — COLOR INHERITANCE
+   theme.min.css sets color: #5b5dd3 on .team but we want it
+   to flow through the CSS variable so token changes propagate.
+   ============================================================ */
+.team,
+.team h1,
+.team h3,
+.team p {
+  color: var(--accent-color);
 }
 
 /* ============================================================
@@ -261,4 +294,119 @@ html { margin-top: 0 !important; }
    ============================================================ */
 .articles.more-projects {
   padding-bottom: 3rem !important;
+}
+
+/* ============================================================
+   FOLDER-PREVIEW SLIDER-CARDS (articles section)
+   theme.min.css sets .articles__repeater margin-top up to
+   9.3125rem !important — designed for the original WordPress
+   DOM. Our folder-preview structure doesn't need this.
+   Also contain slides so they don't bleed into adjacent sections.
+   ============================================================ */
+.articles {
+  overflow-x: hidden; /* clip Swiper horizontal overflow; don't clip vertical content */
+}
+.articles .articles__repeater {
+  margin: 1.5rem 0 0 0 !important;
+}
+.articles .articles__image {
+  width: 100%;
+  max-width: 100%;
+  height: 14rem;
+  object-fit: cover;
+  display: block;
+}
+
+/* ============================================================
+   UNIVERSAL BUTTON CLASS
+   Applied via markdown-it-attrs: [LINK TEXT](url){.button}
+   Every theme defines .button with its own brand treatment.
+   This theme matches the original image-text__contact-us style:
+   mint/teal background sliding to purple on hover.
+   ============================================================ */
+.button {
+  display: inline-block;
+  padding: 0 0.84375rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  line-height: 2rem;
+  color: #5b5dd3;
+  background: linear-gradient(to right, #5b5dd3 50%, #b6fad1 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+  transition: all 0.3s ease-out;
+}
+.button:hover {
+  background-position: left bottom;
+  color: #b6fad1;
+}
+
+/* ============================================================
+   IMAGE-TEXT SECTION — CONTENT STYLING
+   theme.min.css handles: background (#e0643d), offset (top: -Xrem),
+   flex layout, image height, text-container width.
+   These rules style the rendered markdown inside the text column.
+   ============================================================ */
+
+/* First h2 → "OUR SOLUTIONS" label (small, spaced, uppercase) */
+.image-text__text-container > h2:first-child {
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pair-text, #ffffff);
+  padding: 1.875rem 0 1.25rem;
+  margin: 0;
+}
+
+/* h3 → main heading */
+.image-text__text-container > h3 {
+  font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  color: var(--pair-title, #ffffff);
+  padding-bottom: 1.875rem;
+  margin: 0;
+  line-height: 1.15;
+}
+
+/* Paragraphs */
+.image-text__text-container > p {
+  color: var(--pair-text, #ffffff);
+  line-height: 1.6;
+  margin: 0 0 0.5rem;
+}
+
+/* Standalone <p><a> → button (Contact Us pattern).
+   :has() is supported in all modern browsers (Chrome 105+, Firefox 121+). */
+.image-text__text-container p:has(> a:only-child) {
+  margin-top: 2rem;
+}
+.image-text__text-container p:has(> a:only-child) > a {
+  display: inline-block;
+  padding: 0 0.84375rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  line-height: 2rem;
+  color: #5b5dd3;
+  background: linear-gradient(to right, #5b5dd3 50%, #b6fad1 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+  transition: all 0.3s ease-out;
+}
+.image-text__text-container p:has(> a:only-child) > a:hover {
+  background-position: left bottom;
+  color: #b6fad1;
+}
+
+/* image=right: reverse columns via direction trick (DOM order stays image-first
+   for screen readers; visual order flips via CSS) */
+.image-text--image-right .image-text__wrapper {
+  direction: rtl;
+}
+.image-text--image-right .image-text__text-container {
+  direction: ltr;
 }

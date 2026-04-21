@@ -6,6 +6,40 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 30 - April 21, 2026
+**Worked on:** folder-preview slider-cards, musings infinite_scroll, color pair `orange` token + `--pair-label`, image-text image overflow fix, CONTENT_DIR env var bug fix
+
+**`lib/visualizers/musings/` — hybrid type, infinite_scroll: false**
+- Changed manifest type `build-time` → `hybrid` (browser.js now exists)
+- New `browser.js`: when `data-no-loop="true"` is set on `#musings-swiper`, destroys the theme.min.js Swiper instance and reinits with `loop: false` — all other config identical. "infinite_scroll: false means stop at the last card, not remove Swiper."
+- Renderer always outputs Swiper HTML (removed the static-stack branch that caused sections to bleed through theme.min.css's fixed-height `.musings__container-desktop`). `data-no-loop` attribute is the only difference when `infinite_scroll: false`.
+- Added `<div id="mycursor"></div>` as first child of `<section class="musings">` (required by theme.min.js cursor behavior)
+
+**`lib/visualizers/folder-preview/` — slider-cards style**
+- `browser.js` rewritten: new `renderSliderCards()` branch injects articles top section + Swiper HTML, initializes Swiper matching theme.min.js config (`slidesPerView: 1.6, loop: pages.length > 1, speed: 500`). Nav buttons use `.articles__next-button` / `.articles__prev-button`.
+- Filter excludes folder root (`/folder/`) and `/index/` suffix pages so the index page doesn't appear as an article card.
+- `index.js` (build-time transform): slider-cards branch now imports `resolveBg()` and applies `bg=` / `color=` to the section element — CSS custom properties cascade to runtime-injected browser.js content automatically.
+- Homepage `folder=` setting works: when `settings.folder` is present it is used directly (URL-based detection only fires as fallback, which fails on `/`).
+
+**Color pair system — `orange` token + `--pair-label`**
+- New `bg-orange` token added to alter-engineers `main.css` (`--pair-bg: #e08a37`, warm orange; `--pair-title: #ffffff`, `--pair-text: #ffffff`)
+- New `--pair-label` CSS custom property added to every bg token: teal (`#b6fad1`) on dark/orange/accent backgrounds, purple on light (white/muted/green). Used by `.label { color: var(--pair-label, var(--accent-color)) }` so the ARTICLES label inherits correctly inside an orange folder-preview section.
+
+**`themes/alter-engineers/assets/css/main.css` — layout fixes**
+- `.team, .team h1, .team h3, .team p`: color via `var(--accent-color)` (was hardcoded)
+- `.heading-and-paragraph` accent: `var(--accent-color)` (was hardcoded `#5b5dd3`)
+- `.articles { overflow-x: hidden }` + `.articles .articles__repeater { margin: 1.5rem 0 0 0 !important }` — overrides theme.min.css 9.3125rem margin that pushed content out of section
+- `.articles .articles__image`: `width: 100%; height: 14rem; object-fit: cover`
+
+**`lib/visualizers/image-text/styles.css` — image overflow fix**
+- Removed `width: 100%` from desktop `.image-text__image` rule (was overriding theme.min.css's explicit `width: 33.375rem`). Image now stays within its column as designed. Mobile rule (`width: 100%; max-height: 60vw`) unchanged.
+
+**`scripts/dev-local.js` + `scripts/build-site.js` — CONTENT_DIR env var**
+- Both scripts now set `process.env.CONTENT_DIR = contentDir` after resolving the content path
+- `eleventy.config.js` passes `{ contentDir: process.env.CONTENT_DIR }` to `loadSiteConfig()` so `_bloob-settings.md` is found regardless of the `--content=` argument. Previously the config loader defaulted to `content-source/`, breaking on non-default content repos.
+
+---
+
 ### Session 29 - March 23, 2026
 **Worked on:** color pair system, footer link, git push both repos
 

@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { join } from "path";
 import taskLists from "markdown-it-task-lists";
 import markdownItContainer from "markdown-it-container";
+import markdownItAttrs from "markdown-it-attrs";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import Image from "@11ty/eleventy-img";
 import {
@@ -50,7 +51,9 @@ async function loadVisualizers() {
 export default async function (eleventyConfig) {
   // Load site configuration
   const siteName = resolveSiteName();
-  const siteConfig = await loadSiteConfig(siteName);
+  const siteConfig = await loadSiteConfig(siteName, {
+    contentDir: process.env.CONTENT_DIR,
+  });
 
   // Load visualizer modules for build-time transforms
   const visualizers = await loadVisualizers();
@@ -123,6 +126,9 @@ export default async function (eleventyConfig) {
       mdLib.set({ breaks: true });
     }
     mdLib.use(taskLists, { enabled: false, label: true });
+    // {.class} {#id} {attr=value} attribute syntax on links, images, headings
+    // e.g. [CONTACT US](#footer){.button} → <a href="#footer" class="button">
+    mdLib.use(markdownItAttrs);
 
     // ::: name [key=value ...] — section containers for styling and visualizers.
     // First word = CSS class. Additional key=value pairs → data-vis-settings JSON.
@@ -518,9 +524,9 @@ export default async function (eleventyConfig) {
         const altMatch = (before + after).match(/alt="([^"]*)"/);
         const alt = altMatch ? altMatch[1] : "";
 
-        // Skip GIFs — serve untouched to preserve animation
+        // Skip GIFs (preserve animation) and SVGs (vector, no raster conversion)
         const ext = src.toLowerCase().split(".").pop();
-        if (ext === "gif") continue;
+        if (ext === "gif" || ext === "svg") continue;
 
         try {
           // WebP for modern browsers (alpha preserved), PNG fallback for old browsers.
