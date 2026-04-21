@@ -15,4 +15,4 @@ Close out this work session. Keep updates concise — these docs should be easy 
 
 6. Update `docs/next-steps.md` at the project root — move completed items to "What's Done", update "Immediate Next Steps".
 
-7. Commit and push both repos (`bloob-haus-webapp/` and `alter-website-content/`). Write a clear commit message. Report the result.
+7. Commit and push `bloob-haus-webapp/` only. Write a clear commit message. Report the result.
