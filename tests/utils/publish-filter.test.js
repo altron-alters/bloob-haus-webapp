@@ -113,6 +113,65 @@ describe('filterPublishableFiles', () => {
     });
   });
 
+  // --- Status field mode ---
+
+  describe('status_field mode', () => {
+    it('excludes files where website_status is draft', async () => {
+      await writeFile('projects/draft-project.md', '---\nwebsite_status: draft\n---\nDraft');
+      const { published, excluded } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'status_field',
+        statusField: 'website_status',
+      });
+      expect(published).toHaveLength(0);
+      expect(excluded).toHaveLength(1);
+    });
+
+    it('publishes files where website_status is public', async () => {
+      await writeFile('projects/live.md', '---\nwebsite_status: public\n---\nLive');
+      const { published } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'status_field',
+        statusField: 'website_status',
+      });
+      expect(published).toHaveLength(1);
+    });
+
+    it('publishes files where website_status is unlisted', async () => {
+      await writeFile('projects/hidden.md', '---\nwebsite_status: unlisted\n---\nHidden');
+      const { published } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'status_field',
+        statusField: 'website_status',
+      });
+      expect(published).toHaveLength(1);
+    });
+
+    it('publishes files where website_status is archived', async () => {
+      await writeFile('projects/old.md', '---\nwebsite_status: archived\n---\nOld');
+      const { published } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'status_field',
+        statusField: 'website_status',
+      });
+      expect(published).toHaveLength(1);
+    });
+
+    it('publishes files with no website_status field (defaults to public)', async () => {
+      await writeFile('index.md', '---\ntitle: Home\n---\nWelcome');
+      const { published } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'status_field',
+        statusField: 'website_status',
+      });
+      expect(published).toHaveLength(1);
+    });
+
+    it('uses website_status as the default statusField', async () => {
+      await writeFile('projects/draft.md', '---\nwebsite_status: draft\n---\nDraft');
+      const { published, excluded } = await filterPublishableFiles(tmpDir, {
+        publishMode: 'status_field',
+      });
+      expect(published).toHaveLength(0);
+      expect(excluded).toHaveLength(1);
+    });
+  });
+
   // --- Edge cases ---
 
   describe('edge cases', () => {

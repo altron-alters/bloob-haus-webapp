@@ -5,7 +5,7 @@
         <div id="page" class="site">
             {% if not hide_nav %}{% include "partials/nav.njk" %}{% endif %}
 
-            <main id="primary" class="site-main">
+            <main id="primary" class="site-main"{% if website_status == "unlisted" or website_status == "archived" %} data-pagefind-ignore{% endif %}>
                 <article class="hentry">
                     <div class="entry-content">
                         {% block main %}{{ content | safe }}{% endblock %}

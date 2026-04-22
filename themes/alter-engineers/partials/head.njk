@@ -13,6 +13,10 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
 
+    {% if website_status == "unlisted" %}
+    <meta name="robots" content="noindex" />
+    {% endif %}
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{% if layout %}article{% else %}website{% endif %}" />
     <meta property="og:site_name" content="{{ site.title }}" />

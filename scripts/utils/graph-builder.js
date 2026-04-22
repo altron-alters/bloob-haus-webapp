@@ -33,15 +33,17 @@ export function stripAnchor(url) {
  * Builds a graph data structure from per-page link data, optionally including
  * tag nodes derived from a tag index.
  *
- * @param {Object} perPageLinks - Map of page URL → { title, outgoing: [url, ...] }
+ * @param {Object} perPageLinks - Map of page URL → { title, outgoing: [url, ...], website_status? }
  *   where outgoing URLs may include heading anchors and are already resolved
- *   to internal absolute paths.
+ *   to internal absolute paths. `unlisted` pages must be excluded before calling this
+ *   function (handled in preprocess-content.js). `archived` pages are included with
+ *   website_status so runtime visualizers can filter them from listings.
  * @param {Object} [tagIndex] - Optional map of tag slug → { count, pages: [{title, url}] }
  *   from tag-extractor. When provided, tags are added as nodes connected to their pages.
  * @returns {{ nodes: Array, links: Array }} Graph data for force-graph / D3
  *
  * Output format:
- *   nodes: [{ id, title, section, type }]
+ *   nodes: [{ id, title, section, type, website_status? }]
  *     type: "page" for normal pages, "tag" for tag nodes
  *   links: [{ source, target }]  — source/target are node IDs (URLs)
  */
@@ -57,6 +59,7 @@ export function buildGraph(perPageLinks, tagIndex = {}) {
     type: "page",
     ...(page.image ? { image: page.image } : {}),
     ...(page.bloobIcon ? { bloobIcon: page.bloobIcon } : {}),
+    ...(page.website_status ? { website_status: page.website_status } : {}),
   }));
 
   // Build page→page links — deduplicated, only between known nodes, no self-links

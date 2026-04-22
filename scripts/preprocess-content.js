@@ -117,6 +117,7 @@ export async function preprocessContent({
     ...(siteConfig.content?.publish_mode && { publishMode: siteConfig.content.publish_mode }),
     ...(siteConfig.content?.blocklist_tag && { blocklistTag: siteConfig.content.blocklist_tag }),
     ...(siteConfig.content?.exclude_files && { excludeFiles: siteConfig.content.exclude_files }),
+    ...(siteConfig.content?.status_field && { statusField: siteConfig.content.status_field }),
   };
 
   // Step 2: Filter publishable files
@@ -238,13 +239,20 @@ export async function preprocessContent({
       frontmatter.title ||
       path.basename(file.relativePath, ".md");
 
-    // 6g: Collect outgoing links for graph data (wiki-links + markdown links)
-    if (pageInfo) {
+    // 6g: Collect outgoing links for graph data (wiki-links + markdown links).
+    // unlisted pages are excluded entirely — they must not appear in graph.json
+    // or any runtime visualizer. archived/public pages carry website_status for
+    // visualizers that need to filter them from listings.
+    if (pageInfo && frontmatter.website_status !== "unlisted") {
       const outgoing = [
         ...wikiLinkResult.resolved.map((r) => r.url),
         ...mdLinkResult.resolved.map((r) => r.url),
       ];
-      perPageLinks[pageInfo.url] = { title: pageTitle, outgoing };
+      perPageLinks[pageInfo.url] = {
+        title: pageTitle,
+        outgoing,
+        ...(frontmatter.website_status && { website_status: frontmatter.website_status }),
+      };
     }
 
     // 6h: Normalize bloob-object type

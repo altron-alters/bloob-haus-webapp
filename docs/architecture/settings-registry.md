@@ -25,8 +25,40 @@ These settings work identically across every theme. They are part of the Bloob H
 | `body_class` | string | — | Extra CSS class(es) added to `<body>` |
 | `layout` | string | layout from bloob-object or `layouts/page.njk` | Override Eleventy layout explicitly |
 | `bloob-object` | string | — | Object type for this page (e.g. `project-profile`). Controls layout and graph icon. Defined in `_bloob-objects.md`. |
+| `website_status` | string | `public` (when absent) | Publish visibility for this page. One of `draft` / `unlisted` / `archived` / `public`. Only active when `publish_mode: status_field` is set in `_bloob-settings.md`. See status matrix below. |
+
+#### `website_status` — Status Matrix
+
+Requires `publish_mode: status_field` in `_bloob-settings.md`. Field absent = `public`.
+
+| Value | Built | Direct URL | Google-indexable | `sitemap.xml` | Internal search | Card/folder previews | `graph.json` |
+|-------|-------|------------|-----------------|---------------|-----------------|---------------------|--------------|
+| `draft` | No | No | — | No | No | No | No |
+| `unlisted` | Yes | Yes | No (`noindex`) | No | No | No | No |
+| `archived` | Yes | Yes | Yes | Yes | No | No | Yes (with field) |
+| `public` | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+
+**Theme wiring required (per-theme, not automatic):**
+- `partials/head.njk` — add `<meta name="robots" content="noindex">` when `website_status == "unlisted"`
+- `layouts/base.njk` (or equivalent) — add `data-pagefind-ignore` on main content wrapper when `website_status` is `unlisted` or `archived`
+- `pages/sitemap.njk` — filter out `website_status == "unlisted"` entries
+
+**Theme implementation status:**
+| Theme | noindex | pagefind-ignore | sitemap filter |
+|-------|---------|-----------------|----------------|
+| `alter-engineers` | ✓ | ✓ | ✓ |
+| `marbles-pouch` | — | — | — |
+| `warm-kitchen` | — | — | — |
 
 ### Site-Wide (features: in _bloob-settings.md)
+
+#### Publish Mode (`_bloob-settings.md` top-level keys)
+
+| Key | Values | Description |
+|-----|--------|-------------|
+| `publish_mode` | `blocklist` (default) / `allowlist` / `status_field` | How the pipeline decides which files to build |
+| `blocklist_tag` | tag string | Used when `publish_mode: blocklist`. Files tagged with this are excluded. |
+| `status_field` | field name (default `website_status`) | Used when `publish_mode: status_field`. Which frontmatter field to read. |
 
 Documented in full in `docs/architecture/themes.md` → "Baseline Features Contract". Quick reference:
 

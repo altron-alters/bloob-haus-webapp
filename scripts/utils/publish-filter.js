@@ -16,6 +16,7 @@ const DEFAULTS = {
   blocklistTag: "not-for-public",
   allowlistKey: "publish",
   allowlistValue: true,
+  statusField: "website_status",
 };
 
 /**
@@ -30,6 +31,7 @@ function getPublishConfig() {
     allowlistKey: process.env.ALLOWLIST_KEY || DEFAULTS.allowlistKey,
     allowlistValue:
       process.env.ALLOWLIST_VALUE === "false" ? false : DEFAULTS.allowlistValue,
+    statusField: process.env.STATUS_FIELD || DEFAULTS.statusField,
     excludeFiles: excludeFilesRaw ? excludeFilesRaw.split(",").map(s => s.trim()) : [],
   };
 }
@@ -42,11 +44,16 @@ function getPublishConfig() {
  * @returns {boolean} True if file should be published
  */
 function shouldPublish(frontmatter, content, config) {
-  if (config.publishMode === "allowlist") {
+  if (config.publishMode === "status_field") {
+    // Status field mode: exclude only files where the status field equals "draft".
+    // Absent field defaults to public. unlisted/archived/public all pass through (they are built).
+    const statusValue = frontmatter[config.statusField];
+    return statusValue !== "draft";
+  } else if (config.publishMode === "allowlist") {
     // Only publish if explicitly marked
     return frontmatter[config.allowlistKey] === config.allowlistValue;
   } else {
-    // Blocklist mode: publish unless tagged private
+    // Blocklist mode (default): publish unless tagged private
     const tagInContent = content.includes(`#${config.blocklistTag}`);
 
     // Check frontmatter tags - handle both "tag" and "#tag" formats
@@ -77,7 +84,9 @@ export async function filterPublishableFiles(contentDir, options = {}) {
   }
 
   console.log(`[filter] Mode: ${config.publishMode}`);
-  if (config.publishMode === "blocklist") {
+  if (config.publishMode === "status_field") {
+    console.log(`[filter] Status field: ${config.statusField} (draft = excluded)`);
+  } else if (config.publishMode === "blocklist") {
     console.log(`[filter] Blocklist tag: #${config.blocklistTag}`);
   } else {
     console.log(

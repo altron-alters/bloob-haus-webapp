@@ -1,0 +1,15 @@
+---
+permalink: /sitemap.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.w3.org/2001/XMLSchema-instance">
+  {%- for page in collections.all %}
+  {%- if page.url and not page.data.eleventyExcludeFromCollections and page.data.website_status != "unlisted" %}
+  <url>
+    <loc>{{ site.url }}{{ page.url }}</loc>
+    <lastmod>{{ page.date | dateToRfc3339 }}</lastmod>
+  </url>
+  {%- endif %}
+  {%- endfor %}
+</urlset>

@@ -64,6 +64,7 @@ Track major architectural and technical decisions with their rationale.
 | 2026-03-23 | Use non-hyphenated key names for `:::` container settings | Hyphenated keys (e.g., `slide-time`) cause ambiguity in the `key=value` parser because `-` is also used as a separator in some edge cases. Use simple keys: `time`, `limit`, `style`. |
 | 2026-04-21 | `infinite_scroll: false` in musings = Swiper `loop: false`, not removing Swiper | The musings section uses a fixed-height container in theme.min.css. Rendering a static stack instead of Swiper causes card overflow that bleeds into adjacent sections. The correct behavior is always to render Swiper HTML; `infinite_scroll: false` only changes the `loop` option via `browser.js` reinit. |
 | 2026-04-21 | `CONTENT_DIR` env var threaded from orchestrators into `eleventy.config.js` | `loadSiteConfig()` needs the content dir path to find `_bloob-settings.md`. When called from `eleventy.config.js`, the `--content=` CLI arg is not available unless explicitly passed via env var. Both `dev-local.js` and `build-site.js` now set `process.env.CONTENT_DIR` so `eleventy.config.js` can read it. |
+| 2026-04-22 | `publish_mode: status_field` — YAML frontmatter field as first-class publish control | The tag-based blocklist was a blunt instrument: binary publish/don't-publish, no way to express "build but don't index" or "build but hide from listings." A dedicated `website_status` field in frontmatter makes intent explicit, is writable by the GSheet apps script, and supports four semantic states: `draft` (don't build), `unlisted` (build, noindex, hidden everywhere), `archived` (build, indexable, hidden from listings/search), `public` (fully visible). Hardcoded vocabulary avoids per-site config sprawl while remaining extensible. See detailed record below. |
 
 ---
 
@@ -279,6 +280,45 @@ To keep parser/renderer logic shareable across web build, Obsidian plugin, and w
 **Rejected alternative:** Obsidian callout syntax (`> [!type]`) — constrained, Obsidian-specific, no standard markdown support.
 
 **See:** `docs/architecture/visualizers.md` — Container Visualizers section.
+
+---
+
+### `publish_mode: status_field` — YAML Frontmatter Publish Control (2026-04-22)
+
+**Context:** The existing `publish_mode: blocklist` system reads `frontmatter.tags[]` for a blocklist tag. This was discovered to be disconnected from the `status: draft` field being written to project profiles by the GSheet apps script — the field was inert, doing nothing. The alter-engineers site needed richer publish semantics for a GSheet → Obsidian → website pipeline.
+
+**Standard status vocabulary (hardcoded in the builder):**
+
+| Value | Built | Direct URL | Google-indexable | `sitemap.xml` | Internal search | Card/folder previews | `graph.json` |
+|-------|-------|------------|-----------------|---------------|-----------------|---------------------|--------------|
+| `draft` | No | No | — | No | No | No | No |
+| `unlisted` | Yes | Yes | No (`noindex`) | No | No | No | No |
+| `archived` | Yes | Yes | Yes | Yes | No | No | Yes (with field) |
+| `public` | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+
+**Default:** pages without `website_status` set → treated as `public` (backwards compatible for non-project content pages like `index.md`).
+
+**Why hardcode the vocabulary?** Four states cover all known use cases; site config can extend behavior in future without proliferating per-site vocab. Named values in frontmatter are self-documenting — `website_status: unlisted` is clearer than `tags: [not-for-public]`.
+
+**Touch points implemented (2026-04-22):**
+- `scripts/utils/publish-filter.js` — new `status_field` mode branch
+- `scripts/utils/bloob-settings-reader.js` — `status_field` key flows through
+- `scripts/preprocess-content.js` — `status_field` in publishOptions; `unlisted` excluded from `perPageLinks`; `website_status` on all other nodes
+- `scripts/utils/graph-builder.js` — `website_status` in node schema
+- `themes/alter-engineers/partials/head.njk` — `<meta name="robots" content="noindex">` for `unlisted`
+- `themes/alter-engineers/layouts/base.njk` — `data-pagefind-ignore` for `unlisted` + `archived`
+- `themes/alter-engineers/pages/sitemap.njk` — excludes `unlisted`
+- `lib/visualizers/folder-preview/browser.js` — filters `archived` from listings
+
+**Opt-in from `_bloob-settings.md`:**
+```yaml
+publish_mode: status_field
+status_field: website_status   # optional, this is the default field name
+```
+
+**Backwards compatible:** `blocklist` and `allowlist` modes unchanged. No existing site is affected unless they opt in.
+
+**GSheet / apps script note:** The `Code.js` bound script already reads `website_status` correctly. The `project_profile_manager` skill inside the SkillHub library writes the actual frontmatter field — verify it writes `website_status:` not `status:` before next sync run. See `docs/implementation-plans/website-status-field.md` for full plan.
 
 ---
 

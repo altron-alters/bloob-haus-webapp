@@ -79,12 +79,13 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
   }
 
   // Content settings
-  if (bloobSettings.publish_mode || bloobSettings.blocklist_tag || bloobSettings.exclude_files) {
+  if (bloobSettings.publish_mode || bloobSettings.blocklist_tag || bloobSettings.exclude_files || bloobSettings.status_field) {
     merged.content = {
       ...siteConfig.content,
       publish_mode: bloobSettings.publish_mode || siteConfig.content?.publish_mode,
       blocklist_tag: bloobSettings.blocklist_tag || siteConfig.content?.blocklist_tag,
       exclude_files: bloobSettings.exclude_files || siteConfig.content?.exclude_files,
+      status_field: bloobSettings.status_field || siteConfig.content?.status_field,
     };
   }
 
