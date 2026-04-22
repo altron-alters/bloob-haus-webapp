@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "fs";
 import sharp from "sharp";
-import { join, relative } from "path";
+import { join, relative, basename, extname } from "path";
 import taskLists from "markdown-it-task-lists";
 import markdownItContainer from "markdown-it-container";
 import markdownItAttrs from "markdown-it-attrs";
@@ -545,7 +545,7 @@ export default async function (eleventyConfig) {
             outputDir: MEDIA_CACHE_DIR,
             urlPath: "/media/optimized/",
             filenameFormat: function (id, src, width, format) {
-              const name = src.split("/").pop().split(".")[0];
+              const name = basename(src, extname(src));
               return `${name}-${width}w.${format}`;
             },
           });

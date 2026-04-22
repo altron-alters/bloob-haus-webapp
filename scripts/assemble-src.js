@@ -168,9 +168,9 @@ export async function assembleSrc(config, contentDir = null) {
   await generateSiteData(config);
 
   // Step 8: Copy eleventyComputed.js into the per-site src dir.
-  // The source lives at src/_data/eleventyComputed.js (tracked in git).
+  // The source lives at lib/eleventyComputed.js (tracked in git).
   // With per-site src dirs it won't be there automatically, so we copy it on every assemble.
-  const eleventyComputedSrc = path.join(ROOT_DIR, "src", "_data", "eleventyComputed.js");
+  const eleventyComputedSrc = path.join(ROOT_DIR, "lib", "eleventyComputed.js");
   const eleventyComputedDest = path.join(SRC_DIR, "_data", "eleventyComputed.js");
   if (fs.existsSync(eleventyComputedSrc)) {
     await fs.ensureDir(path.join(SRC_DIR, "_data"));

@@ -22,6 +22,13 @@ The session checklists below are a reminder for the END of the session.
 ## Sibling Repo: Planning Vault
 The product vision, values, room concepts, and engineering reports live in a separate Obsidian vault at `../bloobhaus-notes/` (see its `CLAUDE.md`). If you need context on *why* things are designed a certain way, check there. This repo is the source of truth for *how* — technical architecture, build pipeline, and implementation plans.
 
+## Cross-Platform Compatibility (Mac + Windows)
+All scripts and `package.json` commands must work on both Mac/Linux and Windows. Key rules:
+- **Never use `VAR=value node ...` inline env syntax in `package.json` scripts** — this fails on Windows. Pass values as CLI args instead (e.g. `node scripts/foo.js --site=x`).
+- **Never use `cross-env` unless already a dependency** — prefer CLI args or `process.env` set inside the script itself.
+- **Use `path.join` / `path.resolve` for all file paths** — never string-concatenate with `/` or `\`.
+- When shelling out with `execSync`, pass env vars via the `env` option object, not inline shell syntax.
+
 ## Development Principles
 1. **Don't build infrastructure for users you don't have yet** — build what makes current sites better today
 2. **Implement when needed, not when designed** — avoid over-architecture
