@@ -411,24 +411,26 @@ Themes should include visualizer assets in `partials/scripts.njk`:
 
 Visualizers must use CSS custom properties for all colors and spacing, never hardcode theme-specific values. Themes define the variables; visualizers consume them.
 
-**Required CSS variables themes must define** (for visualizers to inherit correctly):
+**Two tiers of tokens:**
+
+**Tier 1 — Universal (required by all themes).** Every visualizer may use these. If a theme omits one, affected visualizers break or look wrong.
+
 ```css
 :root {
-  /* Core palette — visualizers use these */
-  --bg-color: ...;
-  --text-color: ...;
-  --text-light: ...;
-  --accent-color: ...;
-  --accent-dark: ...;
-  --link-color: ...;
-  --border-color: ...;
-  --card-bg: ...;
+  /* Core palette */
+  --accent-color: ...;   /* primary brand color — headings, links, highlights */
+  --accent-dark: ...;    /* darker hover/active variant */
+  --bg-color: ...;       /* default page/section background */
+  --text-color: ...;     /* body text */
+  --text-light: ...;     /* secondary/muted text */
+  --border-color: ...;   /* subtle borders */
+  --card-bg: ...;        /* card and panel backgrounds */
 
   /* Typography */
   --font-body: ...;
   --font-heading: ...;
 
-  /* Spacing */
+  /* Spacing scale */
   --spacing-xs: ...;
   --spacing-sm: ...;
   --spacing-md: ...;
@@ -436,6 +438,21 @@ Visualizers must use CSS custom properties for all colors and spacing, never har
   --spacing-xl: ...;
 }
 ```
+
+**Tier 2 — Theme-specific accent colors (optional).** Visualizers reference these for internal element styling (e.g. a name pill, an icon tint). Themes define them to match their palette; if omitted, the visualizer degrades gracefully (element has no background/color).
+
+```css
+:root {
+  --color-mint: ...;    /* e.g. #b6fad1 — used by testimonials name pill */
+  --color-orange: ...; /* e.g. #e0643d — used by testimonials name pill bg */
+  /* add more as needed for your brand */
+}
+```
+
+**Visualizer default backgrounds use color pairs, not color tokens.** When a visualizer has a default section background (e.g. testimonials → green, image-text → orange), it declares that default via `resolveBg(settings, "green")` in its renderer. The theme's `.bg-green` color pair class handles the actual colors. This means:
+- The visualizer never hardcodes a background color
+- Authors can override with `bg=` on the `:::` fence
+- A different theme simply defines `.bg-green` with its own brand colors
 
 ---
 

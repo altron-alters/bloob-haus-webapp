@@ -10,8 +10,6 @@
 
 .heading-and-paragraph {
   padding: 3.75rem 0;
-  background-color: var(--color-mint);
-  color: var(--accent-color);
 }
 
 @media only screen and (min-width: 1024px) {
