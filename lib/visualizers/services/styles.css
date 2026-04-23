@@ -1,0 +1,166 @@
+/*
+ * Services Visualizer — complete self-contained styles
+ *
+ * Owns all layout and visual rules. No dependency on theme.min.css.
+ * Colors use var(--...) tokens. Spacing copied verbatim from WP theme.
+ * SVG icon fill colors in data URIs cannot use CSS variables — left as-is.
+ */
+
+/* ── Section ─────────────────────────────────────────────────── */
+
+.services {
+  color: var(--accent-color);
+  background-color: var(--bg-color);
+  padding: 1.9375rem 0 5.625rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .services { padding: 3.75rem 0 10rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .services { padding: 5rem 0 8.3125rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .services { padding: 9.375rem 0 15.8125rem; }
+}
+
+/* ── Wrapper ─────────────────────────────────────────────────── */
+
+.services__wrapper {
+  padding: 0 1.25rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .services__wrapper { padding: 0 3.75rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .services__wrapper {
+    display: flex;
+    gap: 5.8125rem;
+    justify-content: space-between;
+    padding: 0 8.875rem;
+  }
+}
+
+@media only screen and (min-width: 2560px) {
+  .services__wrapper { max-width: 126.625rem; padding: 0; margin: 0 auto; }
+}
+
+/* ── Title ───────────────────────────────────────────────────── */
+
+.services__title {
+  color: var(--accent-color);
+  font-family: var(--font-heading);
+  font-weight: 500;
+  padding-bottom: 1.875rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .services__title { padding-bottom: 1.4375rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .services__title { padding-bottom: 1.9375rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .services__title { padding-bottom: 1.9375rem; width: 28.8125rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .services__title { padding-bottom: 3.75rem; width: 100%; }
+}
+
+/* ── Description text ────────────────────────────────────────── */
+
+.services__text {
+  padding-bottom: 3.75rem;
+  font-weight: 400;
+}
+
+@media only screen and (min-width: 1024px) {
+  .services__text { padding-bottom: 0; width: 26.5rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .services__text { font-size: 1rem; line-height: 1.375rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .services__text { width: 49.6875rem; font-size: 1.375rem; line-height: 2.125rem; }
+}
+
+/* ── Services list ───────────────────────────────────────────── */
+
+.services__list h3 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+}
+
+.services__list ul {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1.25rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .services__list ul { row-gap: 1.875rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .services__list { padding-top: 6.125rem; }
+  .services__list ul { row-gap: 1rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .services__list { padding-top: 7.5rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .services__list { padding-top: 13.5rem; }
+  .services__list ul { row-gap: 1.875rem; }
+}
+
+.services__list li {
+  display: flex;
+  gap: 1.9375rem;
+  align-items: center;
+}
+
+@media only screen and (min-width: 768px) {
+  .services__list li { gap: 1.5625rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .services__list li { gap: 1.6875rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .services__list li { gap: 3.125rem; }
+}
+
+/* Arrow icon — SVG fill cannot use CSS vars, value kept as-is */
+.services__list li::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  background: url("data:image/svg+xml,%0A%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M6.71875 21.8213L17.7605 15.3803L17.7605 8.42667L6.71875 1.98564L6.71875 6.88887L15.3152 11.9035L6.71875 16.9181L6.71875 21.8213Z' fill='%235B5DD3'/%3E%3C/svg%3E%0A");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
+  flex-shrink: 0;
+}
+
+@media only screen and (min-width: 2560px) {
+  .services__list li::before {
+    width: 51px;
+    height: 50px;
+    background: url("data:image/svg+xml,%0A%3Csvg width='51' height='50' viewBox='0 0 51 50' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M14.0781 46.1401L37.0783 32.7234L37.0783 16.8754L14.0781 3.45858L14.0781 15.0356L30.816 24.7994L14.0781 34.5631L14.0781 46.1401ZM50.6623 24.7994L50.5012 24.8933L50.5012 24.7054L50.6623 24.7994Z' fill='%235B5DD3'/%3E%3C/svg%3E%0A");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center center;
+  }
+}

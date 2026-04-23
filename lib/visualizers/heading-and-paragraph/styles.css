@@ -1,0 +1,79 @@
+/*
+ * Heading and Paragraph Visualizer — complete self-contained styles
+ *
+ * Owns all layout and visual rules. No dependency on theme.min.css.
+ * Default background is mint green (--color-mint). When bg= is specified,
+ * the resolveBg() utility adds a .bg-* class that overrides via !important.
+ */
+
+/* ── Section ─────────────────────────────────────────────────── */
+
+.heading-and-paragraph {
+  padding: 3.75rem 0;
+  background-color: var(--color-mint);
+  color: var(--accent-color);
+}
+
+@media only screen and (min-width: 1024px) {
+  .heading-and-paragraph {
+    padding: 5rem 0;
+    display: flex;
+  }
+}
+
+@media only screen and (min-width: 2560px) {
+  .heading-and-paragraph { padding: 9.375rem 0; }
+}
+
+/* ── Wrapper ─────────────────────────────────────────────────── */
+
+.heading-and-paragraph__wrapper {
+  padding: 0 1.25rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .heading-and-paragraph__wrapper { padding: 0 3.75rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .heading-and-paragraph__wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 8.875rem;
+  }
+}
+
+@media only screen and (min-width: 2560px) {
+  .heading-and-paragraph__wrapper { max-width: 126.625rem; padding: 0; margin: 0 auto; }
+}
+
+/* ── Heading ─────────────────────────────────────────────────── */
+
+.heading-and-paragraph__heading {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  padding-bottom: 1.875rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .heading-and-paragraph__heading { padding-bottom: 1.4375rem; }
+}
+
+/* ── Paragraph ───────────────────────────────────────────────── */
+
+.heading-and-paragraph__paragraph {
+  font-weight: 400;
+}
+
+@media only screen and (min-width: 1024px) {
+  .heading-and-paragraph__paragraph { width: 45%; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .heading-and-paragraph__paragraph { width: 38%; font-size: 1rem; line-height: 1.375rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .heading-and-paragraph__paragraph { font-size: 1.375rem; line-height: 2.125rem; }
+}

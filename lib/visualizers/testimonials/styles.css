@@ -1,11 +1,181 @@
 /*
- * Testimonials Visualizer — styles
+ * Testimonials Visualizer — complete self-contained styles
  *
- * The base .testimonials layout (section background, typography, Swiper
- * initialization) is handled entirely by theme.min.css. This file is a
- * placeholder for any overrides needed in custom themes that don't include
- * the original WP theme CSS.
- *
- * If visualizer-specific tokens are needed, add them to main.css first
- * (as --token-name custom properties) and reference them here.
+ * Owns all layout and visual rules. No dependency on theme.min.css.
+ * SVG button icons contain hardcoded hex fills (data URI limitation) — left as-is.
  */
+
+/* ── Section ─────────────────────────────────────────────────── */
+
+.testimonials {
+  background-color: var(--color-mint);
+  padding: 3.75rem 0 7.5rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .testimonials { padding: 3.75rem 0 18.75rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .testimonials { padding: 5rem 0; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .testimonials { padding: 9.375rem 0; }
+}
+
+/* ── Wrapper ─────────────────────────────────────────────────── */
+
+.testimonials__wrapper {
+  padding: 0 1.25rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .testimonials__wrapper { padding: 0 3.75rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .testimonials__wrapper { padding: 0 8.875rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .testimonials__wrapper { max-width: 126.625rem; padding: 0; margin: 0 auto; }
+}
+
+/* ── Top section (title + nav buttons) ──────────────────────── */
+
+.testimonials__top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.testimonials__title {
+  color: var(--accent-color);
+}
+
+.testimonials__buttons {
+  display: flex;
+  gap: 0.625rem;
+}
+
+@media only screen and (min-width: 2560px) {
+  .testimonials__buttons { gap: 1.25rem; }
+}
+
+/* ── Nav buttons — SVG fills hardcoded (data URI limitation) ─── */
+
+.testimonials__prev-button {
+  background-image: url("data:image/svg+xml,%3Csvg width='43' height='43' viewBox='0 0 43 43' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M26.7578 11.3984L15.7672 17.8096L15.7672 25.3817L26.7578 31.7929L26.7578 26.2617L18.759 21.5957L26.7578 16.9297L26.7578 11.3984ZM9.27684 21.5957L9.35404 21.5506L9.35404 21.6407L9.27684 21.5957Z' fill='%235B5DD3'/%3E%3Crect x='42.5222' y='42.5222' width='42.0444' height='42.0444' rx='21.0222' transform='rotate(-180 42.5222 42.5222)' stroke='%235B5DD3' stroke-width='0.955555'/%3E%3C/svg%3E");
+  height: 43px;
+  width: 43px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  cursor: pointer;
+  transition: ease all 0.3s;
+}
+
+@media only screen and (min-width: 768px) {
+  .testimonials__prev-button { width: 3.375rem; height: 3.375rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .testimonials__prev-button { width: 3rem; height: 3rem; }
+  .testimonials__prev-button:hover {
+    background-image: url("data:image/svg+xml,%0A%3Csvg width='90' height='90' viewBox='0 0 90 90' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='90' y='90' width='90' height='90' rx='45' transform='rotate(-180 90 90)' fill='%235B5DD3'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M56 23.8601L32.9998 37.2769L32.9998 53.1249L56 66.5417L56 54.9646L39.2622 45.2009L56 35.4371L56 23.8601ZM19.4158 45.2009L19.5769 45.1069L19.5769 45.2949L19.4158 45.2009Z' fill='%23B6FAD1'/%3E%3C/svg%3E%0A");
+  }
+}
+
+.testimonials__prev-button:active {
+  background-image: url("data:image/svg+xml,%0A%3Csvg width='90' height='90' viewBox='0 0 90 90' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='90' y='90' width='90' height='90' rx='45' transform='rotate(-180 90 90)' fill='%235B5DD3'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M56 23.8601L32.9998 37.2769L32.9998 53.1249L56 66.5417L56 54.9646L39.2622 45.2009L56 35.4371L56 23.8601ZM19.4158 45.2009L19.5769 45.1069L19.5769 45.2949L19.4158 45.2009Z' fill='%23B6FAD1'/%3E%3C/svg%3E%0A");
+}
+
+@media only screen and (min-width: 2560px) {
+  .testimonials__prev-button { width: 5.625rem; height: 5.625rem; }
+}
+
+.testimonials__next-button {
+  background-image: url("data:image/svg+xml,%3Csvg width='43' height='43' viewBox='0 0 43 43' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M16.2422 31.6016L27.2328 25.1904L27.2328 17.6183L16.2422 11.2071L16.2422 16.7383L24.241 21.4043L16.2422 26.0703L16.2422 31.6016ZM33.7232 21.4043L33.646 21.4494L33.646 21.3593L33.7232 21.4043Z' fill='%235B5DD3'/%3E%3Crect x='0.477778' y='0.477778' width='42.0444' height='42.0444' rx='21.0222' stroke='%235B5DD3' stroke-width='0.955555'/%3E%3C/svg%3E");
+  height: 43px;
+  width: 43px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  cursor: pointer;
+  transition: ease all 0.3s;
+}
+
+@media only screen and (min-width: 768px) {
+  .testimonials__next-button { width: 3.375rem; height: 3.375rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .testimonials__next-button { width: 3rem; height: 3rem; }
+  .testimonials__next-button:hover {
+    background-image: url("data:image/svg+xml,%3Csvg width='90' height='90' viewBox='0 0 90 90' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='90' height='90' rx='45' fill='%235B5DD3'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M34 66.1399L57.0002 52.7231L57.0002 36.8751L34 23.4583L34 35.0354L50.7378 44.7991L34 54.5629L34 66.1399ZM70.5842 44.7991L70.4231 44.8931L70.4231 44.7051L70.5842 44.7991Z' fill='%23B6FAD1'/%3E%3C/svg%3E");
+  }
+}
+
+.testimonials__next-button:active {
+  background-image: url("data:image/svg+xml,%3Csvg width='90' height='90' viewBox='0 0 90 90' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='90' height='90' rx='45' fill='%235B5DD3'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M34 66.1399L57.0002 52.7231L57.0002 36.8751L34 23.4583L34 35.0354L50.7378 44.7991L34 54.5629L34 66.1399ZM70.5842 44.7991L70.4231 44.8931L70.4231 44.7051L70.5842 44.7991Z' fill='%23B6FAD1'/%3E%3C/svg%3E");
+}
+
+@media only screen and (min-width: 2560px) {
+  .testimonials__next-button { width: 5.625rem; height: 5.625rem; }
+}
+
+/* ── Carousel container ──────────────────────────────────────── */
+
+.testimonials__container {
+  margin-top: 7.5rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .testimonials__container { margin-top: 18.75rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .testimonials__container { margin-top: 3.375rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .testimonials__container { margin-top: 6.25rem; }
+}
+
+/* ── Slide content ───────────────────────────────────────────── */
+
+.testimonials__content {
+  text-align: center;
+}
+
+.testimonials__testimonial {
+  color: var(--accent-color);
+  font-weight: 400 !important;
+  font-family: var(--font-heading);
+}
+
+@media only screen and (min-width: 768px) {
+  .testimonials__testimonial { max-width: 40.6875rem; margin: 0 auto; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .testimonials__testimonial { max-width: 63.75rem; }
+}
+
+.testimonials__name {
+  width: fit-content;
+  color: var(--color-mint);
+  margin: 1.875rem auto 0 auto;
+  background-color: var(--color-orange);
+}
+
+@media only screen and (min-width: 768px) {
+  .testimonials__name { margin-top: 3.75rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .testimonials__name { margin-top: 2rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .testimonials__name { margin-top: 3.75rem; }
+}

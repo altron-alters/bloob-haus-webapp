@@ -1,26 +1,205 @@
 /*
- * image-text visualizer styles
+ * Image Text Visualizer — complete self-contained styles
  *
- * theme.min.css already handles most styling for .image-text via the original
- * WordPress theme rules: background color, top offset, flex layout, image
- * dimensions, and text-container width.
- *
- * This file only adds what theme.min.css doesn't cover — mainly ensuring the
- * image fills its container and the image column has position context.
+ * Owns all layout and visual rules. No dependency on theme.min.css.
+ * Default background is orange (--color-orange). When bg= is specified,
+ * the resolveBg() utility adds a .bg-* class or inline style that overrides.
+ * SVG and gradient colors that cannot use CSS variables are left as-is.
  */
 
-/* Container clips the image at the theme-defined dimensions */
+/* ── Section ─────────────────────────────────────────────────── */
+
+.image-text {
+  background-color: var(--color-orange);
+  color: #fff;
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text { margin-bottom: -2.5rem; }
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text { margin-bottom: 0; }
+}
+
+/* ── Wrapper ─────────────────────────────────────────────────── */
+
+.image-text__wrapper {
+  padding: 0 1.25rem;
+  position: relative;
+  top: -1.875rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text__wrapper { padding: 0 3.75rem; top: -6.25rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .image-text__wrapper {
+    display: flex;
+    justify-content: space-between;
+    gap: 8.25rem;
+    top: -3.375rem;
+    padding: 0 8.875rem;
+    padding-bottom: 1.6875rem;
+  }
+}
+
+@media only screen and (min-width: 2560px) {
+  .image-text__wrapper {
+    max-width: 126.625rem;
+    padding: 0;
+    margin: 0 auto;
+    top: -6.25rem;
+    padding-bottom: 3.125rem;
+  }
+}
+
+/* ── Image ───────────────────────────────────────────────────── */
+
 .image-text__image-container {
   overflow: hidden;
   flex-shrink: 0;
 }
 
-/* object-fit only — do NOT override width/height; theme.min.css sets those
-   per breakpoint (e.g. width:33.375rem height:37.25rem at desktop). */
 .image-text__image {
   display: block;
   object-fit: cover;
+  height: 25.125rem;
 }
+
+@media only screen and (min-width: 768px) {
+  .image-text__image { width: 33.375rem; height: 37.25rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .image-text__image { width: 32.8125rem; height: 39.5625rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .image-text__image { width: 61.5rem; height: 74.125rem; }
+}
+
+/* ── Text container ──────────────────────────────────────────── */
+
+@media only screen and (min-width: 1366px) {
+  .image-text__text-container { width: 38.5%; }
+}
+
+/* ── Text ────────────────────────────────────────────────────── */
+
+.image-text__text {
+  font-weight: 400;
+  height: 5.9375rem;
+  overflow: hidden;
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text__text { height: auto; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .image-text__text { font-size: 1rem; line-height: 1.375rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .image-text__text { font-size: 1.375rem; line-height: 2.125rem; }
+}
+
+.image-text__text.active { height: auto; }
+
+/* ── Title / heading ─────────────────────────────────────────── */
+
+.image-text__title {
+  padding: 1.875rem 0 1.25rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text__title { padding: 3.75rem 0 1.875rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .image-text__title { padding: 8.875rem 0 1.3125rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .image-text__title { padding: 23.75rem 0 2.5rem; }
+}
+
+.image-text__heading {
+  padding-bottom: 1.875rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text__heading { width: 80%; padding-bottom: 2rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .image-text__heading { width: 100%; padding-bottom: 3.75rem; }
+}
+
+/* ── Read more (mobile expand toggle) ───────────────────────── */
+
+.image-text__read-more {
+  margin: 1.25rem 0 1.875rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text__read-more { display: none; }
+}
+
+/* SVG fill in data URI cannot use CSS variables — #b6fad1 (mint) left as-is */
+.image-text__read-more a { color: var(--color-mint); }
+.image-text__read-more a::after {
+  transition: ease all 0.3s;
+  content: url("data:image/svg+xml,%0A%3Csvg width='25' height='24' viewBox='0 0 25 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M2.67969 6.71973L9.11974 17.7598H16.073L22.5131 6.71973H17.6099L12.5964 15.3143L7.5829 6.71973H2.67969Z' fill='%23B6FAD1'/%3E%3C/svg%3E%0A");
+  position: relative;
+  top: 0.25rem;
+}
+
+/* ── Contact us button ───────────────────────────────────────── */
+
+.image-text__contact-us {
+  text-align: center;
+  margin-top: 1.875rem;
+  padding-bottom: 1.875rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text__contact-us { padding-bottom: 0; text-align: left; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .image-text__contact-us { margin-top: 2rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .image-text__contact-us { margin-top: 3.75rem; }
+}
+
+/* Gradient animation — hex values kept (CSS vars unsupported in gradient syntax) */
+.image-text__contact-us a {
+  padding: 0 0.84375rem;
+  color: var(--accent-color);
+  background: linear-gradient(to right, #5B5DD3 50%, #B6FAD1 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+  transition: all 0.3s ease-out;
+}
+
+.image-text__contact-us a:hover {
+  background-position: left bottom;
+  background-color: var(--accent-color);
+  color: var(--color-mint);
+}
+
+@media only screen and (min-width: 768px) {
+  .image-text__contact-us a { padding: 0 0.3125rem; }
+}
+
+/* ── Mobile overrides ────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .image-text__wrapper {
@@ -29,7 +208,6 @@
     top: 0 !important;
   }
 
-  /* Mobile: let image fill the column width and cap height */
   .image-text__image {
     width: 100%;
     height: auto;
