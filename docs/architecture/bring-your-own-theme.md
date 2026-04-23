@@ -100,35 +100,48 @@ That's it. Every visualizer (`image-grid`, `services`, `testimonials`, `graph`, 
 
 ## Color pair system (for visualizer backgrounds)
 
-Visualizers like `services` and `heading-and-paragraph` accept a `bg=` setting to control section background:
+Visualizers use semantic color pair names to declare their default background. Authors can override with `bg=` on the `:::` fence:
 
 ```markdown
-::: services bg=dark
-...
+::: testimonials bg=dark
 :::
 ```
 
-For this to work, add these color pair classes to `main.css`:
+Define these **six required semantic pairs** in `main.css` using your brand colors:
 
 ```css
-.bg-white  { --pair-bg: #ffffff;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
-.bg-muted  { --pair-bg: #f5f5f5;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
-.bg-green  { --pair-bg: #b6fad1;             --pair-title: var(--accent-color); --pair-text: var(--accent-color); --pair-label: var(--accent-color); }
-.bg-dark   { --pair-bg: #1a1a1a;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
-.bg-accent { --pair-bg: var(--accent-color); --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #ffffff; }
-.bg-orange { --pair-bg: #e0643d;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+/* Required semantic pairs — visualizer defaults reference only these names */
+.bg-light    { --pair-bg: #your-light;   --pair-title: ...; --pair-text: ...; --pair-label: ...; }
+.bg-featured { --pair-bg: #your-bold;    --pair-title: ...; --pair-text: ...; --pair-label: ...; }
+.bg-dark     { --pair-bg: #your-dark;    --pair-title: ...; --pair-text: ...; --pair-label: ...; }
+.bg-accent   { --pair-bg: var(--accent-color); --pair-title: #fff; --pair-text: #fff; --pair-label: ...; }
+.bg-muted    { --pair-bg: #f5f5f5;       --pair-title: ...; --pair-text: ...; --pair-label: ...; }
+.bg-default  { --pair-bg: #ffffff;       --pair-title: ...; --pair-text: ...; --pair-label: ...; }
 
-.bg-white, .bg-muted, .bg-green, .bg-dark, .bg-accent, .bg-orange {
+/* Apply them all */
+.bg-light, .bg-featured, .bg-dark, .bg-accent, .bg-muted, .bg-default {
   background: var(--pair-bg) !important;
   color: var(--pair-text);
 }
+.bg-light h1,    .bg-light h2,    /* ... all selectors ... */
+.bg-featured h1, .bg-featured h2  { color: var(--pair-title); }
 
+/* Global heading fallback */
 h1, h2, h3, h4 {
   color: var(--pair-title, var(--text-color));
 }
 ```
 
-You can change the hex values — just keep the variable names. The `--pair-*` names are part of the contract.
+Each pair declares four roles:
+
+| Variable | Role |
+|---|---|
+| `--pair-bg` | Section background |
+| `--pair-title` | h1–h4 heading color inside section |
+| `--pair-text` | Body text color inside section |
+| `--pair-label` | Small `.label` marker color |
+
+You can add any extra named pairs (`bg-teal`, `bg-brand`) for author use in `bg=` fences. See `themes.md` for the full contract.
 
 ---
 

@@ -33,45 +33,62 @@
    or as a plain class on any ::: container (e.g. ::: bg-dark).
    !important overrides theme.min.css section defaults.
 
-   Each token declares three CSS custom properties:
-     --pair-bg     → background color for the section
-     --pair-title  → color for headings (h1–h4) inside the section
-     --pair-text   → color for body text (p, li, etc.) inside the section
-
-   Four color roles per background token:
+   Four color roles per token:
      --pair-bg     → section background
      --pair-title  → h1–h4 headings
      --pair-text   → body text (p, li)
-     --pair-label  → small section labels (.label class) — distinct from headings:
-                     light bg → brand accent (purple); dark bg → brand teal (#b6fad1)
+     --pair-label  → small section labels (.label) — distinct from headings
 
-   Token    Bg          Title       Text        Label
-   ──────   ──          ─────       ────        ─────
-   white    #ffffff     text-color  text-color  accent (#5b5dd3)
-   muted    #f5f5f5     text-color  text-color  accent
-   green    #b6fad1     accent      accent      accent
-   dark     #1a1a1a     #ffffff     #ffffff     #b6fad1 (teal — readable on dark)
-   accent   #5b5dd3     #ffffff     #ffffff     #b6fad1
-   orange   #e0643d     #ffffff     #ffffff     #b6fad1
+   SEMANTIC PAIRS (universal — every theme must define these):
+   Visualizer defaults reference only these names so they work across themes.
+
+   Token       Role                          AE value
+   ─────────   ────                          ────────
+   light       soft brand-tinted background  #b6fad1 (mint)
+   featured    bold / hero section           #e0643d (orange)
+   dark        dark background               #1a1a1a
+   accent      brand primary as bg           var(--accent-color)
+   muted       neutral off-white             #f5f5f5
+   default     plain white                   #ffffff
+
+   THEME-SPECIFIC PAIRS (AE named colors — for author use in bg= fences):
+   Themes may add any named pairs beyond the semantic set.
+
+   Token       AE value         Note
+   ─────────   ────────         ────
+   green       #b6fad1          alias → light
+   orange      #e0643d          alias → featured
+   white       #ffffff          alias → default
 */
-.bg-white  { --pair-bg: #ffffff;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
-.bg-muted  { --pair-bg: #f5f5f5;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
+
+/* ── Semantic pairs (required by all themes) ─────────────────── */
+.bg-light    { --pair-bg: #b6fad1;             --pair-title: var(--accent-color); --pair-text: var(--accent-color); --pair-label: var(--accent-color); }
+.bg-featured { --pair-bg: #e0643d;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+.bg-dark     { --pair-bg: #1a1a1a;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+.bg-accent   { --pair-bg: var(--accent-color); --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+.bg-muted    { --pair-bg: #f5f5f5;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
+.bg-default  { --pair-bg: #ffffff;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
+
+/* ── Theme-specific aliases (AE only) ────────────────────────── */
 .bg-green  { --pair-bg: #b6fad1;             --pair-title: var(--accent-color); --pair-text: var(--accent-color); --pair-label: var(--accent-color); }
-.bg-dark   { --pair-bg: #1a1a1a;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
-.bg-accent { --pair-bg: var(--accent-color); --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
 .bg-orange { --pair-bg: #e0643d;             --pair-title: #ffffff;             --pair-text: #ffffff;             --pair-label: #b6fad1; }
+.bg-white  { --pair-bg: #ffffff;             --pair-title: var(--text-color);   --pair-text: var(--text-color);   --pair-label: var(--accent-color); }
 
 /* Apply pair universally — background, body text, heading, and label cascade */
-.bg-white, .bg-muted, .bg-green, .bg-dark, .bg-accent, .bg-orange {
+.bg-light, .bg-featured, .bg-dark, .bg-accent, .bg-muted, .bg-default,
+.bg-green, .bg-orange, .bg-white {
   background: var(--pair-bg) !important;
   color: var(--pair-text);
 }
-.bg-white h1, .bg-white h2, .bg-white h3, .bg-white h4,
-.bg-muted  h1, .bg-muted  h2, .bg-muted  h3, .bg-muted  h4,
-.bg-green  h1, .bg-green  h2, .bg-green  h3, .bg-green  h4,
-.bg-dark   h1, .bg-dark   h2, .bg-dark   h3, .bg-dark   h4,
-.bg-accent h1, .bg-accent h2, .bg-accent h3, .bg-accent h4,
-.bg-orange h1, .bg-orange h2, .bg-orange h3, .bg-orange h4 {
+.bg-light h1,    .bg-light h2,    .bg-light h3,    .bg-light h4,
+.bg-featured h1, .bg-featured h2, .bg-featured h3, .bg-featured h4,
+.bg-dark h1,     .bg-dark h2,     .bg-dark h3,     .bg-dark h4,
+.bg-accent h1,   .bg-accent h2,   .bg-accent h3,   .bg-accent h4,
+.bg-muted h1,    .bg-muted h2,    .bg-muted h3,    .bg-muted h4,
+.bg-default h1,  .bg-default h2,  .bg-default h3,  .bg-default h4,
+.bg-green h1,    .bg-green h2,    .bg-green h3,    .bg-green h4,
+.bg-orange h1,   .bg-orange h2,   .bg-orange h3,   .bg-orange h4,
+.bg-white h1,    .bg-white h2,    .bg-white h3,    .bg-white h4 {
   color: var(--pair-title);
 }
 

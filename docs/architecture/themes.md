@@ -413,46 +413,73 @@ Visualizers must use CSS custom properties for all colors and spacing, never har
 
 **Two tiers of tokens:**
 
-**Tier 1 — Universal (required by all themes).** Every visualizer may use these. If a theme omits one, affected visualizers break or look wrong.
+**Tier 1 — Universal CSS variables (required).** Every visualizer uses these. Omitting one breaks affected visualizers.
 
 ```css
 :root {
-  /* Core palette */
-  --accent-color: ...;   /* primary brand color — headings, links, highlights */
+  --accent-color: ...;   /* primary brand color */
   --accent-dark: ...;    /* darker hover/active variant */
-  --bg-color: ...;       /* default page/section background */
+  --bg-color: ...;       /* default page background */
   --text-color: ...;     /* body text */
   --text-light: ...;     /* secondary/muted text */
   --border-color: ...;   /* subtle borders */
-  --card-bg: ...;        /* card and panel backgrounds */
-
-  /* Typography */
+  --card-bg: ...;        /* card/panel backgrounds */
   --font-body: ...;
   --font-heading: ...;
-
-  /* Spacing scale */
-  --spacing-xs: ...;
-  --spacing-sm: ...;
-  --spacing-md: ...;
-  --spacing-lg: ...;
-  --spacing-xl: ...;
+  --spacing-xs … --spacing-xl: ...;
 }
 ```
 
-**Tier 2 — Theme-specific accent colors (optional).** Visualizers reference these for internal element styling (e.g. a name pill, an icon tint). Themes define them to match their palette; if omitted, the visualizer degrades gracefully (element has no background/color).
+**Tier 2 — Theme-specific accent colors (optional).** Used for internal element styling (e.g. a name pill, icon tint). Visualizers reference these with a fallback so they degrade gracefully if undefined.
 
 ```css
 :root {
-  --color-mint: ...;    /* e.g. #b6fad1 — used by testimonials name pill */
-  --color-orange: ...; /* e.g. #e0643d — used by testimonials name pill bg */
-  /* add more as needed for your brand */
+  --color-mint: ...;    /* soft brand tint — e.g. testimonials name pill text */
+  --color-orange: ...; /* bold brand color — e.g. testimonials name pill bg */
 }
 ```
 
-**Visualizer default backgrounds use color pairs, not color tokens.** When a visualizer has a default section background (e.g. testimonials → green, image-text → orange), it declares that default via `resolveBg(settings, "green")` in its renderer. The theme's `.bg-green` color pair class handles the actual colors. This means:
-- The visualizer never hardcodes a background color
-- Authors can override with `bg=` on the `:::` fence
-- A different theme simply defines `.bg-green` with its own brand colors
+---
+
+### Semantic Color Pair Contract (Tier 1 — Required)
+
+Visualizer **default backgrounds** use semantic pair names so they work across any theme. Visualizers never reference theme-specific color names (`green`, `orange`).
+
+Every theme **must** define these six semantic `.bg-*` classes:
+
+| Class | Role | AE value |
+|---|---|---|
+| `.bg-light` | Soft, brand-tinted section background | `#b6fad1` (mint) |
+| `.bg-featured` | Bold / hero section background | `#e0643d` (orange) |
+| `.bg-dark` | Dark background | `#1a1a1a` |
+| `.bg-accent` | Brand primary color as background | `var(--accent-color)` |
+| `.bg-muted` | Neutral off-white | `#f5f5f5` |
+| `.bg-default` | Plain white | `#ffffff` |
+
+Each class sets four CSS custom properties:
+```css
+.bg-light {
+  --pair-bg:    ...;  /* section background */
+  --pair-title: ...;  /* h1–h4 heading color */
+  --pair-text:  ...;  /* body text color */
+  --pair-label: ...;  /* .label marker color */
+}
+```
+
+Themes may add any **named pairs** beyond these (`bg-green`, `bg-orange`, `bg-teal`) for author use in `bg=` fences — but visualizer defaults only ever reference the six semantic names.
+
+**How visualizers declare a default background:**
+
+```js
+// renderer.js — visualizer says "I want a light background by default"
+const { extraClass, style } = resolveBg(settings, "light");
+// author can override: ::: testimonials bg=dark
+```
+
+This means:
+- The visualizer never hardcodes a color value
+- Authors can override the default with `bg=` on the `:::` fence
+- A new theme just defines `.bg-light` / `.bg-featured` with its own brand colors
 
 ---
 
