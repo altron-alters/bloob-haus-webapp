@@ -1,29 +1,159 @@
 /*
- * Image Grid Visualizer — styles supplement
+ * Image Grid Visualizer — complete self-contained styles
  *
- * Core layout (.team, .team__members, .team__member-image, etc.) is already
- * in theme.min.css. This file adds any overrides that need CSS custom properties
- * from main.css (which theme.min.css cannot reference).
+ * This file owns ALL layout and visual rules for the ::: image-grid visualizer.
+ * No dependency on theme.min.css — the visualizer is portable across any theme
+ * that defines the standard CSS token contract (--accent-color, --bg-color, etc.).
  *
- * All color values MUST use var(--...) tokens — never hardcode hex values.
+ * Colors/fonts use var(--...) tokens only — never hardcode hex values.
+ * Spacing/layout values are copied verbatim from the original WP theme to
+ * guarantee pixel-level visual parity on the alter-engineers site.
+ *
+ * Note: theme.min.css still contains .team* rules — they are now dead code on
+ * the alter-engineers site (these rules win due to load order). See TECH-DEBT.md.
  */
 
+/* ── Section ─────────────────────────────────────────────────── */
+
 .team {
+  padding: 3.75rem 0;
   color: var(--accent-color);
   background-color: var(--bg-color);
 }
 
+@media only screen and (min-width: 1024px) {
+  .team { padding: 5rem 0; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .team { padding: 9.375rem 0 9.6875rem; }
+}
+
+/* ── Wrapper (horizontal padding / max-width) ─────────────────── */
+
+.team__wrapper {
+  padding: 0 1.25rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .team__wrapper { padding: 0 3.75rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .team__wrapper { padding: 0 8.875rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .team__wrapper { max-width: 126.625rem; padding: 0; margin: 0 auto; }
+}
+
+/* ── Title ───────────────────────────────────────────────────── */
+
 .team__title {
   color: var(--accent-color);
   font-family: var(--font-heading);
+  font-weight: 500;
+  padding-bottom: 1.25rem;
 }
+
+@media only screen and (min-width: 768px) {
+  .team__title { padding-bottom: 3.75rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .team__title { padding-bottom: 3.3125rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .team__title { padding-bottom: 6.25rem; }
+}
+
+/* ── Members grid ────────────────────────────────────────────── */
+
+.team__members {
+  display: grid;
+  grid-template-columns: 48% 48%;
+  grid-column-gap: 4%;
+  grid-row-gap: 1.875rem;
+}
+
+@media only screen and (min-width: 768px) {
+  .team__members { padding: 0 6.25rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .team__members { max-width: 62.5rem; margin: 0 auto; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .team__members {
+    max-width: 52.5rem;
+    grid-template-columns: 49% 49%;
+    grid-column-gap: 2%;
+    grid-row-gap: 1.875rem;
+  }
+}
+
+@media only screen and (min-width: 2560px) {
+  .team__members { max-width: 87.5rem; grid-row-gap: 6.25rem; }
+}
+
+/* ── Member image ────────────────────────────────────────────── */
+
+.team__member-image {
+  transition: ease all 0.3s;
+  width: 100%;
+}
+
+.team__member-image:hover {
+  filter: grayscale(100%);
+}
+
+/* ── Member name ─────────────────────────────────────────────── */
 
 .team__member-name {
   font-family: var(--font-heading);
   color: var(--text-color);
+  padding: 1.25rem 0 0.625rem;
 }
+
+@media only screen and (min-width: 768px) {
+  .team__member-name { padding: 2.5rem 0 1.25rem; }
+}
+
+@media only screen and (min-width: 1024px) {
+  .team__member-name { padding: 1.25rem 0 1rem; }
+}
+
+@media only screen and (min-width: 1366px) {
+  .team__member-name {
+    padding: 2.25rem 0 1rem;
+    font-size: 2.25rem;
+    line-height: 2.6875rem;
+    width: 85%;
+  }
+}
+
+@media only screen and (min-width: 2560px) {
+  .team__member-name {
+    padding: 3.4375rem 0 1.875rem;
+    font-size: 4.3125rem;
+    line-height: 5.125rem;
+  }
+}
+
+/* ── Member position ─────────────────────────────────────────── */
 
 .team__member-position {
   color: var(--text-light);
   font-family: var(--font-body);
+  font-weight: 400;
+}
+
+@media only screen and (min-width: 1366px) {
+  .team__member-position { font-size: 1rem; line-height: 1.375rem; }
+}
+
+@media only screen and (min-width: 2560px) {
+  .team__member-position { font-size: 1.375rem; line-height: 2.125rem; }
 }

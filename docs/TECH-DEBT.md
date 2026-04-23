@@ -29,6 +29,7 @@ Tracked items with severity, impact, and target resolution phase.
 | 23 | `publish-filter.test.js`: 2 tests fail on Windows (path separator `\` vs `/`) | Low | Tests pass on Mac/Linux CI; local Windows dev shows failures | Normalize paths in test fixtures with `path.normalize` or platform-aware assertion | ⬜ Open |
 | 24 | `warm-kitchen` + `marbles-pouch`: missing color pair CSS contract | Low | `bg=` on visualizers will have no effect until themes define `--pair-bg/--pair-title/--pair-text` for `.bg-*` classes and add the apply rules | Copy pattern from `alter-engineers/main.css`; adjust token colors per theme | ⬜ Open |
 | 25 | `warm-kitchen`: missing PhotoSwipe (head.njk + scripts.njk) | Low | Image zoom silently broken on warm-kitchen sites | Copy from alter-engineers following settings-registry.md wiring guide | ⬜ Open |
+| 26 | `theme.min.css` still contains `.team*` rules (dead code after image-grid migration) | Low | Duplicate rules; `styles.css` wins due to load order so no visual impact | Remove `.team*` block from `theme.min.css` once all visualizers are migrated; do it in one pass | ⬜ Open |
 
 ## Notes
 
