@@ -1,0 +1,28 @@
+/*
+ * Ken Burns Zoom — Visualizer Styles
+ *
+ * Scoped to .vis-ken-burns-zoom.
+ * Uses var(--token) from theme main.css per CSS token standard.
+ * See: docs/implementation-plans/DECISIONS.md 2026-03-19
+ */
+
+.vis-ken-burns-zoom {
+  width: 100%;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  background: var(--color-surface-muted, #111);
+  /* Block-level, respects normal document flow */
+  display: block;
+}
+
+.vis-ken-burns-zoom > div {
+  /* viewport div — overflow:hidden set inline by engine */
+  width: 100%;
+}
+
+.vis-ken-burns-zoom img {
+  /* Prevent browser drag and selection */
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}

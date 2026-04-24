@@ -13,3 +13,4 @@ content:
 # Build features
 features:
   search: true   # Pagefind search index — enables search bar on homepage
+  magic_machines: true

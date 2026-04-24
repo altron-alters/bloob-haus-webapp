@@ -71,6 +71,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.og_images` | `true` | OG preview image generation |
 | `features.tags` | `true` | Tag system |
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |
+| `features.magic_machines` | `true` | Serve magic machine GUI tools at `/magic-machine/*`; disable for client/professional sites |
 
 ---
 

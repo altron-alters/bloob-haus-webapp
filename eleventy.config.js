@@ -92,18 +92,24 @@ export default async function (eleventyConfig) {
   });
 
   // Magic machines — auto-discovered from lib/magic-machines/*/manifest.json
-  // Add a "route" field to a manifest to make the machine public at that URL.
-  const magicMachines = loadMagicMachines();
-  for (const machine of magicMachines) {
-    const src = `lib/magic-machines/${machine.dirName}/${machine.app.entry}`;
-    const dest = machine.route.replace(/^\//, "") + "index.html";
-    eleventyConfig.addPassthroughCopy({ [src]: dest });
+  // Gated by features.magic_machines in sites/*.yaml (defaults to true when absent).
+  if (siteConfig.features?.magic_machines !== false) {
+    const magicMachines = loadMagicMachines();
+    for (const machine of magicMachines) {
+      const src = `lib/magic-machines/${machine.dirName}/${machine.app.entry}`;
+      const dest = machine.route.replace(/^\//, "") + "index.html";
+      eleventyConfig.addPassthroughCopy({ [src]: dest });
+    }
+    // Legacy alias — scene-nav-builder was previously served at /tools/ before
+    // the /magic-machine/ convention was established. Keep old URL working.
+    eleventyConfig.addPassthroughCopy({
+      "lib/magic-machines/scene-nav-builder/app/index.html": "tools/scene-nav-builder/index.html",
+    });
+    // Cloudflare Pages _headers — COOP/COEP for magic machines requiring SharedArrayBuffer
+    if (existsSync("lib/magic-machines/_headers")) {
+      eleventyConfig.addPassthroughCopy({ "lib/magic-machines/_headers": "_headers" });
+    }
   }
-  // Legacy alias — scene-nav-builder was previously served at /tools/ before
-  // the /magic-machine/ convention was established. Keep old URL working.
-  eleventyConfig.addPassthroughCopy({
-    "lib/magic-machines/scene-nav-builder/app/index.html": "tools/scene-nav-builder/index.html",
-  });
 
   // Watch for changes during development
   eleventyConfig.addWatchTarget(`${SRC}/assets/`);

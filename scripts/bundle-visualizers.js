@@ -4,6 +4,8 @@
  * Auto-discovers visualizer packages in lib/visualizers/ and:
  * 1. Bundles browser.js → src/assets/js/visualizers/<name>.js (via esbuild)
  * 2. Copies styles.css → src/assets/css/visualizers/<name>.css
+ * 3. Copies engine.js → src/assets/js/visualizers/<name>.engine.js (plain copy, no bundle)
+ *    engine.js is a self-contained IIFE shared by the visualizer and its paired magic machine.
  *
  * Adding a new visualizer = adding a new folder in lib/visualizers/.
  * No changes to this script needed.
@@ -44,8 +46,9 @@ const manifest = [];
 for (const name of visualizerDirs) {
   const dir = join(VISUALIZERS_DIR, name);
   const browserEntry = join(dir, "browser.js");
-  const stylesFile = join(dir, "styles.css");
-  const entry = { name, hasJs: false, hasCss: false };
+  const stylesFile   = join(dir, "styles.css");
+  const engineFile   = join(dir, "engine.js");
+  const entry = { name, hasJs: false, hasCss: false, hasEngine: false };
 
   // Bundle browser.js with esbuild
   if (existsSync(browserEntry)) {
@@ -66,6 +69,13 @@ for (const name of visualizerDirs) {
     copyFileSync(stylesFile, join(CSS_OUT_DIR, `${name}.css`));
     entry.hasCss = true;
     console.log(`[bundle] ${name}: styles.css → ${CSS_OUT_DIR}/${name}.css`);
+  }
+
+  // Copy engine.js (plain IIFE — no bundling needed, shared with magic machine)
+  if (existsSync(engineFile)) {
+    copyFileSync(engineFile, join(JS_OUT_DIR, `${name}.engine.js`));
+    entry.hasEngine = true;
+    console.log(`[bundle] ${name}: engine.js → ${JS_OUT_DIR}/${name}.engine.js`);
   }
 
   manifest.push(entry);

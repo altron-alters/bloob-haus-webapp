@@ -1,0 +1,13 @@
+{
+  "name": "ken-burns-zoom-builder",
+  "type": "gui",
+  "version": "0.1.0",
+  "description": "Design a Ken Burns zoom animation on a still image. Export as video or copy an embed snippet for the ken-burns-zoom visualizer.",
+  "pairs_with": "ken-burns-zoom",
+  "route": "/magic-machine/ken-burns-zoom-builder/",
+  "app": {
+    "entry": "app/index.html",
+    "standalone": false,
+    "description": "Must be served — requires COOP/COEP headers for FFmpeg.wasm video export."
+  }
+}

@@ -1,0 +1,7 @@
+# Cloudflare Pages HTTP headers
+# Required for SharedArrayBuffer used by FFmpeg.wasm in ken-burns-zoom-builder
+# See: docs/implementation-plans/phases/phase-3/2026-04-24_ken-burns-zoom.md — Phase 3
+
+/magic-machine/ken-burns-zoom-builder/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
