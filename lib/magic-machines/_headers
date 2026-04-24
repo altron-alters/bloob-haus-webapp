@@ -1,7 +1,11 @@
-# Cloudflare Pages HTTP headers
-# Required for SharedArrayBuffer used by FFmpeg.wasm in ken-burns-zoom-builder
-# See: docs/implementation-plans/phases/phase-3/2026-04-24_ken-burns-zoom.md — Phase 3
-
-/magic-machine/ken-burns-zoom-builder/*
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: require-corp
+# Cloudflare Pages HTTP headers for magic machine routes.
+#
+# COOP/COEP headers (required for SharedArrayBuffer) are NOT enabled here because
+# ken-burns-zoom-builder uses @ffmpeg/core (single-threaded) which does not need
+# SharedArrayBuffer. Enabling require-corp without crossorigin attributes on all
+# CDN resources breaks script loading.
+#
+# If upgrading to @ffmpeg/core-mt (multi-threaded), re-add:
+#   Cross-Origin-Opener-Policy: same-origin
+#   Cross-Origin-Embedder-Policy: require-corp
+# AND add crossorigin="anonymous" to all cross-origin <script> and <link> tags.

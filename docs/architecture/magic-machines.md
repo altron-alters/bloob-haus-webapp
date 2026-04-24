@@ -49,6 +49,36 @@ GUI machines produce markdown (or other output) through a visual interface rathe
 - Can be opened directly in a browser (`file://`) or hosted
 - Produce a code fence that a paired visualizer reads
 
+### Required: Debug Log Panel
+
+**Every GUI magic machine must include a debug log panel.** Users are often non-developers who can't open browser DevTools. The debug log gives them full visibility into what the tool is doing and why it might be failing.
+
+**Required elements:**
+- A small `debug` button in the topbar (always visible, non-intrusive)
+- A slide-up or overlay panel showing timestamped log entries, color-coded by level (`info`, `warn`, `error`, `ok`)
+- Auto-opens the panel on the first `error`-level entry
+- A **"Copy debug log"** button — one click copies the full log as plain text for sharing/pasting in a bug report
+- A **"Clear"** and **"Close"** button
+
+**Implementation pattern** (from `ken-burns-zoom-builder`):
+
+```js
+const debugEntries = [];
+
+function dbg(msg, level = 'info') {
+  const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+  debugEntries.push({ ts, level, msg });
+  const el = document.createElement('div');
+  el.className = `debug-entry ${level}`;
+  el.textContent = `[${ts}] ${msg}`;
+  debugLogEl.appendChild(el);
+  debugLogEl.scrollTop = debugLogEl.scrollHeight;
+  if (level === 'error') debugPanel.classList.add('open');
+}
+```
+
+Log these events at minimum: page load, any external library detection, all network fetches (start + size + result), any heavy async operation, and the actual `err.message` + `err.stack` in every catch block.
+
 **Scene Nav Builder** is the first GUI machine and establishes the pattern:
 
 ```

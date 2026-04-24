@@ -6,7 +6,7 @@
 <title>Ken Burns Zoom Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script type="module" src="/assets/js/visualizers/ken-burns-zoom.engine.js"></script>
-<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
 <style>
   :root {
     --bg-a:      oklch(0.97 0.025 70);
@@ -633,6 +633,93 @@
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: oklch(0.60 0.04 55 / 0.22); border-radius: 3px; }
+
+  /* ── DEBUG PANEL ── */
+  .debug-toggle {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid oklch(0.60 0.04 55 / 0.18);
+    background: oklch(0.60 0.04 55 / 0.08);
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .debug-toggle:hover { background: oklch(0.60 0.04 55 / 0.16); color: var(--text); }
+  .debug-toggle.has-error { border-color: oklch(0.60 0.18 25 / 0.50); color: oklch(0.55 0.18 25); background: oklch(0.60 0.18 25 / 0.08); }
+  .debug-count {
+    font-size: 9px;
+    background: oklch(0.60 0.04 55 / 0.15);
+    border-radius: 8px;
+    padding: 1px 5px;
+    min-width: 16px;
+    text-align: center;
+  }
+  .debug-panel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 240px;
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+    background: oklch(0.12 0.01 250 / 0.97);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid oklch(0.30 0.02 250 / 0.60);
+    transform: translateY(100%);
+    transition: transform 0.2s ease;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .debug-panel.open { transform: translateY(0); }
+  .debug-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    border-bottom: 1px solid oklch(0.28 0.01 250 / 0.50);
+    flex-shrink: 0;
+  }
+  .debug-panel-title {
+    color: oklch(0.55 0.04 250);
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    flex: 1;
+  }
+  .debug-btn-sm {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    border: 1px solid oklch(0.35 0.02 250 / 0.50);
+    background: oklch(0.22 0.01 250 / 0.60);
+    color: oklch(0.60 0.03 250);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .debug-btn-sm:hover { background: oklch(0.30 0.02 250); color: oklch(0.80 0.03 250); }
+  .debug-log-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 14px;
+  }
+  .debug-log-scroll::-webkit-scrollbar { width: 4px; }
+  .debug-log-scroll::-webkit-scrollbar-thumb { background: oklch(0.30 0.02 250 / 0.50); border-radius: 2px; }
+  .debug-entry {
+    line-height: 1.7;
+    color: oklch(0.55 0.02 250);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .debug-entry.info  { color: oklch(0.55 0.02 250); }
+  .debug-entry.warn  { color: oklch(0.68 0.12 75); }
+  .debug-entry.error { color: oklch(0.65 0.16 25); }
+  .debug-entry.ok    { color: oklch(0.60 0.12 145); }
 </style>
 </head>
 <body>
@@ -653,7 +740,10 @@
     <span class="s">Ken Burns</span> Zoom Builder
   </div>
   <div class="topbar-spacer"></div>
-  <div class="topbar-badge">Wireframe v0.1</div>
+  <button class="debug-toggle" id="debug-toggle" title="Show debug log">
+    debug <span class="debug-count" id="debug-count">0</span>
+  </button>
+  <div class="topbar-badge">v0.1</div>
 </div>
 
 <!-- MAIN -->
@@ -698,7 +788,7 @@
           <img id="preview-img" src="" alt="preview" draggable="false">
 
           <!-- Start rect -->
-          <div class="rect-overlay start-rect" id="rect-start" style="left:5%;top:5%;width:90%;height:90%;">
+          <div class="rect-overlay start-rect" id="rect-start" style="left:8.87%;top:0.12%;width:83.46%;height:98.92%;">
             <div class="rect-fill"></div>
             <div class="rect-cross"></div>
             <div class="rect-label">START</div>
@@ -713,7 +803,7 @@
           </div>
 
           <!-- End rect -->
-          <div class="rect-overlay end-rect" id="rect-end" style="left:25%;top:20%;width:50%;height:60%;">
+          <div class="rect-overlay end-rect" id="rect-end" style="left:32.97%;top:40.87%;width:30.70%;height:36.38%;">
             <div class="rect-fill"></div>
             <div class="rect-cross"></div>
             <div class="rect-label">END</div>
@@ -759,9 +849,9 @@
       <div class="field">
         <div class="field-label">
           Duration
-          <span class="field-label-val" id="dur-val">8s</span>
+          <span class="field-label-val" id="dur-val">18.5s</span>
         </div>
-        <input type="range" id="dur-slider" min="3" max="30" value="8" step="0.5">
+        <input type="range" id="dur-slider" min="3" max="30" value="18.5" step="0.5">
       </div>
       <div class="field">
         <div class="field-label">Frame rate</div>
@@ -774,10 +864,10 @@
       <div class="field">
         <div class="field-label" style="margin-bottom:3px;">Easing <span style="font-size:10px;color:var(--dim);font-weight:400;">— speed curve</span></div>
         <div class="seg-group" id="ease-group">
-          <button class="seg-btn active" data-ease="linear">linear</button>
+          <button class="seg-btn" data-ease="linear">linear</button>
           <button class="seg-btn" data-ease="ease-in">accel</button>
           <button class="seg-btn" data-ease="ease-out">decel</button>
-          <button class="seg-btn" data-ease="ease-in-out">s-curve</button>
+          <button class="seg-btn active" data-ease="ease-in-out">s-curve</button>
         </div>
       </div>
 
@@ -792,9 +882,9 @@
       <div class="field">
         <div class="field-label" style="margin-bottom:3px;">Loop <span style="font-size:10px;color:var(--dim);font-weight:400;">— what happens at the end</span></div>
         <div class="seg-group" id="playback-group">
-          <button class="seg-btn active" data-playback="loop" title="Jump back to start and repeat">↺ loop</button>
+          <button class="seg-btn" data-playback="loop" title="Jump back to start and repeat">↺ loop</button>
           <button class="seg-btn" data-playback="hold" title="Stop at end frame">■ hold</button>
-          <button class="seg-btn" data-playback="bounce" title="Smoothly reverse back to start">↔ bounce</button>
+          <button class="seg-btn active" data-playback="bounce" title="Smoothly reverse back to start">↔ bounce</button>
         </div>
       </div>
     </div>
@@ -809,12 +899,12 @@
           <span class="ar-label"><strong>1 : 1</strong>Square</span>
         </button>
 
-        <button class="aspect-btn" data-ar="9:16" data-w="9" data-h="16">
+        <button class="aspect-btn active" data-ar="9:16" data-w="9" data-h="16">
           <svg class="ar-icon" width="10" height="17" viewBox="0 0 10 17"><rect x="1" y="1" width="8" height="15" fill="none"/></svg>
           <span class="ar-label"><strong>9 : 16</strong>Story</span>
         </button>
 
-        <button class="aspect-btn active" data-ar="16:9" data-w="16" data-h="9">
+        <button class="aspect-btn" data-ar="16:9" data-w="16" data-h="9">
           <svg class="ar-icon" width="17" height="10" viewBox="0 0 17 10"><rect x="1" y="1" width="15" height="8" fill="none"/></svg>
           <span class="ar-label"><strong>16 : 9</strong>Landscape</span>
         </button>
@@ -903,20 +993,75 @@
 
   </div>
 </div>
+<!-- DEBUG PANEL -->
+<div class="debug-panel" id="debug-panel">
+  <div class="debug-panel-header">
+    <span class="debug-panel-title">Debug Log</span>
+    <button class="debug-btn-sm" id="debug-copy-btn">Copy log</button>
+    <button class="debug-btn-sm" id="debug-clear-btn">Clear</button>
+    <button class="debug-btn-sm" id="debug-close-btn">✕ Close</button>
+  </div>
+  <div class="debug-log-scroll" id="debug-log"></div>
+</div>
 </div><!-- app-shell -->
 
 <script>
 const state = {
   imageLoaded: false, imageW: 0, imageH: 0,
-  duration: 8, fps: 24, easing: 'linear',
-  ar: '16:9', arW: 16, arH: 9, customArW: 4, customArH: 5,
-  playback: 'loop',  // 'loop' | 'hold' | 'bounce'
-  direction: 'in',   // 'in' = start→end (zoom in), 'out' = end→start (zoom out)
+  duration: 18.5, fps: 24, easing: 'ease-in-out',
+  ar: '9:16', arW: 9, arH: 16, customArW: 4, customArH: 5,
+  playback: 'bounce',  // 'loop' | 'hold' | 'bounce'
+  direction: 'in',     // 'in' = start→end (zoom in), 'out' = end→start (zoom out)
   rects: {
-    start: { x: 5, y: 5, w: 90, h: 90 },
-    end:   { x: 25, y: 20, w: 50, h: 60 }
+    start: { x: 8.87, y: 0.12,  w: 83.46, h: 98.92 },
+    end:   { x: 32.97, y: 40.87, w: 30.70, h: 36.38 }
   }
 };
+
+// ─────────────────────────────────────────────
+// Debug log — surfaced via the "debug" button in the topbar.
+// All magic machines should include a debug log for user-facing diagnostics.
+// ─────────────────────────────────────────────
+const debugEntries = [];
+const debugPanel    = document.getElementById('debug-panel');
+const debugLogEl    = document.getElementById('debug-log');
+const debugCountEl  = document.getElementById('debug-count');
+const debugToggleEl = document.getElementById('debug-toggle');
+
+function dbg(msg, level = 'info') {
+  const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+  debugEntries.push({ ts, level, msg });
+  const el = document.createElement('div');
+  el.className = `debug-entry ${level}`;
+  el.textContent = `[${ts}] ${msg}`;
+  debugLogEl.appendChild(el);
+  debugLogEl.scrollTop = debugLogEl.scrollHeight;
+  debugCountEl.textContent = debugEntries.length;
+  if (level === 'error') {
+    debugPanel.classList.add('open');
+    debugToggleEl.classList.add('has-error');
+  }
+}
+
+debugToggleEl.addEventListener('click', () => debugPanel.classList.toggle('open'));
+document.getElementById('debug-close-btn').addEventListener('click', () => debugPanel.classList.remove('open'));
+document.getElementById('debug-clear-btn').addEventListener('click', () => {
+  debugEntries.length = 0;
+  debugLogEl.innerHTML = '';
+  debugCountEl.textContent = '0';
+  debugToggleEl.classList.remove('has-error');
+});
+document.getElementById('debug-copy-btn').addEventListener('click', () => {
+  const text = debugEntries.map(e => `[${e.ts}] [${e.level.toUpperCase()}] ${e.msg}`).join('\n');
+  const btn = document.getElementById('debug-copy-btn');
+  navigator.clipboard.writeText(text)
+    .then(() => { btn.textContent = '✓ copied'; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); })
+    .catch(() => { btn.textContent = 'failed'; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); });
+});
+
+dbg('Page loaded — ken-burns-zoom-builder v0.1');
+dbg(`User agent: ${navigator.userAgent}`);
+dbg(`SharedArrayBuffer available: ${typeof SharedArrayBuffer !== 'undefined'}`);
 
 const dropZone   = document.getElementById('drop-zone');
 const fileInput  = document.getElementById('file-input');
@@ -1363,8 +1508,16 @@ const exportProgText = document.getElementById('export-progress-text');
 const exportProgFill = document.getElementById('export-progress-fill');
 
 async function fetchWithProgress(url, mimeType, onProgress) {
-  const res = await fetch(url);
+  dbg(`Fetching: ${url.split('/').slice(-1)[0]} (${mimeType})`);
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (e) {
+    throw new Error(`Network error fetching ${url.split('/').slice(-1)[0]}: ${e.message}`);
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText} for ${url.split('/').slice(-1)[0]}`);
   const total = parseInt(res.headers.get('content-length') || '0');
+  if (!total) dbg(`  no content-length header — progress unknown`, 'warn');
   const reader = res.body.getReader();
   const chunks = [];
   let received = 0;
@@ -1378,23 +1531,31 @@ async function fetchWithProgress(url, mimeType, onProgress) {
   const all = new Uint8Array(received);
   let pos = 0;
   for (const chunk of chunks) { all.set(chunk, pos); pos += chunk.length; }
-  return URL.createObjectURL(new Blob([all], { type: mimeType }));
+  const blobUrl = URL.createObjectURL(new Blob([all], { type: mimeType }));
+  dbg(`  fetched ${(received / 1024).toFixed(0)} KB → blob URL`, 'ok');
+  return blobUrl;
 }
 
 async function initFFmpeg() {
+  dbg('initFFmpeg() called');
+  dbg(`FFmpegWASM global present: ${!!window.FFmpegWASM}`);
   if (!window.FFmpegWASM) {
-    loaderLabel.textContent = 'Video engine unavailable (script failed to load)';
+    dbg('FFmpegWASM script did not load — CDN blocked or network error', 'error');
+    loaderLabel.textContent = 'Video engine unavailable — open debug log for details';
     return;
   }
   try {
-    const { FFmpeg } = FFmpegWASM;
+    const { FFmpeg } = window.FFmpegWASM;
+    dbg(`FFmpeg class found: ${typeof FFmpeg}`);
     ffmpeg = new FFmpeg();
+    dbg('FFmpeg instance created');
+
+    ffmpeg.on('log', ({ message }) => dbg(`[ffmpeg] ${message}`));
 
     loaderLabel.textContent = 'Loading video engine…';
     loaderFill.style.width = '5%';
     loaderPct.textContent = '5%';
 
-    // Fetch core JS (small) then WASM (large, with progress)
     const coreURL = await fetchWithProgress(
       `${FFMPEG_CORE_BASE}/ffmpeg-core.js`, 'text/javascript'
     );
@@ -1410,7 +1571,9 @@ async function initFFmpeg() {
       }
     );
 
+    dbg('Calling ffmpeg.load({ coreURL, wasmURL })…');
     await ffmpeg.load({ coreURL, wasmURL });
+    dbg('ffmpeg.load() complete — video engine ready', 'ok');
 
     ffmpegReady = true;
     loaderLabel.textContent = 'Video engine ready';
@@ -1419,8 +1582,11 @@ async function initFFmpeg() {
     setTimeout(() => { loaderEl.style.display = 'none'; }, 800);
     btnDownload.disabled = false;
   } catch (err) {
+    const msg = err?.message || String(err);
+    dbg(`FFmpeg load failed: ${msg}`, 'error');
+    if (err?.stack) dbg(err.stack, 'error');
     console.error('[ken-burns] FFmpeg load failed:', err);
-    loaderLabel.textContent = 'Video engine failed to load';
+    loaderLabel.textContent = `Video engine failed — open debug log for details`;
     loaderPct.textContent = '';
   }
 }
@@ -1518,8 +1684,11 @@ async function exportVideo() {
     ffmpeg.deleteFile('output.mp4').catch(() => {});
 
   } catch (err) {
+    const msg = err?.message || String(err);
+    dbg(`Export failed: ${msg}`, 'error');
+    if (err?.stack) dbg(err.stack, 'error');
     console.error('[ken-burns] Export failed:', err);
-    exportProgText.textContent = '⚠ Export failed — see console';
+    exportProgText.textContent = '⚠ Export failed — open debug log for details';
   } finally {
     btnDownload.disabled = false;
     btnLabel.textContent = 'Export Video';
