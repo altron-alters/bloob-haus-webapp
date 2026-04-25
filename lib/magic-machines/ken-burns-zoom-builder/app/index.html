@@ -6,7 +6,7 @@
 <title>Ken Burns Zoom Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script type="module" src="/assets/js/visualizers/ken-burns-zoom.engine.js"></script>
-<script crossorigin="anonymous" src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+<!-- mp4-muxer loaded lazily inside exportVideo() via dynamic import -->
 <style>
   :root {
     --bg-a:      oklch(0.97 0.025 70);
@@ -578,29 +578,6 @@
     color: var(--dim); min-width: 28px; text-align: right;
   }
 
-  /* ── FFMPEG LOADER ── */
-  .ffmpeg-loader { margin-bottom: 10px; }
-  .ffmpeg-loader-text {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: space-between;
-  }
-  .ffmpeg-loader-track {
-    height: 3px;
-    background: oklch(0.60 0.04 55 / 0.15);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .ffmpeg-loader-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    width: 0%;
-    transition: width 0.2s ease;
-  }
   .btn-primary:disabled {
     opacity: 0.45;
     cursor: not-allowed;
@@ -931,16 +908,6 @@
     <!-- Export -->
     <div class="output-section">
       <div class="panel-section-title" style="margin-bottom:12px;">Export</div>
-
-      <div class="ffmpeg-loader" id="ffmpeg-loader">
-        <div class="ffmpeg-loader-text">
-          <span id="ffmpeg-loader-label">Loading video engine…</span>
-          <span id="ffmpeg-loader-pct">0%</span>
-        </div>
-        <div class="ffmpeg-loader-track">
-          <div class="ffmpeg-loader-fill" id="ffmpeg-loader-fill"></div>
-        </div>
-      </div>
 
       <button class="btn-primary" id="btn-download" disabled>
         <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1490,123 +1457,24 @@ document.getElementById('btn-copy-bloob').addEventListener('click', () => {
 function pad(n) { return String(n).padStart(4,' '); }
 
 // ─────────────────────────────────────────────
-// FFmpeg loading + video export
+// Video export — WebCodecs + mp4-muxer
+// No WASM, no workers, no cross-origin complexity.
+// mp4-muxer is loaded lazily on first export (~15 KB ESM).
 // ─────────────────────────────────────────────
-const FFMPEG_CORE_BASE   = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-// Worker chunk is a webpack artifact tied to the pinned ffmpeg version.
-// Must be fetched as a blob URL so new Worker() treats it as same-origin.
-const FFMPEG_WORKER_URL  = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/814.ffmpeg.js';
-let ffmpeg = null;
-let ffmpegReady = false;
-
-const loaderEl    = document.getElementById('ffmpeg-loader');
-const loaderLabel = document.getElementById('ffmpeg-loader-label');
-const loaderPct   = document.getElementById('ffmpeg-loader-pct');
-const loaderFill  = document.getElementById('ffmpeg-loader-fill');
-const btnDownload = document.getElementById('btn-download');
-const btnLabel    = document.getElementById('btn-download-label');
-const exportProg  = document.getElementById('export-progress');
+const btnDownload    = document.getElementById('btn-download');
+const btnLabel       = document.getElementById('btn-download-label');
+const exportProg     = document.getElementById('export-progress');
 const exportProgText = document.getElementById('export-progress-text');
 const exportProgFill = document.getElementById('export-progress-fill');
 
-async function fetchWithProgress(url, mimeType, onProgress) {
-  dbg(`Fetching: ${url.split('/').slice(-1)[0]} (${mimeType})`);
-  let res;
-  try {
-    res = await fetch(url);
-  } catch (e) {
-    throw new Error(`Network error fetching ${url.split('/').slice(-1)[0]}: ${e.message}`);
-  }
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText} for ${url.split('/').slice(-1)[0]}`);
-  const total = parseInt(res.headers.get('content-length') || '0');
-  if (!total) dbg(`  no content-length header — progress unknown`, 'warn');
-  const reader = res.body.getReader();
-  const chunks = [];
-  let received = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    received += value.length;
-    if (total && onProgress) onProgress(received / total);
-  }
-  const all = new Uint8Array(received);
-  let pos = 0;
-  for (const chunk of chunks) { all.set(chunk, pos); pos += chunk.length; }
-  const blobUrl = URL.createObjectURL(new Blob([all], { type: mimeType }));
-  dbg(`  fetched ${(received / 1024).toFixed(0)} KB → blob URL`, 'ok');
-  return blobUrl;
-}
-
-async function initFFmpeg() {
-  dbg('initFFmpeg() called');
-  dbg(`FFmpegWASM global present: ${!!window.FFmpegWASM}`);
-  if (!window.FFmpegWASM) {
-    dbg('FFmpegWASM script did not load — CDN blocked or network error', 'error');
-    loaderLabel.textContent = 'Video engine unavailable — open debug log for details';
+function checkVideoExport() {
+  if (typeof VideoEncoder === 'undefined') {
+    dbg('VideoEncoder (WebCodecs) not available in this browser', 'warn');
+    btnLabel.textContent = 'Export Video (unsupported)';
     return;
   }
-  try {
-    const { FFmpeg } = window.FFmpegWASM;
-    dbg(`FFmpeg class found: ${typeof FFmpeg}`);
-    ffmpeg = new FFmpeg();
-    dbg('FFmpeg instance created');
-
-    ffmpeg.on('log', ({ message }) => dbg(`[ffmpeg] ${message}`));
-
-    loaderLabel.textContent = 'Loading video engine…';
-    loaderFill.style.width = '5%';
-    loaderPct.textContent = '5%';
-
-    // Fetch all three files as blob URLs so Worker() treats them as same-origin.
-    // Cross-origin Worker URLs are blocked by browsers without COOP/COEP headers.
-    const classWorkerURL = await fetchWithProgress(FFMPEG_WORKER_URL, 'text/javascript');
-    loaderFill.style.width = '8%';
-    loaderPct.textContent = '8%';
-
-    // Fetch core JS as text and patch it: Emscripten UMD uses `var createFFmpegCore`
-    // which is scoped to the module in an ES module worker context (not globalThis).
-    // The @ffmpeg/ffmpeg worker checks globalThis.createFFmpegCore after import(),
-    // so we append an explicit global assignment to cover the module-worker case.
-    dbg('Fetching: ffmpeg-core.js (text/javascript)');
-    const coreRes = await fetch(`${FFMPEG_CORE_BASE}/ffmpeg-core.js`);
-    if (!coreRes.ok) throw new Error(`HTTP ${coreRes.status} fetching ffmpeg-core.js`);
-    const coreText = await coreRes.text();
-    const patchedCore = coreText +
-      '\n;if(typeof createFFmpegCore!=="undefined"&&!globalThis.createFFmpegCore)' +
-      'globalThis.createFFmpegCore=createFFmpegCore;';
-    const coreURL = URL.createObjectURL(new Blob([patchedCore], { type: 'text/javascript' }));
-    dbg(`  fetched ${(coreText.length / 1024).toFixed(0)} KB → patched blob URL`, 'ok');
-    loaderFill.style.width = '12%';
-    loaderPct.textContent = '12%';
-
-    const wasmURL = await fetchWithProgress(
-      `${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm',
-      pct => {
-        const total = 12 + Math.round(pct * 83);
-        loaderFill.style.width = total + '%';
-        loaderPct.textContent = total + '%';
-      }
-    );
-
-    dbg('Calling ffmpeg.load({ classWorkerURL, coreURL, wasmURL })…');
-    await ffmpeg.load({ classWorkerURL, coreURL, wasmURL });
-    dbg('ffmpeg.load() complete — video engine ready', 'ok');
-
-    ffmpegReady = true;
-    loaderLabel.textContent = 'Video engine ready';
-    loaderFill.style.width = '100%';
-    loaderPct.textContent = '100%';
-    setTimeout(() => { loaderEl.style.display = 'none'; }, 800);
-    btnDownload.disabled = false;
-  } catch (err) {
-    const msg = err?.message || String(err);
-    dbg(`FFmpeg load failed: ${msg}`, 'error');
-    if (err?.stack) dbg(err.stack, 'error');
-    console.error('[ken-burns] FFmpeg load failed:', err);
-    loaderLabel.textContent = `Video engine failed — open debug log for details`;
-    loaderPct.textContent = '';
-  }
+  dbg('VideoEncoder (WebCodecs) available', 'ok');
+  btnDownload.disabled = false;
 }
 
 function computeOutputSize() {
@@ -1626,7 +1494,6 @@ const EASING_FNS = {
 
 async function exportVideo() {
   if (!state.imageLoaded) { flashFootnote('⚠ Load an image first'); return; }
-  if (!ffmpegReady)        { flashFootnote('⚠ Video engine not ready yet'); return; }
 
   btnDownload.disabled = true;
   btnLabel.textContent = 'Exporting…';
@@ -1640,14 +1507,59 @@ async function exportVideo() {
   const iw = previewImg.naturalWidth;
   const ih = previewImg.naturalHeight;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = outW; canvas.height = outH;
-  const ctx = canvas.getContext('2d');
+  dbg(`Export start: ${outW}×${outH} @ ${state.fps}fps, ${totalFrames} frames`);
 
   try {
-    // Phase 1: render frames to FFmpeg virtual FS
+    // Lazy-load mp4-muxer (~15 KB ESM, no workers, no WASM)
+    exportProgText.textContent = 'Loading muxer…';
+    dbg('Importing mp4-muxer…');
+    const { Muxer, ArrayBufferTarget } = await import(
+      'https://unpkg.com/mp4-muxer@5.1.3/build/mp4-muxer.js'
+    );
+    dbg('mp4-muxer imported', 'ok');
+
+    // Find best supported H.264 codec
+    const codecCandidates = ['avc1.640034', 'avc1.4d0034', 'avc1.42003e'];
+    let codec = null;
+    for (const c of codecCandidates) {
+      try {
+        const { supported } = await VideoEncoder.isConfigSupported({
+          codec: c, width: outW, height: outH, framerate: state.fps, bitrate: 8_000_000
+        });
+        if (supported) { codec = c; break; }
+      } catch {}
+    }
+    if (!codec) throw new Error('No supported H.264 codec found in this browser');
+    dbg(`Codec selected: ${codec}`, 'ok');
+
+    // Set up muxer
+    const target = new ArrayBufferTarget();
+    const muxer = new Muxer({
+      target,
+      video: { codec: 'avc', width: outW, height: outH, frameRate: state.fps },
+      fastStart: 'in-memory',
+    });
+
+    // Set up encoder
+    const videoChunks = [];
+    const encoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: e => { throw e; },
+    });
+    encoder.configure({
+      codec, width: outW, height: outH,
+      framerate: state.fps, bitrate: 8_000_000,
+      latencyMode: 'quality',
+    });
+
+    // Render + encode all frames (faster than real-time — no waiting)
+    const canvas = document.createElement('canvas');
+    canvas.width = outW; canvas.height = outH;
+    const ctx = canvas.getContext('2d');
+
+    exportProgText.textContent = 'Encoding…';
     for (let i = 0; i < totalFrames; i++) {
-      const t = totalFrames > 1 ? i / (totalFrames - 1) : 0;
+      const t  = totalFrames > 1 ? i / (totalFrames - 1) : 0;
       const et = easeFn(t);
       const rx = (rs.x + (re.x - rs.x) * et) / 100 * iw;
       const ry = (rs.y + (re.y - rs.y) * et) / 100 * ih;
@@ -1657,37 +1569,26 @@ async function exportVideo() {
       ctx.clearRect(0, 0, outW, outH);
       ctx.drawImage(previewImg, rx, ry, rw, rh, 0, 0, outW, outH);
 
-      const buf = await new Promise((res, rej) => {
-        canvas.toBlob(b => b ? res(b.arrayBuffer()) : rej(new Error('toBlob failed')), 'image/jpeg', 0.92);
-      }).then(ab => new Uint8Array(ab));
+      const frame = new VideoFrame(canvas, {
+        timestamp: Math.round(i / state.fps * 1e6),
+        duration:  Math.round(1  / state.fps * 1e6),
+      });
+      encoder.encode(frame, { keyFrame: i % 30 === 0 });
+      frame.close();
 
-      await ffmpeg.writeFile(`frame${String(i).padStart(4,'0')}.jpg`, buf);
-
-      const framePct = Math.round((i + 1) / totalFrames * 70);
-      exportProgFill.style.width = framePct + '%';
-      exportProgText.textContent = `Rendering frame ${i + 1} / ${totalFrames}`;
-      // Yield to browser to keep UI responsive
-      if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+      exportProgFill.style.width = Math.round((i + 1) / totalFrames * 90) + '%';
+      exportProgText.textContent = `Encoding ${i + 1} / ${totalFrames}`;
+      if (i % 20 === 0) await new Promise(r => setTimeout(r, 0)); // keep UI alive
     }
 
-    // Phase 2: FFmpeg encode
-    exportProgText.textContent = 'Encoding…';
-    ffmpeg.on('progress', ({ progress }) => {
-      exportProgFill.style.width = (70 + Math.round(progress * 28)) + '%';
-    });
+    await encoder.flush();
+    muxer.finalize();
 
-    await ffmpeg.exec([
-      '-framerate', String(state.fps),
-      '-i', 'frame%04d.jpg',
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p',
-      '-preset', 'medium', '-movflags', '+faststart',
-      'output.mp4'
-    ]);
+    const { buffer } = target;
+    dbg(`Encoded: ${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB MP4`, 'ok');
 
-    // Phase 3: download
-    const data = await ffmpeg.readFile('output.mp4');
-    const url  = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-    const a    = document.createElement('a');
+    const url = URL.createObjectURL(new Blob([buffer], { type: 'video/mp4' }));
+    const a   = document.createElement('a');
     a.href = url; a.download = 'ken-burns-zoom.mp4'; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
 
@@ -1695,18 +1596,11 @@ async function exportVideo() {
     exportProgText.textContent = '✓ Done';
     setTimeout(() => { exportProg.classList.remove('visible'); exportProgFill.style.width = '0%'; }, 2000);
 
-    // Clean up virtual FS
-    for (let i = 0; i < totalFrames; i++) {
-      ffmpeg.deleteFile(`frame${String(i).padStart(4,'0')}.jpg`).catch(() => {});
-    }
-    ffmpeg.deleteFile('output.mp4').catch(() => {});
-
   } catch (err) {
     const msg = err?.message || String(err);
     dbg(`Export failed: ${msg}`, 'error');
     if (err?.stack) dbg(err.stack, 'error');
-    console.error('[ken-burns] Export failed:', err);
-    exportProgText.textContent = '⚠ Export failed — open debug log for details';
+    exportProgText.textContent = '⚠ Export failed — open debug log';
   } finally {
     btnDownload.disabled = false;
     btnLabel.textContent = 'Export Video';
@@ -1733,8 +1627,8 @@ function flashFootnote(msg) {
   fn._t = setTimeout(() => { fn.innerHTML = orig; }, 2500);
 }
 
-// Start loading FFmpeg in the background as soon as the page is ready
-initFFmpeg();
+// Check WebCodecs availability and enable export button
+checkVideoExport();
 
 updateSummary();
 </script>
