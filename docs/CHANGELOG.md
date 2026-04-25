@@ -6,6 +6,20 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 31 - April 25, 2026
+**Worked on:** ken-burns-zoom-builder video export fix, bounce export, dev tooling (magic machine server + single-page build filter)
+
+- **Fix:** Self-hosted `mp4-muxer` v5.1.3 in `app/vendor/mp4-muxer.mjs` — CDN dynamic import (`unpkg` UMD, `esm.sh`) silently returned undefined exports; local file fixes it across all deployment contexts
+- **Fix:** `eleventy.config.js` passthrough now copies entire `app/` directory (not just `index.html`) so vendor/ subdirectories are included in builds
+- **Fix:** `bundle-visualizers.js` now creates `_data/` output directory before writing `visualizers.json` (was crashing on fresh bundle targets)
+- **Feature:** Bounce export renders a full ping-pong video (2× duration): 0→1 forward, 1→0 reverse; seamlessly loopable
+- **Feature:** Export filename now derived from image name: `ken-burns-animation-{slug}.mp4`
+- **Feature:** `features.magic_machines` flag in `sites/*.yaml` — disabled on `alter-engineers`, enabled on `marbles`
+- **Fix:** `sites/marbles.yaml` URL corrected from `marbles.bloob.haus` → `leons.bloob.haus` (was causing wrong og:url in page metadata)
+- **Tooling:** `npm run dev:magic-machine <name>` — lightweight static server for GUI magic machine dev; no Eleventy, no content repo; bundles visualizer assets once (~3s) then serves on port 8090
+- **Tooling:** `--page=<path>` flag for `dev:*` commands — filters preprocessing to one file for fast visualizer testing
+- **Tooling:** `scripts/test-ken-burns-export.js` — Playwright headless test; injects image, triggers export, reads debug log; run against local server or deployed URL
+
 ### Session 30 - April 21, 2026
 **Worked on:** folder-preview slider-cards, musings infinite_scroll, color pair `orange` token + `--pair-label`, image-text image overflow fix, CONTENT_DIR env var bug fix
 

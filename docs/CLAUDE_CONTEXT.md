@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-03-19
+**Last Updated:** 2026-04-25
 **Current Phase:** alter-engineers theme under active development. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -34,10 +34,11 @@
 
 **LIVE SITES:**
 - https://buffbaby.bloob.haus (Buff Baby Kitchen)
-- marbles.bloob.haus (Leon's Marbles — not yet deployed)
+- https://leons.bloob.haus (Leon's Marbles — Cloudflare project name: `leons`, content repo: `LSanten/bloob-haus-marbles`)
 
 **IN DEVELOPMENT:**
 - alter-engineers site (`sites/alter-engineers.yaml`, theme `themes/alter-engineers/`) — Most homepage sections are now content-driven from `index.md`. Live: hero, team (image-grid), heading-and-paragraph, services, slideshow (partners logos), image-text (solutions), musings, testimonials, folder-preview (articles slider-cards). Remaining TODO: `card-preview` (projects grid). Content repo at `C:/ae-dev/alter-website-content/` (separate git repo). Dev command: `npm run dev:alter-engineers`
+- `ken-burns-zoom-builder` magic machine — working video export (WebCodecs + self-hosted mp4-muxer). Served at `/magic-machine/ken-burns-zoom-builder/` on sites with `features.magic_machines: true`. Disabled on alter-engineers.
 
 ---
 
@@ -86,9 +87,13 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 
 **Build pipeline:**
 ```bash
-npm run build           # Full build (defaults to buffbaby)
-npm run build:buffbaby  # Explicit buffbaby build
-npm run dev             # Eleventy dev server with hot reload
+npm run build                             # Full build (defaults to buffbaby)
+npm run build:buffbaby                    # Explicit buffbaby build
+npm run dev                               # Eleventy dev server with hot reload
+npm run dev:alter-engineers               # Dev server for alter-engineers site
+npm run dev:alter-engineers -- --page=projects/my-page.md  # Build only one file (fast visualizer testing)
+npm run dev:magic-machine ken-burns-zoom-builder  # Standalone magic machine server (port 8090, no Eleventy)
+node scripts/test-ken-burns-export.js [url]       # Playwright headless export test
 ```
 
 **Deployment (GitHub Actions → Cloudflare Pages):**
