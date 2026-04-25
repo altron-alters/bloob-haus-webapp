@@ -1500,14 +1500,15 @@ async function exportVideo() {
   exportProg.classList.add('visible');
 
   const { w: outW, h: outH } = computeOutputSize();
-  const totalFrames = Math.round(state.duration * state.fps);
+  const halfFrames  = Math.round(state.duration * state.fps);
+  const totalFrames = state.playback === 'bounce' ? halfFrames * 2 : halfFrames;
   const easeFn = EASING_FNS[state.easing] || EASING_FNS['linear'];
   const rs = state.direction === 'in' ? state.rects.start : state.rects.end;
   const re = state.direction === 'in' ? state.rects.end   : state.rects.start;
   const iw = previewImg.naturalWidth;
   const ih = previewImg.naturalHeight;
 
-  dbg(`Export start: ${outW}×${outH} @ ${state.fps}fps, ${totalFrames} frames`);
+  dbg(`Export start: ${outW}×${outH} @ ${state.fps}fps, ${totalFrames} frames (${state.playback})`);
 
   try {
     // Lazy-load mp4-muxer (self-hosted ~30 KB ESM, no workers, no WASM)
@@ -1559,7 +1560,15 @@ async function exportVideo() {
 
     exportProgText.textContent = 'Encoding…';
     for (let i = 0; i < totalFrames; i++) {
-      const t  = totalFrames > 1 ? i / (totalFrames - 1) : 0;
+      // bounce: 0→1 forward, then 1→0 backward (ping-pong)
+      let t;
+      if (state.playback === 'bounce') {
+        t = i < halfFrames
+          ? i / Math.max(1, halfFrames - 1)
+          : (2 * halfFrames - 1 - i) / Math.max(1, halfFrames - 1);
+      } else {
+        t = totalFrames > 1 ? i / (totalFrames - 1) : 0;
+      }
       const et = easeFn(t);
       const rx = (rs.x + (re.x - rs.x) * et) / 100 * iw;
       const ry = (rs.y + (re.y - rs.y) * et) / 100 * ih;
@@ -1588,8 +1597,10 @@ async function exportVideo() {
     dbg(`Encoded: ${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB MP4`, 'ok');
 
     const url = URL.createObjectURL(new Blob([buffer], { type: 'video/mp4' }));
-    const a   = document.createElement('a');
-    a.href = url; a.download = 'ken-burns-zoom.mp4'; a.click();
+    const rawName = document.getElementById('image-credit').textContent.split('·')[0].trim();
+    const slug = rawName.replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'image';
+    const a = document.createElement('a');
+    a.href = url; a.download = `ken-burns-animation-${slug}.mp4`; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
 
     exportProgFill.style.width = '100%';
