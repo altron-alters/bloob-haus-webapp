@@ -10,6 +10,7 @@
     "dev:buffbaby": "node scripts/dev-local.js --site=buffbaby --content=../buffbaby",
     "dev:marbles": "node scripts/dev-local.js --site=marbles --content=../bloob-haus-marbles",
     "dev:alter-engineers": "node scripts/dev-local.js --site=alter-engineers --content=../alter-website-content",
+    "dev:magic-machine": "node scripts/dev-magic-machine.js",
     "assemble": "node scripts/assemble-src.js",
     "eleventy": "npx @11ty/eleventy",
     "build:search": "npx pagefind --site _site",

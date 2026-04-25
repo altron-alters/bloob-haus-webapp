@@ -18,7 +18,7 @@ import {
   mkdirSync,
   writeFileSync,
 } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
 import { build } from "esbuild";
 
 const VISUALIZERS_DIR = "lib/visualizers";
@@ -30,6 +30,7 @@ const DATA_OUT = `${SRC}/_data/visualizers.json`;
 // Ensure output directories exist
 mkdirSync(JS_OUT_DIR, { recursive: true });
 mkdirSync(CSS_OUT_DIR, { recursive: true });
+mkdirSync(dirname(DATA_OUT), { recursive: true });
 
 // Auto-discover visualizer folders
 const visualizerDirs = readdirSync(VISUALIZERS_DIR, { withFileTypes: true })

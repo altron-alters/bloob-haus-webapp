@@ -75,6 +75,7 @@ export async function preprocessContent({
   contentDir = path.join(ROOT_DIR, "content-source"),
   outputDir,
   staticDir,
+  pageFilter,   // optional: relative path or filename — build only this one file
 } = {}) {
   const BUILD_TARGET = getBuildTarget();
   outputDir = outputDir || OUTPUT_DIRS[BUILD_TARGET].content;
@@ -122,8 +123,25 @@ export async function preprocessContent({
 
   // Step 2: Filter publishable files
   console.log("\n--- Step 2: Filtering publishable files ---");
-  const { published, excluded } = await filterPublishableFiles(contentDir, publishOptions);
+  let { published, excluded } = await filterPublishableFiles(contentDir, publishOptions);
   stats.filesExcluded = excluded.length;
+
+  // Single-page mode: build only one file for fast dev/visualizer testing
+  if (pageFilter) {
+    const needle = pageFilter.replace(/\\/g, "/").replace(/^\//, "");
+    const match = published.find((f) => {
+      const rel = f.relativePath.replace(/\\/g, "/");
+      return rel === needle || rel.endsWith("/" + needle) || path.basename(rel) === path.basename(needle);
+    });
+    if (match) {
+      console.log(`\n[page-filter] ⚡ Single-page mode: ${match.relativePath}`);
+      console.log(`[page-filter]    Skipping ${published.length - 1} other file(s).`);
+      published = [match];
+    } else {
+      console.warn(`\n[page-filter] ⚠ '${pageFilter}' not found in published files — building all.`);
+      console.warn(`[page-filter]   (File may be a draft or excluded by publish rules.)`);
+    }
+  }
 
   // Step 3: Build file index
   console.log("\n--- Step 3: Building file index ---");

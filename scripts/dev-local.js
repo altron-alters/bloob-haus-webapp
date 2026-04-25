@@ -31,13 +31,20 @@ function getContentDir() {
   return path.join(ROOT_DIR, "content-source");
 }
 
+function getPageFilter() {
+  const arg = process.argv.find((a) => a.startsWith("--page="));
+  return arg ? arg.slice(7) : null;
+}
+
 async function devLocal() {
   const siteName = resolveSiteName();
   const contentDir = getContentDir();
+  const pageFilter = getPageFilter();
 
   console.log("\n========================================");
   console.log(`  LOCAL DEV (site: ${siteName})`);
   console.log(`  Content: ${contentDir}`);
+  if (pageFilter) console.log(`  Page filter: ${pageFilter}`);
   console.log("========================================\n");
 
   // Load site config with _bloob-settings.md merged from content directory
@@ -59,7 +66,7 @@ async function devLocal() {
   process.env.SRC_DIR = srcDir;
 
   // Step 1: Preprocess content (must run before assemble — copies attachments needed for favicons)
-  await preprocessContent({ contentDir });
+  await preprocessContent({ contentDir, ...(pageFilter && { pageFilter }) });
 
   // Step 1.5: Generate OG preview images (same gate as prod pipeline)
   if (config.features?.og_images) {
