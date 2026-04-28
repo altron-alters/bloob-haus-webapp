@@ -138,13 +138,6 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
  * @returns {Object} Attachment index mapping filenames to output paths
  */
 export async function buildAttachmentIndex(contentDir, attachmentFolder) {
-  const attachmentDir = path.join(contentDir, attachmentFolder);
-
-  if (!(await fs.pathExists(attachmentDir))) {
-    console.log(`[index] No attachment folder found at: ${attachmentFolder}`);
-    return {};
-  }
-
   const extensions = [
     "jpg",
     "jpeg",
@@ -157,13 +150,20 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
   ];
   const pattern = `**/*.{${extensions.join(",")}}`;
 
-  const files = await glob(pattern, { cwd: attachmentDir, nodir: true });
+  // Scan the entire vault so users can place images anywhere — mirrors Obsidian's
+  // own resolution behaviour (attachmentFolderPath only controls where Obsidian
+  // *pastes* new files, not where it *finds* existing ones).
+  // Exclude system directories that are never user content.
+  const files = await glob(pattern, {
+    cwd: contentDir,
+    nodir: true,
+    ignore: [".obsidian/**", "node_modules/**", ".git/**"],
+  });
 
   const attachments = {};
 
   for (const file of files) {
     const filename = path.basename(file);
-    // Decode URL-encoded filenames (e.g., "Pasted%20image" → "Pasted image")
     const decodedFilename = decodeURIComponent(filename);
 
     // Encode filename for use in URLs (spaces → %20, etc.)
@@ -178,7 +178,7 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
     attachments[decodedFilename.toLowerCase()] = mediaPath;
   }
 
-  console.log(`[index] Indexed ${files.length} attachments`);
+  console.log(`[index] Indexed ${files.length} attachments from vault`);
 
   return attachments;
 }

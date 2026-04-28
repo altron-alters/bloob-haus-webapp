@@ -393,6 +393,7 @@ html { margin-top: 0 !important; }
 /* Paragraphs */
 .image-text__text-container > p {
   color: var(--pair-text, #ffffff);
+  font-weight: 400;
   line-height: 1.6;
   margin: 0 0 0.5rem;
 }

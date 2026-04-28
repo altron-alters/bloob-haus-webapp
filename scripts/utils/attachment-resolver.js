@@ -89,17 +89,12 @@ export function extractFirstImage(content) {
  * @returns {Object} { copied, errors } - stats about copied files
  */
 export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
-  const sourceDir = path.join(contentDir, attachmentFolder);
-
-  if (!(await fs.pathExists(sourceDir))) {
-    console.log(`[attachments] No attachment folder found at: ${sourceDir}`);
-    return { copied: [], errors: [] };
-  }
-
   // Ensure output directory exists
   await fs.ensureDir(outputDir);
 
-  // Find all attachment files
+  // Scan the entire vault — mirrors Obsidian's resolution behaviour.
+  // attachmentFolder is retained as a parameter for API compatibility but
+  // is no longer used to restrict the scan.
   const extensions = [
     "jpg",
     "jpeg",
@@ -113,7 +108,11 @@ export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
     "webm",
   ];
   const pattern = `**/*.{${extensions.join(",")}}`;
-  const files = await glob(pattern, { cwd: sourceDir, nodir: true });
+  const files = await glob(pattern, {
+    cwd: contentDir,
+    nodir: true,
+    ignore: [".obsidian/**", "node_modules/**", ".git/**"],
+  });
 
   console.log(`[attachments] Found ${files.length} attachments to copy`);
 
@@ -121,7 +120,7 @@ export async function copyAttachments(contentDir, attachmentFolder, outputDir) {
   const errors = [];
 
   for (const file of files) {
-    const sourcePath = path.join(sourceDir, file);
+    const sourcePath = path.join(contentDir, file);
     const destPath = path.join(outputDir, path.basename(file));
 
     try {

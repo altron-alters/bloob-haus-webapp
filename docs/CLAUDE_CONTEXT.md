@@ -377,15 +377,21 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 
 ## What to Do Next
 
-Multi-site is **OPERATIONAL**. alter-engineers theme homepage renders at localhost:8080 but all content is hardcoded in `homepage.njk`.
+**alter-engineers is the active focus.** All homepage sections now render from `index.md` via `{{ content | safe }}`. Dev command now points to the live content vault at `G:/Shared drives/.../Website/_live-website-content-obsidian-repo`. Detailed plan: `docs/implementation-plans/phases/ae-launch/2026-04-28_ae-launch-sprint.md`.
 
-**Current priorities (alter-engineers):**
-1. Make homepage content-driven: replace hardcoded HTML in `themes/alter-engineers/layouts/homepage.njk` with data from content repo
-2. Extend `folder-preview` visualizer with `style: cards` option (renders image + title cards using `node.image` from graph.json) — benefits all sites
-3. Build `projects-preview` hybrid visualizer (explicit ordered wikilink list → cards from graph.json)
-4. Build build-time visualizers for `team-grid`, `musings`, `testimonials`, `slideshow` (all data is inline YAML in code fence — no graph.json needed)
-5. Add images to project `.md` files (then `node.image` is auto-populated in graph.json)
-6. Deploy pipeline (GitHub Actions + Cloudflare Pages for alter-engineers)
+**Bug fixes (priority order):**
+1. **Hero floating arrows** — `folder-preview/browser.js` adds `.swiper-button-prev/.swiper-button-next` classes to nav elements; Swiper CSS positions them absolutely and they escape to the viewport edges. Fix: remove those default classes, style custom `.articles__prev-button/.articles__next-button` in `folder-preview/styles.css`.
+2. **Musings scroll passthrough** — add `releaseOnEdges: true` to mousewheel config in `quotes-stack/browser.js` so page scrolls resume when carousel hits the end.
+3. **OUR SOLUTIONS text weight** — paragraph in `::: image-text id=solutions` is too heavy; fix via `main.css` `.image-text p` selector.
+4. **Musings → quotes-stack rename** — rename folder + manifest trigger; keep CSS class names/IDs unchanged (theme.min.js compatibility).
+
+**New feature:**
+5. ✅ **Redirect support (universal)** — `redirect:` or `Redirect:` frontmatter → meta refresh + JS redirect on page load; folder-preview cards open redirect URL in new tab. Implemented: `scripts/utils/redirect-resolver.js`, wired into `preprocess-content.js`, `graph-builder.js`, `_base/head.njk`, `folder-preview/browser.js`.
+
+**Remaining AE tasks:**
+6. Add images to project `.md` files (so `card-preview` shows photos)
+7. Deploy pipeline — GitHub Actions + Cloudflare Pages for alter-engineers
+8. Cleanup: update `homepage.njk` comments (all sections now live via content)
 
 **Other sites:**
 - Deploy marbles to Cloudflare Pages (create project + workflow)

@@ -15,7 +15,7 @@
         <div class="header-navigation-bar__mobile">
             <div class="header-navigation-bar__mobile-logo">
                 <a href="{{ "/" | url }}" class="custom-logo-link" rel="home">
-                    <img width="241" height="46" src="{{ "/assets/images/Group-49.svg" | url }}" class="custom-logo" alt="{{ site.title }}">
+                    <img width="241" height="46" src="{{ (site.logo if site.logo else "/assets/images/Group-49.svg") | url }}" class="custom-logo" alt="{{ site.title }}">
                 </a>
             </div>
             <div class="header-navigation-bar__mobile-hamburger-menu">
@@ -38,7 +38,7 @@
         <div class="header-navigation-bar__desktop">
             <div class="header-navigation-bar__desktop-logo">
                 <a href="{{ "/" | url }}" class="custom-logo-link" rel="home">
-                    <img width="241" height="46" src="{{ "/assets/images/Group-49.svg" | url }}" class="custom-logo" alt="{{ site.title }}">
+                    <img width="241" height="46" src="{{ (site.logo if site.logo else "/assets/images/Group-49.svg") | url }}" class="custom-logo" alt="{{ site.title }}">
                 </a>
             </div>
             <div class="header-navigation-bar__desktop-nav-items">

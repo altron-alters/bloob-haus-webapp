@@ -8,9 +8,18 @@
 
 ## Current Focus
 
-**Phase 2: Enhanced Linking & API Foundation**
+**AE Launch Sprint** — Ship the Alter Engineers website.
 
-See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for detailed tasks.
+See [AE Launch Sprint Plan](phases/ae-launch/2026-04-28_ae-launch-sprint.md) for the full task list.
+
+**Quick summary:**
+1. Bug: hero floating arrows (folder-preview Swiper CSS escape)
+2. Bug: musings scroll passthrough at carousel end
+3. Bug: OUR SOLUTIONS text weight too heavy
+4. Feature: redirect support (universal — `redirect:` frontmatter → meta redirect + folder-preview new-tab links)
+5. Rename: musings visualizer → quotes-stack
+6. Content: add images to project pages
+7. Deploy: GitHub Actions + Cloudflare Pages for alter-engineers
 
 ---
 
@@ -20,8 +29,9 @@ See [Phase 2 Implementation Plan](phases/phase-2/phase-2-linking-api.md) for det
 |-------|-------|--------|---------|
 | Phase 1 | Recipe site (buffbaby.bloob.haus) | ✅ Complete | [Archived Plan](_completed/phase-1-implementation-plan.md) |
 | Migration | Hugo → Eleventy (M0-M7) | ✅ Complete | [Migration Plan](_completed/2026-02-05_Migration-plan-from%20HUGO%20to%20ELEVENTY.md) |
-| Phase 2 | Enhanced linking + API foundation | 🔧 Active (validation remaining) | [Phase 2 Plan](phases/phase-2/phase-2-linking-api.md) |
+| Phase 2 | Enhanced linking + API foundation | ✅ Complete | [Phase 2 Plan](phases/phase-2/phase-2-linking-api.md) |
 | Phase 2.5 | Tags, search, page preview | ✅ Complete | [Archived Plan](_completed/2026-02-08%20tag%20system%20and%20search%20implementation.md) |
+| AE Launch | Alter Engineers site — bug fixes, redirect feature, deploy | 🔧 Active | [AE Launch Sprint](phases/ae-launch/2026-04-28_ae-launch-sprint.md) |
 | Phase 3 | Quick Mode + Multi-user | ⏳ Future | See below |
 | Phase 4 | Interactive visualizers + Magic Machines | ⏳ Future | See below |
 | Phase 5+ | Advanced features | 💡 Ideas | See below |

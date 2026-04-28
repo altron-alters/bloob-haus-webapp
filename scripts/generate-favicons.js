@@ -90,7 +90,7 @@ function resolveLogoPath(rawValue, srcDir) {
  */
 export async function generateFavicons({ config }) {
   const SRC_DIR = getSrcDir();
-  const rawLogo = config.site?.logo || config.site?.favicon;
+  const rawLogo = config.site?.favicon || config.site?.logo;
   if (!rawLogo) {
     console.log("[favicon] No logo/favicon set in site config — skipping");
     return;

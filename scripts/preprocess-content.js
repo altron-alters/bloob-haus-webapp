@@ -6,7 +6,7 @@
 import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { glob } from "glob";
 
 import { readObsidianConfig } from "./utils/config-reader.js";
@@ -35,6 +35,7 @@ import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
+import { resolveRedirect } from "./utils/redirect-resolver.js";
 import {
   readBloobObjects,
   normalizeBloobObject,
@@ -276,13 +277,26 @@ export async function preprocessContent({
     // 6h: Normalize bloob-object type
     const bloobObject = normalizeBloobObject(frontmatter["bloob-object"]);
 
+    // Resolve redirect frontmatter (supports bare URLs, [[wiki-links]], [text](url)).
+    // Accept both `redirect:` and `Redirect:` (YAML is case-sensitive; vault authors may use either).
+    const resolvedRedirect = resolveRedirect(
+      frontmatter.redirect || frontmatter.Redirect,
+      fileIndex,
+    );
+
     const outputFrontmatter = {
       ...frontmatter,
       title: pageTitle,
       slug: pageInfo?.slug,
       tags: pageTags,
       ...(bloobObject && { bloob_object: bloobObject }),
+      ...(resolvedRedirect && { redirect: resolvedRedirect }),
     };
+
+    // Propagate redirect to graph node
+    if (resolvedRedirect && pageInfo && perPageLinks[pageInfo.url]) {
+      perPageLinks[pageInfo.url].redirect = resolvedRedirect;
+    }
 
     // Store bloob icon path on graph node for use in pills and the connections graph.
     // - Specific image → resized icon at /assets/objects/bloob-icons/[type]-icon.png
@@ -414,7 +428,7 @@ export async function preprocessContent({
   });
   for (const hookFile of hookFiles) {
     try {
-      const mod = await import(path.join(ROOT_DIR, hookFile));
+      const mod = await import(pathToFileURL(path.join(ROOT_DIR, hookFile)).href);
       if (typeof mod.preprocessHook === "function") {
         console.log(`[preprocess] Running hook: ${hookFile}`);
         await mod.preprocessHook({ contentDir, outputDir });

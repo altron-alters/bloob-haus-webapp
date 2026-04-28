@@ -187,7 +187,7 @@ return `<section class="my-section${extraClass}"${styleAttr}>...</section>`;
 
 Settings that apply to specific visualizers regardless of theme.
 
-### `musings` code fence
+### `quotes-stack` code fence
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
