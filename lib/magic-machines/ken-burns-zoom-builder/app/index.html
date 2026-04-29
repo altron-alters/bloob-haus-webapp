@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ken Burns Zoom Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500&display=swap" rel="stylesheet">
 <script type="module" src="/assets/js/visualizers/ken-burns-zoom.engine.js"></script>
 <!-- mp4-muxer v5.1.3 self-hosted at vendor/mp4-muxer.mjs — loaded lazily inside exportVideo() -->
 <style>
@@ -150,16 +151,19 @@
 
   .tagline-bar {
     flex-shrink: 0;
-    padding: 0 20px;
-    height: 32px;
+    padding: 6px 20px;
+    min-height: 32px;
+    height: auto;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     font-family: var(--sans);
     font-size: 11.5px;
     color: var(--dim);
     background: oklch(0.98 0.015 65 / 0.50);
     border-bottom: 1px solid var(--glass-border);
-    gap: 0;
+    gap: 0 4px;
+    line-height: 1.6;
   }
   .tagline-bar a {
     color: var(--accent);
@@ -588,6 +592,10 @@
     flex: 1; height: 3px;
     background: oklch(0.60 0.04 55 / 0.18);
     border-radius: 2px; overflow: hidden;
+    cursor: pointer;
+    padding: 6px 0;
+    margin: -6px 0;
+    box-sizing: content-box;
   }
   .preview-progress-fill {
     height: 100%; background: var(--accent); border-radius: 2px; width: 0%;
@@ -623,6 +631,114 @@
     border-radius: 2px;
     width: 0%;
     transition: width 0.15s linear;
+  }
+
+  /* ── TEXT INPUT ── */
+  .text-input {
+    width: 100%;
+    background: oklch(1 0 0 / 0.55);
+    border: 1px solid oklch(0.60 0.04 55 / 0.20);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 6px 9px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .text-input::placeholder { color: var(--dim); }
+  .text-input:focus { border-color: var(--accent); }
+
+  /* ── CAPTION OVERLAY (on preview viewport) ── */
+  .caption-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .caption-rule {
+    width: 38px;
+    height: 1px;
+    background: var(--caption-color, #ffffff);
+    opacity: 0.82;
+    margin-bottom: 5px;
+    filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
+  }
+  .caption-subtitle-el {
+    font-family: 'Satoshi', -apple-system, sans-serif;
+    font-size: 8.5px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.70);
+    text-shadow:
+      0 0 28px rgba(0,0,0,0.85),
+      0 0 14px rgba(0,0,0,0.70),
+      0 0 5px  rgba(0,0,0,0.55);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    display: none;
+  }
+  .caption-subtitle-el.visible { display: block; }
+
+  .caption-text-el {
+    font-family: 'Satoshi', -apple-system, sans-serif;
+    font-size: 10px;
+    font-weight: 300;
+    font-variant: small-caps;
+    color: rgba(255,255,255,0.92);
+    text-shadow:
+      0 0 28px rgba(0,0,0,0.85),
+      0 0 14px rgba(0,0,0,0.70),
+      0 0 5px  rgba(0,0,0,0.55);
+    letter-spacing: 0.07em;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+  }
+
+  /* ── COLOR PICKER ── */
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .color-swatch {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    border: 1.5px solid oklch(0.60 0.04 55 / 0.25);
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 4px oklch(0.40 0.04 55 / 0.12);
+  }
+  .color-swatch input[type=color] {
+    position: absolute;
+    inset: -4px;
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    opacity: 0;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .color-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
   }
 
   /* Scrollbar */
@@ -832,6 +948,11 @@
       <div class="preview-viewport" id="preview-viewport">
         <div class="preview-placeholder" id="preview-placeholder">drop an image<br>to see preview</div>
         <img id="preview-anim-img" src="" alt="">
+        <div class="caption-overlay" id="caption-overlay">
+          <div class="caption-rule"></div>
+          <div class="caption-subtitle-el" id="caption-subtitle-el"></div>
+          <div class="caption-text-el" id="caption-text-el"></div>
+        </div>
       </div>
       <div class="preview-controls">
         <button class="btn-preview-play" id="btn-preview-play" title="Play / Pause">
@@ -886,6 +1007,49 @@
           <button class="seg-btn" data-playback="loop" title="Jump back to start and repeat">↺ loop</button>
           <button class="seg-btn" data-playback="hold" title="Stop at end frame">■ hold</button>
           <button class="seg-btn active" data-playback="bounce" title="Smoothly reverse back to start">↔ bounce</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Caption -->
+    <div class="panel-section">
+      <div class="panel-section-title">Caption</div>
+
+      <div class="field">
+        <div class="seg-group" id="caption-toggle">
+          <button class="seg-btn active" data-cap="off">Off</button>
+          <button class="seg-btn" data-cap="on">On</button>
+        </div>
+      </div>
+
+      <div id="caption-fields" style="display:none;">
+        <div class="field">
+          <div class="field-label">Top line <span style="font-size:10px;color:var(--dim);font-weight:400;">— optional</span></div>
+          <input class="text-input" id="caption-subtitle" type="text" placeholder="e.g. Sony A7 IV · 85mm" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="field-label">Bottom line</div>
+          <input class="text-input" id="caption-location" type="text" placeholder="Bali, Indonesia" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="field-label">Date <span id="exif-status" style="font-size:10px;color:var(--dim);font-weight:400;">— from EXIF if available</span></div>
+          <input class="text-input" id="caption-date" type="text" placeholder="April 15, 2024" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Fade out at
+            <span class="field-label-val" id="caption-fade-val">4.0s</span>
+          </div>
+          <input type="range" id="caption-fade-slider" min="1" max="15" value="4" step="0.5">
+        </div>
+        <div class="field">
+          <div class="field-label">Color</div>
+          <div class="color-row">
+            <div class="color-swatch" id="color-swatch" style="background:#ffffff;">
+              <input type="color" id="caption-color-input" value="#ffffff">
+            </div>
+            <span class="color-label" id="caption-color-label">#ffffff</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1003,9 +1167,10 @@ const state = {
   ar: '9:16', arW: 9, arH: 16, customArW: 4, customArH: 5,
   playback: 'bounce',  // 'loop' | 'hold' | 'bounce'
   direction: 'in',     // 'in' = start→end (zoom in), 'out' = end→start (zoom out)
+  caption: { enabled: false, subtitle: '', location: '', date: '', fadeOut: 4.0, color: '#ffffff' },
   rects: {
-    start: { x: 8.87, y: 0.12,  w: 83.46, h: 98.92 },
-    end:   { x: 32.97, y: 40.87, w: 30.70, h: 36.38 }
+    start: JSON.parse(localStorage.getItem('kb-rect-start') || 'null') || { x: 8.87, y: 0.12,  w: 83.46, h: 98.92 },
+    end:   JSON.parse(localStorage.getItem('kb-rect-end')   || 'null') || { x: 32.97, y: 40.87, w: 30.70, h: 36.38 }
   }
 };
 
@@ -1092,6 +1257,40 @@ function loadImage(file) {
     initPreview();
   };
   previewImg.src = url;
+
+  // Read EXIF date and pre-fill caption date field; fall back to file.lastModified
+  const exifStatus = document.getElementById('exif-status');
+  exifStatus.textContent = '— reading EXIF…';
+  exifStatus.style.color = '';
+  readExifDate(file).then(exifStr => {
+    const formatted = formatExifDate(exifStr);
+    if (formatted) {
+      state.caption.date = formatted;
+      document.getElementById('caption-date').value = formatted;
+      exifStatus.textContent = '— ✓ from EXIF';
+      exifStatus.style.color = 'var(--start)';
+      dbg(`EXIF date found: ${exifStr} → "${formatted}"`, 'ok');
+    } else {
+      dbg('No EXIF DateTimeOriginal — falling back to file.lastModified');
+      const fallback = formatExifDate(
+        (() => {
+          const d = new Date(file.lastModified);
+          const pad = n => String(n).padStart(2, '0');
+          return `${d.getFullYear()}:${pad(d.getMonth()+1)}:${pad(d.getDate())} 00:00:00`;
+        })()
+      );
+      if (fallback) {
+        state.caption.date = fallback;
+        document.getElementById('caption-date').value = fallback;
+        exifStatus.textContent = '— from file date (no EXIF)';
+        exifStatus.style.color = 'var(--muted)';
+        dbg(`Fallback date: "${fallback}"`, 'warn');
+      } else {
+        exifStatus.textContent = '— no date found';
+        exifStatus.style.color = '';
+      }
+    }
+  });
 }
 
 btnClear.addEventListener('click', () => {
@@ -1105,6 +1304,7 @@ btnClear.addEventListener('click', () => {
   if (previewEngine) { previewEngine.destroy(); previewEngine = null; }
   previewAnimImg.style.display = 'none'; previewAnimImg.src = '';
   previewPlaceholder.style.display = '';
+  previewPlaying = false; playStartMs = null; pausedElapsedMs = 0;
   previewFill.style.width = '0%'; previewTimeEl.textContent = '0.0s';
   updatePlayIcon();
 });
@@ -1113,6 +1313,8 @@ btnClear.addEventListener('click', () => {
 function updateRects() {
   setRectStyle(rectStart, state.rects.start);
   setRectStyle(rectEnd, state.rects.end);
+  localStorage.setItem('kb-rect-start', JSON.stringify(state.rects.start));
+  localStorage.setItem('kb-rect-end',   JSON.stringify(state.rects.end));
   updateCoordReadouts(); updateSummary();
 }
 function setRectStyle(el, r) {
@@ -1263,7 +1465,7 @@ document.getElementById('playback-group').addEventListener('click', e => {
   state.playback = btn.dataset.playback;
   document.querySelectorAll('#playback-group .seg-btn').forEach(b => b.classList.toggle('active', b===btn));
   updateSummary();
-  if (previewEngine) { previewEngine.seek(0); previewEngine.play(); }
+  if (previewEngine) { previewEngine.seek(0); previewPlaying = true; resetElapsed(); previewEngine.play(); updatePlayIcon(); }
 });
 
 document.getElementById('direction-group').addEventListener('click', e => {
@@ -1271,7 +1473,7 @@ document.getElementById('direction-group').addEventListener('click', e => {
   state.direction = btn.dataset.dir;
   document.querySelectorAll('#direction-group .seg-btn').forEach(b => b.classList.toggle('active', b===btn));
   updateSummary();
-  if (previewEngine) { previewEngine.seek(0); previewEngine.play(); }
+  if (previewEngine) { previewEngine.seek(0); previewPlaying = true; resetElapsed(); previewEngine.play(); updatePlayIcon(); }
 });
 
 document.getElementById('ease-group').addEventListener('click', e => {
@@ -1343,7 +1545,24 @@ const previewFill        = document.getElementById('preview-progress-fill');
 const previewTimeEl      = document.getElementById('preview-time');
 const btnPreviewPlay     = document.getElementById('btn-preview-play');
 
-let previewEngine = null;
+let previewEngine   = null;
+let previewPlaying  = false;
+let playStartMs     = null;  // performance.now() when current play segment began
+let pausedElapsedMs = 0;     // accumulated elapsed ms across all prior play segments
+
+function getTotalPreviewDuration() {
+  return state.playback === 'bounce' ? 2 * state.duration : state.duration;
+}
+
+function getElapsedSec() {
+  const base = pausedElapsedMs / 1000;
+  return playStartMs !== null ? base + (performance.now() - playStartMs) / 1000 : base;
+}
+
+function resetElapsed() {
+  playStartMs     = previewPlaying ? performance.now() : null;
+  pausedElapsedMs = 0;
+}
 
 function buildEngineConfig() {
   return {
@@ -1360,8 +1579,7 @@ function buildEngineConfig() {
 
 function updatePlayIcon() {
   const svg = btnPreviewPlay.querySelector('svg');
-  const playing = previewEngine && previewEngine._playing;
-  svg.innerHTML = playing
+  svg.innerHTML = previewPlaying
     ? '<rect x="1" y="1" width="3" height="10" fill="currentColor"/><rect x="6" y="1" width="3" height="10" fill="currentColor"/>'
     : '<polygon points="0,0 10,6 0,12" fill="currentColor"/>';
 }
@@ -1374,24 +1592,48 @@ function initPreview() {
   previewAnimImg.src = previewImg.src;
   previewAnimImg.style.display = 'block';
 
-  previewEngine = new KenBurnsEngine(previewViewport, previewAnimImg, buildEngineConfig());
+  previewPlaying = true;
+  previewEngine  = new KenBurnsEngine(previewViewport, previewAnimImg, buildEngineConfig());
   previewEngine.onTick(t => {
-    previewFill.style.width = (t * 100) + '%';
-    previewTimeEl.textContent = (t * state.duration).toFixed(1) + 's';
-    updatePlayIcon();
+    const elapsed = getElapsedSec();
+    const total   = getTotalPreviewDuration();
+    const progress = state.playback === 'loop'
+      ? (elapsed % total) / total
+      : Math.min(1, elapsed / total);
+    previewFill.style.width  = (progress * 100) + '%';
+    previewTimeEl.textContent = elapsed.toFixed(1) + 's';
+    syncCaptionOverlay(t);
   });
+  resetElapsed();
   previewEngine.play();
   updatePlayIcon();
 }
 
 btnPreviewPlay.addEventListener('click', () => {
   if (!previewEngine) return;
-  if (previewEngine._playing) {
-    previewEngine.pause();
-  } else {
+  previewPlaying = !previewPlaying;
+  if (previewPlaying) {
+    playStartMs = performance.now();
     previewEngine.play();
+  } else {
+    pausedElapsedMs += performance.now() - (playStartMs ?? performance.now());
+    playStartMs = null;
+    previewEngine.pause();
   }
   updatePlayIcon();
+});
+
+// Click progress track to seek
+document.querySelector('.preview-progress-track').addEventListener('click', e => {
+  if (!previewEngine) return;
+  const rect     = e.currentTarget.getBoundingClientRect();
+  const ratio    = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const total    = getTotalPreviewDuration();
+  pausedElapsedMs = ratio * total * 1000;
+  playStartMs     = previewPlaying ? performance.now() : null;
+  previewEngine.seekAbsolute(ratio);
+  previewFill.style.width = (ratio * 100) + '%';
+  previewTimeEl.textContent = (ratio * total).toFixed(1) + 's';
 });
 
 // Summary
@@ -1464,6 +1706,13 @@ function updateBloobSnippet() {
     `end-y: ${fmtPct(r.end.y)}%`,
     `end-w: ${fmtPct(r.end.w)}%`,
     `end-h: ${fmtPct(r.end.h)}%`,
+    ...(state.caption.enabled && getCaptionText() ? [
+      ...(state.caption.subtitle.trim() ? [`caption-top: ${state.caption.subtitle.trim()}`] : []),
+      `caption-location: ${state.caption.location.trim()}`,
+      `caption-date: ${state.caption.date.trim()}`,
+      `caption-fade-out: ${state.caption.fadeOut}`,
+      ...(state.caption.color !== '#ffffff' ? [`caption-color: ${state.caption.color}`] : []),
+    ] : []),
     `:::`,
   ];
 
@@ -1479,6 +1728,224 @@ document.getElementById('btn-copy-bloob').addEventListener('click', () => {
 });
 
 function pad(n) { return String(n).padStart(4,' '); }
+
+// ─────────────────────────────────────────────
+// EXIF date reader — reads DateTimeOriginal (0x9003) from JPEG binary.
+// Scans IFD0 and SubExif IFD; returns 'YYYY:MM:DD HH:MM:SS' or null.
+// ─────────────────────────────────────────────
+async function readExifDate(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const view = new DataView(e.target.result);
+        let off = 2; // skip JPEG SOI marker
+        let segCount = 0;
+        while (off < view.byteLength - 4) {
+          const marker = view.getUint16(off);
+          const segLen = view.getUint16(off + 2);
+          segCount++;
+          dbg(`EXIF scan: marker 0x${marker.toString(16).toUpperCase()} @ byte ${off}, len=${segLen}`);
+
+          if (marker === 0xFFE1) {
+            const hdr = [4,5,6,7].map(i => String.fromCharCode(view.getUint8(off+i))).join('');
+            if (hdr === 'Exif') {
+              const base = off + 10;
+              const le   = view.getUint16(base) === 0x4949;
+              dbg(`EXIF: found Exif APP1 @ ${off}, TIFF base=${base}, endian=${le?'LE':'BE'}`);
+              const r16  = o => view.getUint16(o, le);
+              const r32  = o => view.getUint32(o, le);
+
+              const scanIFD = (ifdAbs, label) => {
+                const n = r16(ifdAbs);
+                dbg(`EXIF: scanning ${label} (${n} entries) @ abs=${ifdAbs}`);
+                let subPtr = null;
+                for (let i = 0; i < n; i++) {
+                  const eo  = ifdAbs + 2 + i * 12;
+                  if (eo + 12 > view.byteLength) break;
+                  const tag = r16(eo);
+                  if (tag === 0x9003 || tag === 0x0132) {
+                    const vo = base + r32(eo + 8);
+                    let s = '';
+                    for (let j = 0; j < 19; j++) s += String.fromCharCode(view.getUint8(vo + j));
+                    dbg(`EXIF: tag 0x${tag.toString(16)} → "${s}"`, 'ok');
+                    return s;
+                  }
+                  if (tag === 0x8769) {
+                    subPtr = base + r32(eo + 8);
+                    dbg(`EXIF: ExifIFD pointer → abs=${subPtr}`);
+                  }
+                }
+                return subPtr ? scanIFD(subPtr, 'ExifIFD') : null;
+              };
+
+              const ifd0Abs = base + r32(base + 4);
+              const result  = scanIFD(ifd0Abs, 'IFD0');
+              resolve(result);
+              return;
+            } else {
+              dbg(`EXIF: APP1 at ${off} has header "${hdr}", skipping`);
+            }
+          }
+          if (segLen < 2) break;
+          off += 2 + segLen;
+        }
+        dbg(`EXIF: no Exif APP1 found after ${segCount} segments`, 'warn');
+        resolve(null);
+      } catch (err) {
+        dbg(`EXIF parse error: ${err.message}`, 'error');
+        resolve(null);
+      }
+    };
+    // 512 KB covers Sony maker notes (which can be 200–300 KB)
+    reader.readAsArrayBuffer(file.slice(0, 524288));
+  });
+}
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function formatExifDate(exifStr) {
+  if (!exifStr) return '';
+  const [datePart] = exifStr.split(' ');
+  const [y, m, d] = datePart.split(':').map(Number);
+  if (!y || !m || !d) return '';
+  return `${MONTH_NAMES[m-1]} ${d}, ${y}`;
+}
+
+function getCaptionText() {
+  const loc  = state.caption.location.trim();
+  const date = state.caption.date.trim();
+  if (loc && date) return `${loc} - ${date}`;
+  return loc || date || '';
+}
+
+// ─────────────────────────────────────────────
+// Caption controls
+// ─────────────────────────────────────────────
+const captionToggleBtns = document.querySelectorAll('#caption-toggle .seg-btn');
+const captionFields     = document.getElementById('caption-fields');
+const captionOverlay    = document.getElementById('caption-overlay');
+const captionTextEl     = document.getElementById('caption-text-el');
+
+// ── Restore localStorage ──────────────────────────────────────────────────────
+const _savedEnabled  = localStorage.getItem('kb-caption-enabled');
+const _savedLocation = localStorage.getItem('kb-caption-location');
+const _savedSubtitle = localStorage.getItem('kb-caption-subtitle');
+const _savedColor    = localStorage.getItem('kb-caption-color');
+
+if (_savedEnabled === 'true') {
+  state.caption.enabled = true;
+  captionToggleBtns.forEach(b => b.classList.toggle('active', b.dataset.cap === 'on'));
+  captionFields.style.display = '';
+}
+if (_savedLocation) {
+  state.caption.location = _savedLocation;
+  document.getElementById('caption-location').value = _savedLocation;
+}
+if (_savedSubtitle) {
+  state.caption.subtitle = _savedSubtitle;
+  document.getElementById('caption-subtitle').value = _savedSubtitle;
+}
+if (_savedColor) {
+  state.caption.color = _savedColor;
+  document.getElementById('caption-color-input').value = _savedColor;
+  document.getElementById('color-swatch').style.background = _savedColor;
+  document.getElementById('caption-color-label').textContent = _savedColor;
+}
+
+captionToggleBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.caption.enabled = btn.dataset.cap === 'on';
+    localStorage.setItem('kb-caption-enabled', state.caption.enabled);
+    captionToggleBtns.forEach(b => b.classList.toggle('active', b === btn));
+    captionFields.style.display = state.caption.enabled ? '' : 'none';
+    syncCaptionOverlay();
+    updateSummary();
+  });
+});
+
+document.getElementById('caption-subtitle').addEventListener('input', e => {
+  state.caption.subtitle = e.target.value;
+  localStorage.setItem('kb-caption-subtitle', e.target.value);
+  syncCaptionOverlay();
+  updateSummary();
+});
+
+document.getElementById('caption-location').addEventListener('input', e => {
+  state.caption.location = e.target.value;
+  localStorage.setItem('kb-caption-location', e.target.value);
+  syncCaptionOverlay();
+  updateSummary();
+});
+
+document.getElementById('caption-date').addEventListener('input', e => {
+  state.caption.date = e.target.value;
+  syncCaptionOverlay();
+  updateSummary();
+});
+
+document.getElementById('caption-color-input').addEventListener('input', e => {
+  const hex = e.target.value;
+  state.caption.color = hex;
+  localStorage.setItem('kb-caption-color', hex);
+  document.getElementById('color-swatch').style.background = hex;
+  document.getElementById('caption-color-label').textContent = hex;
+  syncCaptionOverlay();
+  updateSummary();
+});
+
+const captionFadeSlider = document.getElementById('caption-fade-slider');
+const captionFadeVal    = document.getElementById('caption-fade-val');
+captionFadeSlider.addEventListener('input', () => {
+  state.caption.fadeOut = parseFloat(captionFadeSlider.value);
+  captionFadeVal.textContent = state.caption.fadeOut.toFixed(1) + 's';
+  updateSummary();
+});
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Updates the preview overlay text, color, and opacity based on normalized time t ∈ [0,1]
+function syncCaptionOverlay(t) {
+  const text     = getCaptionText();
+  const subtitle = state.caption.subtitle.trim();
+  const subtitleEl = document.getElementById('caption-subtitle-el');
+
+  if (!state.caption.enabled || !text) {
+    captionOverlay.style.opacity = '0';
+    return;
+  }
+
+  captionTextEl.textContent = text;
+  captionTextEl.style.color = hexToRgba(state.caption.color, 0.92);
+
+  if (subtitle) {
+    subtitleEl.textContent = subtitle;
+    subtitleEl.style.color = hexToRgba(state.caption.color, 0.65);
+    subtitleEl.classList.add('visible');
+  } else {
+    subtitleEl.classList.remove('visible');
+  }
+
+  // Rule color via CSS variable on the overlay
+  captionOverlay.style.setProperty('--caption-color', state.caption.color);
+
+  let opacity = 1;
+  if (t !== undefined) {
+    const elapsed   = t * state.duration;
+    const fadeStart = state.caption.fadeOut - 1;
+    if (elapsed >= state.caption.fadeOut) {
+      opacity = 0;
+    } else if (elapsed >= fadeStart) {
+      opacity = Math.max(0, state.caption.fadeOut - elapsed);
+    }
+  }
+  captionOverlay.style.opacity = String(opacity);
+}
 
 // ─────────────────────────────────────────────
 // Video export — WebCodecs + mp4-muxer
@@ -1516,9 +1983,63 @@ const EASING_FNS = {
   'ease-in-out': t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t,
 };
 
+function drawCaptionOnCanvas(ctx, w, h, text, alpha) {
+  ctx.save();
+
+  const previewW  = previewViewport.clientWidth || 264;
+  const scale     = w / previewW;
+  const fontSize  = Math.round(10 * scale);
+  const subSize   = Math.round(8.5 * scale);
+  const lineLen   = Math.round(38 * scale);
+  const bottomPx  = Math.round(10 * scale);
+  const gap       = Math.round(3 * scale);
+  const ruleGap   = Math.round(5 * scale);
+  const subtitle  = state.caption.subtitle.trim();
+  const color     = state.caption.color || '#ffffff';
+  const textColor = hexToRgba(color, 0.90);
+  const subColor  = hexToRgba(color, 0.65);
+  const ruleColor = hexToRgba(color, 0.82);
+  const mainFont  = `small-caps 300 ${fontSize}px "Satoshi", -apple-system, "Helvetica Neue", Arial, sans-serif`;
+  const subFont   = `italic 300 ${subSize}px "Satoshi", -apple-system, "Helvetica Neue", Arial, sans-serif`;
+  const cx        = w / 2;
+
+  const textY = h - bottomPx;
+  const subY  = subtitle ? textY - fontSize - gap : null;
+  const lineY = subtitle ? subY - subSize - ruleGap : textY - fontSize - ruleGap;
+  const lineW = Math.max(1, Math.round(w / 1080));
+
+  ctx.textAlign    = 'center';
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  const drawLayer = (blurAlpha, blur) => {
+    ctx.globalAlpha = alpha * blurAlpha;
+    ctx.shadowColor = 'rgba(0,0,0,1)';
+    ctx.shadowBlur  = blur;
+    ctx.font = mainFont; ctx.fillStyle = textColor; ctx.fillText(text, cx, textY);
+    if (subtitle) { ctx.font = subFont; ctx.fillStyle = subColor; ctx.fillText(subtitle, cx, subY); }
+    ctx.strokeStyle = ruleColor; ctx.lineWidth = lineW;
+    ctx.beginPath(); ctx.moveTo(cx - lineLen/2, lineY); ctx.lineTo(cx + lineLen/2, lineY); ctx.stroke();
+  };
+
+  drawLayer(0.22, fontSize * 3.5);
+  drawLayer(0.38, fontSize * 1.8);
+  drawLayer(0.55, fontSize * 0.7);
+
+  // Final crisp pass
+  ctx.globalAlpha = alpha; ctx.shadowBlur = 0;
+  ctx.font = mainFont; ctx.fillStyle = textColor; ctx.fillText(text, cx, textY);
+  if (subtitle) { ctx.font = subFont; ctx.fillStyle = subColor; ctx.fillText(subtitle, cx, subY); }
+  ctx.strokeStyle = ruleColor; ctx.lineWidth = lineW;
+  ctx.beginPath(); ctx.moveTo(cx - lineLen/2, lineY); ctx.lineTo(cx + lineLen/2, lineY); ctx.stroke();
+
+  ctx.restore();
+}
+
 async function exportVideo() {
   if (!state.imageLoaded) { flashFootnote('⚠ Load an image first'); return; }
 
+  await document.fonts.ready;
   btnDownload.disabled = true;
   btnLabel.textContent = 'Exporting…';
   exportProg.classList.add('visible');
@@ -1601,6 +2122,21 @@ async function exportVideo() {
 
       ctx.clearRect(0, 0, outW, outH);
       ctx.drawImage(previewImg, rx, ry, rw, rh, 0, 0, outW, outH);
+
+      if (state.caption.enabled) {
+        const captionText = getCaptionText();
+        if (captionText) {
+          const elapsedSec = i / state.fps;
+          const fadeStart  = state.caption.fadeOut - 1;
+          let alpha = 1;
+          if (elapsedSec >= state.caption.fadeOut) {
+            alpha = 0;
+          } else if (elapsedSec >= fadeStart) {
+            alpha = Math.max(0, state.caption.fadeOut - elapsedSec);
+          }
+          if (alpha > 0) drawCaptionOnCanvas(ctx, outW, outH, captionText, alpha);
+        }
+      }
 
       const frame = new VideoFrame(canvas, {
         timestamp: Math.round(i / state.fps * 1e6),
