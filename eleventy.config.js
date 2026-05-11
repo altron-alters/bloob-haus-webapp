@@ -477,6 +477,24 @@ export default async function (eleventyConfig) {
         const inputPath = join(SRC, decodeURIComponent(src));
         if (!existsSync(inputPath)) continue;
 
+        // ── Image opt-out flags (checked via class or attribute on the <img>) ──────
+        // no-optimize  → skip entirely, serve original file at full resolution
+        // no-zoom      → optimize to 80px-tall webp, no PhotoSwipe (use for logos/nav)
+        // no-lightbox  → optimize to display size, no PhotoSwipe (banner images)
+        // no-pswp      → optimize normally, skip PhotoSwipe (inside Swiper etc.)
+        // ─────────────────────────────────────────────────────────────────────────
+
+        // no-optimize: skip ALL processing — leave original <img> tag unchanged.
+        // Ensure the src is properly URL-encoded so browsers can load files with spaces.
+        // Example: ![alt](image.png){.no-optimize}
+        if ((before + after).includes("no-optimize")) {
+          const encodedSrc = src.split("/").map(part => encodeURIComponent(decodeURIComponent(part))).join("/");
+          if (encodedSrc !== src) {
+            result = result.replace(originalTag, originalTag.replace(`src="${src}"`, `src="${encodedSrc}"`));
+          }
+          continue;
+        }
+
         // Banner/UI images (no-lightbox): optimize to reasonable display size, no PhotoSwipe.
         // Used for bloob-object banner images — full quality but no lightbox wrapper.
         if ((before + after).includes("no-lightbox")) {
@@ -489,7 +507,7 @@ export default async function (eleventyConfig) {
             const baseName = decodeURIComponent(src.split("/").pop().replace(/\.[^.]+$/, ""));
             const cacheFile = join(MEDIA_CACHE_DIR, `${baseName}-banner.webp`);
             const outFile = join(siteOptDir, `${baseName}-banner.webp`);
-            const outUrl = `/media/optimized/${baseName}-banner.webp`;
+            const outUrl = `/media/optimized/${encodeURIComponent(baseName)}-banner.webp`;
             if (!existsSync(cacheFile)) {
               await sharp(inputPath)
                 .resize({ width: 400, withoutEnlargement: true })
@@ -517,10 +535,10 @@ export default async function (eleventyConfig) {
             const baseName = decodeURIComponent(src.split("/").pop().replace(/\.[^.]+$/, ""));
             const cacheFile = join(MEDIA_CACHE_DIR, `${baseName}-nav.webp`);
             const outFile = join(siteOptDir, `${baseName}-nav.webp`);
-            const outUrl = `/media/optimized/${baseName}-nav.webp`;
+            const outUrl = `/media/optimized/${encodeURIComponent(baseName)}-nav.webp`;
             if (!existsSync(cacheFile)) {
               await sharp(inputPath)
-                .resize({ height: 80, withoutEnlargement: true })
+                .resize({ height: 120, withoutEnlargement: true })
                 .webp({ quality: 85 })
                 .toFile(cacheFile);
             }
