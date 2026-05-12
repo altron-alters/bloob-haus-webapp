@@ -1,7 +1,36 @@
 <!doctype html>
-<html lang="en-US" class="wf-active">
+<html lang="en-US" class="wf-active"{% if body_class and "home" in body_class %} style="background-color:#5b5dd3"{% endif %}>
     {% include "partials/head.njk" %}
     <body class="wp-theme-alter-engineers{% if body_class %} {{ body_class }}{% endif %}">
+
+        {# ── Page loader ────────────────────────────────────────────────────────
+           Covers FOUC (unstyled HTML flash) and FOUT (font swap) by rendering an
+           inline overlay immediately — no external CSS dependency. Hidden once
+           document.fonts.ready fires (styles + fonts applied, images may still load).
+           Swap the <img> for a <img src="/assets/images/your-loader.gif"> for a
+           branded animation.
+        ─────────────────────────────────────────────────────────────────────── #}
+        <div id="page-loader" style="position:fixed;inset:0;background:#5b5dd3;z-index:9999;display:flex;align-items:center;justify-content:center">
+            <img src="{{ "/assets/images/Group-49.svg" | url }}" style="height:64px;width:auto;opacity:0.95" alt="">
+        </div>
+        <script>
+        (function () {
+            function hideLoader() {
+                var el = document.getElementById('page-loader');
+                if (!el || el.dataset.hiding) return;
+                el.dataset.hiding = '1';
+                el.style.transition = 'opacity 0.3s ease';
+                el.style.opacity = '0';
+                setTimeout(function () { el.style.display = 'none'; }, 300);
+            }
+            // Hide once fonts are ready AND at least 500ms have elapsed
+            var minWait = new Promise(function (resolve) { setTimeout(resolve, 500); });
+            var fontsReady = document.fonts ? document.fonts.ready : new Promise(function (resolve) { window.addEventListener('load', resolve); });
+            Promise.all([minWait, fontsReady]).then(hideLoader);
+            // Fallback: never block longer than 2s regardless of network
+            setTimeout(hideLoader, 2000);
+        })();
+        </script>
         <div id="page" class="site">
             {% if not hide_nav %}{% include "partials/nav.njk" %}{% endif %}
 

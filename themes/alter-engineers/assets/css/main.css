@@ -104,6 +104,20 @@
 }
 
 /* ============================================================
+   FOOTER — BLOOB HAUS CREDIT
+   Small-caps + tracked label style (Bauhaus typographic feel).
+   ============================================================ */
+.footer__bloob-credit,
+.footer__bloob-credit a {
+  font-variant: small-caps;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-color) !important;
+  text-decoration: none;
+}
+
+/* ============================================================
    HOMEPAGE BODY BACKGROUND
    The .hero-block is position: fixed; z-index: -1 — it stays fixed
    while sections scroll over it. body.home needs the matching
@@ -154,17 +168,18 @@ html { margin-top: 0 !important; }
   object-fit: cover;
 }
 
-/* Logo sizing (matches original site custom CSS) */
-.custom-logo {
+/* Nav logo sizing — PhotoSwipe wraps the img in <picture><a>, so target by container */
+.header-navigation-bar__desktop-logo img,
+.header-navigation-bar__desktop-logo picture img {
+  height: 48px !important;
   width: auto !important;
-  height: 60px !important;
   max-width: none !important;
 }
-@media (max-width: 768px) {
-  .custom-logo { height: 40px !important; }
-}
-@media (max-width: 480px) {
-  .custom-logo { width: 241px !important; height: 46px !important; }
+.header-navigation-bar__mobile-logo img,
+.header-navigation-bar__mobile-logo picture img {
+  height: 37px !important;
+  width: auto !important;
+  max-width: none !important;
 }
 
 /* ============================================================

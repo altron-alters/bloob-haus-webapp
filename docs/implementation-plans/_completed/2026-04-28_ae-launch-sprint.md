@@ -1,7 +1,7 @@
 # AE Launch Sprint — Implementation Plan
 
 **Created:** 2026-04-28  
-**Status:** Active  
+**Status:** Completed 2026-05-11 — all bug fixes and features shipped. Active tracking moved to `C:/ae-dev/docs/next-steps.md`.  
 **Goal:** Ship the Alter Engineers website. All sections render from content. Fix polish bugs, add redirect support, deploy to Cloudflare.
 
 ---
