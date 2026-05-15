@@ -132,6 +132,7 @@ export async function filterPublishableFiles(contentDir, options = {}) {
         path: filePath,
         relativePath,
         reason: `in exclude_files list`,
+        isDraft: false,
       });
       console.log(`[filter] Excluding: ${relativePath} (exclude_files)`);
     } else if (shouldPublish(frontmatter, content, config)) {
@@ -141,13 +142,18 @@ export async function filterPublishableFiles(contentDir, options = {}) {
         frontmatter,
       });
     } else {
+      const isDraft = config.publishMode === "status_field" &&
+        frontmatter?.[config.statusField] === "draft";
       excluded.push({
         path: filePath,
         relativePath,
         reason:
           config.publishMode === "blocklist"
             ? `contains #${config.blocklistTag}`
-            : `missing ${config.allowlistKey}: ${config.allowlistValue}`,
+            : config.publishMode === "status_field"
+              ? `website_status: draft`
+              : `missing ${config.allowlistKey}: ${config.allowlistValue}`,
+        isDraft,
       });
       console.log(`[filter] Excluding: ${relativePath}`);
     }

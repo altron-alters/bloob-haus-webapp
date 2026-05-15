@@ -124,7 +124,7 @@ export async function preprocessContent({
 
   // Step 2: Filter publishable files
   console.log("\n--- Step 2: Filtering publishable files ---");
-  let { published, excluded } = await filterPublishableFiles(contentDir, publishOptions);
+  let { published, excluded, config: filterConfig } = await filterPublishableFiles(contentDir, publishOptions);
   stats.filesExcluded = excluded.length;
 
   // Single-page mode: build only one file for fast dev/visualizer testing
@@ -149,7 +149,13 @@ export async function preprocessContent({
   // Step 3: Build file index
   console.log("\n--- Step 3: Building file index ---");
   const slugStrategy = process.env.SLUG_STRATEGY || "slugify";
-  const fileIndex = await buildFileIndex(published, contentDir, { slugStrategy });
+  // In status_field mode, draft files are excluded from publishing but their URLs
+  // are stable and should resolve when referenced via wiki-links (e.g. card-preview).
+  // In blocklist/allowlist modes, excluded files are private and must not be indexed.
+  const draftFiles = filterConfig.publishMode === "status_field"
+    ? excluded.filter(f => f.isDraft)
+    : [];
+  const fileIndex = await buildFileIndex([...published, ...draftFiles], contentDir, { slugStrategy });
 
   // Step 4: Build attachment index
   console.log("\n--- Step 4: Building attachment index ---");
