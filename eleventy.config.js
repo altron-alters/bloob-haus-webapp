@@ -508,13 +508,15 @@ export default async function (eleventyConfig) {
             const cacheFile = join(MEDIA_CACHE_DIR, `${baseName}-banner.webp`);
             const outFile = join(siteOptDir, `${baseName}-banner.webp`);
             const outUrl = `/media/optimized/${encodeURIComponent(baseName)}-banner.webp`;
+            let freshBanner = false;
             if (!existsSync(cacheFile)) {
               await sharp(inputPath)
                 .resize({ width: 400, withoutEnlargement: true })
                 .webp({ quality: 85 })
                 .toFile(cacheFile);
+              freshBanner = true;
             }
-            if (!existsSync(outFile)) copyFileSync(cacheFile, outFile);
+            if (freshBanner || !existsSync(outFile)) copyFileSync(cacheFile, outFile);
             result = result.replace(originalTag, originalTag.replace(`src="${src}"`, `src="${outUrl}"`));
           } catch (e) {
             console.warn(`[image] Failed to optimize banner image ${src}: ${e.message}`);
@@ -536,13 +538,15 @@ export default async function (eleventyConfig) {
             const cacheFile = join(MEDIA_CACHE_DIR, `${baseName}-nav.webp`);
             const outFile = join(siteOptDir, `${baseName}-nav.webp`);
             const outUrl = `/media/optimized/${encodeURIComponent(baseName)}-nav.webp`;
+            let freshNav = false;
             if (!existsSync(cacheFile)) {
               await sharp(inputPath)
                 .resize({ height: 500, withoutEnlargement: true })
                 .webp({ quality: 85 })
                 .toFile(cacheFile);
+              freshNav = true;
             }
-            if (!existsSync(outFile)) copyFileSync(cacheFile, outFile);
+            if (freshNav || !existsSync(outFile)) copyFileSync(cacheFile, outFile);
             result = result.replace(originalTag, originalTag.replace(`src="${src}"`, `src="${outUrl}"`));
           } catch (e) {
             console.warn(`[image] Failed to optimize UI image ${src}: ${e.message}`);
@@ -576,19 +580,18 @@ export default async function (eleventyConfig) {
           });
 
           // Ensure generated files are also in _site/ for the current build.
-          // (The passthrough copy runs before transforms, so new cache files need this.)
+          // Always overwrite — passthrough copy can race with sharp and create 0-byte
+          // placeholders in _site/ before the real file is fully written to the cache.
           const siteOptDir = join(outputDir, "media/optimized");
           mkdirSync(siteOptDir, { recursive: true });
           for (const images of Object.values(metadata)) {
             for (const img of images) {
               const basename = img.url.split("/").pop();
               const siteFile = join(siteOptDir, basename);
-              if (!existsSync(siteFile)) {
-                // Use img.outputPath (the actual written file) rather than a reconstructed path.
-                // Reconstructed paths can miss on Windows if the cache dir is missing.
-                const cachedFile = img.outputPath || join(MEDIA_CACHE_DIR, basename);
-                if (existsSync(cachedFile)) copyFileSync(cachedFile, siteFile);
-              }
+              // Use img.outputPath (the actual written file) rather than a reconstructed path.
+              // Reconstructed paths can miss on Windows if the cache dir is missing.
+              const cachedFile = img.outputPath || join(MEDIA_CACHE_DIR, basename);
+              if (existsSync(cachedFile)) copyFileSync(cachedFile, siteFile);
             }
           }
 
