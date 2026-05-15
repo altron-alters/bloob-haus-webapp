@@ -46,6 +46,16 @@ function extractTitle(frontmatter, content, filename) {
 }
 
 /**
+ * Converts a folder name (slug-style) to a human-readable title.
+ * E.g. "my-folder" → "My Folder", "resources" → "Resources"
+ */
+function prettifyFolderName(name) {
+  return name
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
  * Generates a URL-safe slug from a title.
  * Default implementation — used as fallback when no strategy is specified.
  * @param {string} title - The title to slugify
@@ -81,14 +91,19 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     const { data: frontmatter, content: body } = matter(content);
 
     const filename = path.basename(file.relativePath, ".md");
-    const title = extractTitle(frontmatter, body, filename);
-
-    // Slug is based on FILENAME, not title (URLs stay stable even if title changes)
-    const slug = slugFn(filename);
 
     // Get folder path (e.g., "recipes" from "recipes/Challah.md")
     const folderPath = path.dirname(file.relativePath);
     const hasFolder = folderPath && folderPath !== ".";
+
+    // For index files, fall back to prettified folder name rather than "index"
+    const isIndex = filename === "index";
+    const titleFallback =
+      isIndex && hasFolder ? prettifyFolderName(path.basename(folderPath)) : filename;
+    const title = extractTitle(frontmatter, body, titleFallback);
+
+    // Slug is based on FILENAME, not title (URLs stay stable even if title changes)
+    const slug = slugFn(filename);
 
     // Build URL with folder prefix if in a subfolder
     // Apply slug strategy to each folder segment
@@ -97,7 +112,6 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
       : "";
     // index.md files use the folder URL (e.g. resources/index.md → /resources/)
     // matching the Eleventy permalink injected by preprocess-content.js
-    const isIndex = filename === "index";
     const url = isIndex
       ? (hasFolder ? `/${slugifiedFolder}/` : "/")
       : (hasFolder ? `/${slugifiedFolder}/${slug}/` : `/${slug}/`);

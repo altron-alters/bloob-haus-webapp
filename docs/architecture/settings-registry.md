@@ -23,9 +23,17 @@ These settings work identically across every theme. They are part of the Bloob H
 | `hide_nav` | bool | `false` | Hide the site navigation bar on this page |
 | `hide_footer` | bool | `false` | Hide the site footer on this page |
 | `body_class` | string | — | Extra CSS class(es) added to `<body>` |
-| `layout` | string | layout from bloob-object or `layouts/page.njk` | Override Eleventy layout explicitly |
-| `bloob-object` | string | — | Object type for this page (e.g. `project-profile`). Controls layout and graph icon. Defined in `_bloob-objects.md`. |
+| `layout` | string | layout from `bloob-type` or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-type`) |
+| `bloob-type` | string | — | Content type for this page (e.g. `note`, `guide`). Controls layout, graph icon, and banner display. Defined in `_bloob-types.md`. Alias: `bloob-object` (legacy). |
+| `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
+| `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
 | `website_status` | string | `public` (when absent) | Publish visibility for this page. One of `draft` / `unlisted` / `archived` / `public`. Only active when `publish_mode: status_field` is set in `_bloob-settings.md`. See status matrix below. |
+
+#### Optional display fields (not in standard YAML, no UI prompt)
+
+| Field | Description |
+|-------|-------------|
+| `byline` | Freeform attribution string displayed as-is below the title — use when you need full control over the attribution line (e.g. "In collaboration with X and Y"). Takes precedence over `author` if both are set. No "By" prefix is added. |
 
 #### `website_status` — Status Matrix
 

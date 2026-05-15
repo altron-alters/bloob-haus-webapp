@@ -293,6 +293,14 @@ body {
   margin-bottom: 12px;
 }
 
+.page-banner-text {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.page-author,
 .page-byline {
   font-size: 0.82rem;
   color: var(--color-text-muted);

@@ -1,10 +1,13 @@
 ---
 layout: layouts/base.njk
 ---
+{% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
 <article class="page-content" data-pagefind-body>
   <header class="page-header">
-    {% if type %}<p class="page-type">{{ type }}</p>{% endif %}
+    {% if typeData and typeData.display_name %}<p class="page-type">{{ typeData.display_name }}</p>{% endif %}
     <h1 class="page-title">{{ title }}</h1>
+    {% if typeData and typeData.banner_text %}<p class="page-banner-text">{{ typeData.banner_text }}</p>{% endif %}
+    {% if author %}<p class="page-author">By {{ author }}</p>{% endif %}
     {% if byline %}<p class="page-byline">{{ byline }}</p>{% endif %}
   </header>
 
