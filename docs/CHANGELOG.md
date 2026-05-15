@@ -6,6 +6,42 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 33 - May 14, 2026
+**Worked on:** MELT client site — new theme, content, and two new visualizers
+
+**New site: MELT (Massage Exchange and Learning Together) — Whitney & Vicki**
+- `sites/melt.yaml` — site config pointing to `LSanten/melt-website`
+- `themes/melt/` — full theme skeleton: `base.njk`, `home.njk`, `page.njk`, `folder-index.njk`, partials (head, nav, footer, scripts), 404, CSS
+- CSS: fixed-attachment purple-mauve gradient, Caveat (headings) + Quicksand (body) Google Fonts, breadcrumb nav with circle-dot home button, mobile responsive
+- 14 content files with realistic placeholder copy in `../melt-website/` (resources folder: 9 essays/guides, playlists, what-is-melt, contact, host-your-own-melt)
+- Dev command: `node scripts/dev-local.js --site=melt --content=../melt-website`
+
+**New visualizer: `circular-nav`** (`lib/visualizers/circular-nav/`)
+- Parses `:::circular-nav` blocks; renders animated flower of orbiting bubbles around a center CTA
+- `index.js` — build-time transform: decodes `data-vis-raw`, parses `[label](url) - name` lines + `center:` line, emits `<div class="circular-nav-visualizer" data-circular-nav='…'>`
+- `browser.js` — positions N bubbles via trig (sin/cos orbit), staggered float animation, scales to fit viewport on mobile
+- `styles.css` — dark indigo orbit bubbles, rose CTA bubble, radial-gradient fade (no hard edges), `cnav-float` keyframes
+
+**Adapted visualizer: `folder-preview`** — new `layout: bubbles` mode
+- `browser.js` — `renderBubbles()` renders pages as light blue-lavender glassmorphism bubbles, staggered two-column scatter layout, varies size organically
+- `styles.css` — `.fp-bubbles`, `.fp-bubble`, `.fp-bubble__type`, `.fp-bubble__title`
+
+**Infrastructure fix: `inject-container-raw.js`**
+- Changed `/^:::\s+\S/` → `/^:::\s*\S/` — `:::name` (no space) now correctly gets `data-vis-raw` injected, matching how `markdownItContainer` already accepted it. This was a genuine bug blocking any new `:::` visualizer.
+
+**Infrastructure addition: `content_type` in graph.json**
+- `preprocess-content.js` — passes `frontmatter.type` as `content_type` to `perPageLinks`
+- `graph-builder.js` — spreads `content_type` onto graph nodes
+- `folder-preview/browser.js` bubbles now display `content_type` as the small label (e.g. "essay", "guide", "notes")
+
+**Docs**
+- `docs/architecture/melt-handoff.md` — full design spec: page inventory, both visualizer specs (circular-nav parser format, bubble visual spec), content repo structure, frontmatter conventions, done/pending table
+
+**Pending (next session)**
+- Marbles regression check for `inject-container-raw.js` change (build started but not confirmed)
+- Whitney's real logo asset
+- Deploy to melt.bloob.haus
+
 ### Session 32 - April 28, 2026
 **Worked on:** AE launch polish — quotes-stack rename, redirect support, attachment scan fix, bug fixes
 

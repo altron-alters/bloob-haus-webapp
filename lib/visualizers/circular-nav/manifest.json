@@ -1,0 +1,14 @@
+{
+  "name": "circular-nav",
+  "type": "hybrid",
+  "version": "0.1.0",
+  "description": "Circular flower navigation for site homepages. Renders :::circular-nav blocks as orbiting bubbles around a center CTA.",
+  "activation": {
+    "method": "auto-detect",
+    "pattern": ".circular-nav-visualizer"
+  },
+  "files": {
+    "browser": "browser.js",
+    "styles": "styles.css"
+  }
+}

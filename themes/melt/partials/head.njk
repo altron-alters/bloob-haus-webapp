@@ -1,0 +1,33 @@
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{% if page.url == "/" %}{{ site.title }}{% else %}{{ title }} · {{ site.title }}{% endif %}</title>
+
+    <meta name="description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
+    <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="{{ site.title }}" />
+    <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+    <meta property="og:title" content="{% if page.url == '/' %}{{ site.title }}{% else %}{{ title }}{% endif %}" />
+    <meta property="og:description" content="{% if description %}{{ description }}{% else %}{{ site.description }}{% endif %}" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ "/favicon.png" | url }}" />
+    <link rel="apple-touch-icon" href="{{ "/apple-touch-icon.png" | url }}" />
+
+    <!-- Fonts: Caveat (handwritten headings) + Quicksand (soft rounded body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- Theme stylesheet -->
+    <link rel="stylesheet" href="{{ "/assets/css/main.css" | url }}" />
+
+    <!-- Visualizer stylesheets -->
+    {% for vis in visualizers %}{% if vis.hasCss %}
+    <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
+    {% endif %}{% endfor %}
+</head>

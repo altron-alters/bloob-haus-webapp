@@ -34,8 +34,9 @@ export function injectContainerRaw(markdown) {
     const line = lines[i];
 
     // Match ::: openers that have at least a name — skip bare :::
+    // Accepts both :::name and ::: name (space is optional).
     // Also skip lines that already have _raw= injected (idempotent)
-    const openMatch = /^:::\s+\S/.test(line) && !line.includes("_raw=");
+    const openMatch = /^:::\s*\S/.test(line) && !line.includes("_raw=");
 
     if (openMatch) {
       // Find the matching closing ::: using a depth counter

@@ -2,6 +2,8 @@
 
 > *Bloob Haus is the place where any markdown becomes an interactive, embeddable digital object — and where anyone can extend the catalog of what's possible.*
 
+Existing tools such as Obsidian Publish host your vault. Bloob Haus turns your notes into portable visual objects and lets the world add new ways to see them.
+
 **Live sites built with Obsidian to Webpage builder (still under construction but good for getting the idea):**
 - [buffbaby.bloob.haus](https://buffbaby.bloob.haus) — Buff Baby Kitchen (recipes)
 - [leons.bloob.haus](https://leons.bloob.haus) — Leon's Marbles (notes, thoughts, creative work)
@@ -59,7 +61,7 @@ The point is that you shouldn't have to hand-write YAML to build something that 
 Adding a new magic machine is just: drop a folder in `lib/magic-machines/`, add a `manifest.json` with a `route` field, and the build pipeline picks it up automatically.
 
 **Live magic machines:**
-- [Scene Nav Builder](https://leons.bloob.haus/magic-machine/scene-nav-builder/) — drag-and-drop builder for the scene-nav visualizer
+- [Scene Nav Builder](https://leons.bloob.haus/tools/scene-nav-builder/) — drag-and-drop builder for the scene-nav visualizer
 - [YouTube Non-Addictive Interface](https://leons.bloob.haus/magic-machine/youtube-non-addictive-interface/) — distraction-free YouTube search and playback, your API key stays in your browser. Developed by [Adrian Botran](https://adrianfbotran.wixsite.com/portfolio).
 
 ---

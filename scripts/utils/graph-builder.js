@@ -61,6 +61,7 @@ export function buildGraph(perPageLinks, tagIndex = {}) {
     ...(page.bloobIcon ? { bloobIcon: page.bloobIcon } : {}),
     ...(page.website_status ? { website_status: page.website_status } : {}),
     ...(page.redirect ? { redirect: page.redirect } : {}),
+    ...(page.content_type ? { content_type: page.content_type } : {}),
   }));
 
   // Build page→page links — deduplicated, only between known nodes, no self-links

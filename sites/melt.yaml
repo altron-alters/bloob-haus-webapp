@@ -1,0 +1,15 @@
+# Bloob Haus Site Config — melt
+# Infrastructure settings only. Author settings live in _bloob-settings.md in the vault.
+
+# Deployed URL
+site:
+  url: "https://melt.bloob.haus"
+
+# Content source
+content:
+  repo: "LSanten/melt-website"
+  branch: "main"
+
+# Build features
+features:
+  search: false

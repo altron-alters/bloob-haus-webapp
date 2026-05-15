@@ -1,0 +1,20 @@
+---
+layout: layouts/base.njk
+---
+<div class="folder-wrapper">
+  <header class="folder-header">
+    <p class="folder-room-label">A MELT ROOM</p>
+    <h1 class="folder-title">{{ title }}</h1>
+    {% if description %}<p class="folder-description">{{ description }}</p>{% endif %}
+  </header>
+
+  {#
+    BLOOB SLOT: folder-preview visualizer (adapted for bubble layout)
+    The :::folder-preview block in the folder's index.md is processed by
+    the folder-preview visualizer and renders as scattered bubbles.
+    Until adapted, falls back to rendering the content as-is (list view).
+  #}
+  <div class="folder-items-area">
+    {{ content | safe }}
+  </div>
+</div>

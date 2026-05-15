@@ -1,0 +1,420 @@
+/* ============================================================
+   MELT theme — main.css
+   Dreamy, soft, cozy queer/trans safe-space aesthetic.
+   Purple-mauve gradient · Caveat headings · Quicksand body
+   ============================================================ */
+
+/* --- Bloob Haus token contract (required) --- */
+:root {
+  --color-bg: #7a5090;
+  --color-text: #ffffff;
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-accent: #e8a4c0;
+  --color-accent-2: #c084c4;
+  --color-surface: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.15);
+  --color-link: rgba(255, 255, 255, 0.9);
+  --color-link-hover: #ffffff;
+
+  /* Semantic color pairs for visualizers */
+  --color-pair-a-bg: rgba(80, 50, 130, 0.65);
+  --color-pair-a-text: #ffffff;
+  --color-pair-b-bg: rgba(180, 160, 220, 0.35);
+  --color-pair-b-text: #ffffff;
+
+  --font-body: 'Quicksand', sans-serif;
+  --font-heading: 'Caveat', cursive;
+
+  --content-max-width: 680px;
+  --radius: 12px;
+
+  /* Gradient — used on html, body, and fixed-bg pseudo */
+  --gradient: linear-gradient(
+    140deg,
+    #4a2d6e 0%,
+    #6a4090 20%,
+    #8a5590 45%,
+    #9a6080 65%,
+    #a07278 85%,
+    #a07878 100%
+  );
+}
+
+/* --- Reset --- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* --- Full-viewport fixed gradient background --- */
+html {
+  min-height: 100%;
+  background: var(--gradient);
+  background-attachment: fixed;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-text);
+  min-height: 100vh;
+  /* Background repeated on body for browsers that don't scroll html */
+  background: var(--gradient);
+  background-attachment: fixed;
+}
+
+/* --- Breadcrumb nav --- */
+.melt-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  /* subtle blur so nav doesn't fight content */
+  background: linear-gradient(to bottom, rgba(40, 20, 70, 0.25) 0%, transparent 100%);
+}
+
+.melt-nav__home {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(20, 8, 50, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.melt-nav__home:hover { background: rgba(40, 15, 80, 0.9); }
+
+/* White dot inside the home circle */
+.melt-nav__home::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: white;
+  display: block;
+}
+
+.melt-nav__sep { opacity: 0.35; }
+
+.melt-nav__crumb {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.melt-nav__crumb:hover { color: white; }
+.melt-nav__crumb--current { color: rgba(255, 255, 255, 0.85); }
+
+/* --- Main content area --- */
+.site-main { padding-top: 54px; } /* clear fixed nav */
+
+/* --- Home page --- */
+.home-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 24px 60px;
+}
+
+.home-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(20, 8, 50, 0.55);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.home-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+.home-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.4rem, 8vw, 4rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+.home-tagline {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 56px;
+}
+
+.home-nav-area { width: 100%; max-width: 560px; }
+
+/* --- Bubble-nav stub (fallback until visualizer is built) ---
+   The :::circular-nav container renders its content here.
+   When the real visualizer is built it will replace this with
+   the animated flower layout. For now we show a centered grid. */
+.home-nav-area ul,
+.circular-nav-stub {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  padding: 0;
+}
+
+.home-nav-area li a,
+.circular-nav-stub a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 114px;
+  height: 114px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #4a3282, #1a0838);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  color: white;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+  padding: 14px;
+  line-height: 1.35;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-nav-area li a:hover,
+.circular-nav-stub a:hover {
+  transform: scale(1.05);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* CTA bubble (center) — identified by data-cta or first link in circular-nav */
+.home-nav-area li:first-child a,
+.circular-nav-stub a.cta {
+  width: 148px;
+  height: 148px;
+  background: radial-gradient(circle at 38% 32%, #c87090, #7a3050);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* --- Folder index page --- */
+.folder-wrapper {
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.folder-header {
+  text-align: center;
+  padding: 80px 24px 48px;
+}
+
+.folder-room-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 18px;
+}
+
+.folder-title {
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+
+.folder-description {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.folder-items-area {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Fallback: plain list of folder items when folder-preview visualizer not yet adapted */
+.folder-items-area ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.folder-items-area li a {
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.folder-items-area li a:hover { background: rgba(255,255,255,0.13); }
+
+/* --- Content page --- */
+.page-content {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 60px 24px 120px;
+}
+
+.page-header { margin-bottom: 48px; }
+
+.page-type {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+.page-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+
+.page-byline {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* --- Body typography --- */
+.page-body { font-size: 1.05rem; line-height: 1.8; }
+
+.page-body p { margin-bottom: 1.5em; }
+
+.page-body h2 {
+  font-family: var(--font-heading);
+  font-size: 1.9rem;
+  font-weight: 600;
+  margin: 2.2em 0 0.5em;
+}
+
+.page-body h3 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  margin: 1.8em 0 0.4em;
+}
+
+.page-body a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.35);
+  transition: text-decoration-color 0.15s;
+}
+
+.page-body a:hover { text-decoration-color: white; }
+
+.page-body blockquote {
+  border-left: 3px solid rgba(255,255,255,0.25);
+  padding: 4px 0 4px 20px;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: 2em 0;
+}
+
+.page-body strong { font-weight: 600; }
+.page-body em { font-style: italic; }
+
+.page-body ul,
+.page-body ol {
+  padding-left: 1.6em;
+  margin-bottom: 1.5em;
+}
+
+.page-body li { margin-bottom: 0.5em; }
+
+.page-body hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2.5em 0;
+}
+
+/* Required: table scroll wrapper */
+.table-wrapper { overflow-x: auto; }
+.page-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.page-body th,
+.page-body td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+/* Required: internal link pills */
+a.internal-link {
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: var(--color-surface);
+}
+
+/* --- Footer --- */
+.melt-footer {
+  text-align: center;
+  padding: 40px 24px 32px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+}
+
+.melt-footer__team {
+  font-weight: 600;
+  color: white;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+}
+
+.melt-footer__credit a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.melt-footer__credit a:hover { color: white; }
+
+/* --- Mobile --- */
+@media (max-width: 600px) {
+  .melt-nav { padding: 12px 14px; font-size: 0.75rem; }
+  .home-logo { width: 64px; height: 64px; }
+  .home-tagline { margin-bottom: 40px; }
+
+  .home-nav-area li a,
+  .circular-nav-stub a { width: 96px; height: 96px; font-size: 0.75rem; padding: 10px; }
+
+  .home-nav-area li:first-child a,
+  .circular-nav-stub a.cta { width: 124px; height: 124px; font-size: 0.88rem; }
+
+  .folder-title { font-style: italic; }
+  .page-content { padding: 48px 20px 80px; }
+}

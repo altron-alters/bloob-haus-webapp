@@ -1,0 +1,17 @@
+# melt theme
+# Dreamy, soft, cozy queer/trans safe-space aesthetic.
+# Purple-mauve gradient background, handwritten headings, bubble navigation.
+# Built for: melt.bloob.haus (Whitney & Vicki)
+
+name: melt
+version: "0.1.0"
+description: "Soft gradient theme with bubble navigation for MELT — Massage Exchange and Learning Together."
+
+visualizer_defaults:
+  bubble-nav: true
+  folder-preview: true
+
+feature_defaults:
+  image_zoom: false
+  backlinks: false
+  rss: false

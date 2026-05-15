@@ -1,0 +1,14 @@
+---
+layout: layouts/base.njk
+---
+<article class="page-content" data-pagefind-body>
+  <header class="page-header">
+    {% if type %}<p class="page-type">{{ type }}</p>{% endif %}
+    <h1 class="page-title">{{ title }}</h1>
+    {% if byline %}<p class="page-byline">{{ byline }}</p>{% endif %}
+  </header>
+
+  <div class="page-body">
+    {{ content | safe }}
+  </div>
+</article>

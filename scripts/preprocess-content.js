@@ -273,6 +273,7 @@ export async function preprocessContent({
         title: pageTitle,
         outgoing,
         ...(frontmatter.website_status && { website_status: frontmatter.website_status }),
+        ...(frontmatter.type && { content_type: frontmatter.type }),
       };
     }
 

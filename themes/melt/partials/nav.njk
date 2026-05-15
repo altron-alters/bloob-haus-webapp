@@ -1,0 +1,26 @@
+{# Breadcrumb nav — home dot + path segments #}
+{% if page.url != "/" %}
+<nav class="melt-nav" aria-label="breadcrumb">
+  <a href="{{ "/" | url }}" class="melt-nav__home" aria-label="Home to MELT"></a>
+
+  {# Site name #}
+  <span class="melt-nav__sep" aria-hidden="true">·</span>
+  <a href="{{ "/" | url }}" class="melt-nav__crumb">{{ site.title }}</a>
+
+  {# Folder segment (if URL has 2+ parts) #}
+  {% set urlParts = page.url | replace("/", " ") | trim | split(" ") %}
+  {% if urlParts.length >= 2 %}
+    <span class="melt-nav__sep" aria-hidden="true">·</span>
+    <a href="{{ ("/" + urlParts[0] + "/") | url }}" class="melt-nav__crumb">{{ urlParts[0] | replace("-", " ") }}</a>
+  {% endif %}
+
+  {# Page title (leaf page only, not folder index) #}
+  {% if urlParts.length >= 2 and urlParts[1] and urlParts[1] != "" %}
+    <span class="melt-nav__sep" aria-hidden="true">·</span>
+    <span class="melt-nav__crumb melt-nav__crumb--current">{{ title | truncate(32) }}</span>
+  {% elif urlParts.length == 1 and page.url != "/" %}
+    <span class="melt-nav__sep" aria-hidden="true">·</span>
+    <span class="melt-nav__crumb melt-nav__crumb--current">{{ title | truncate(32) }}</span>
+  {% endif %}
+</nav>
+{% endif %}

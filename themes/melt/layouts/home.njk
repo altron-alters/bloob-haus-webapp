@@ -1,0 +1,23 @@
+---
+layout: layouts/base.njk
+---
+<div class="home-wrapper">
+  {# Logo placeholder — Whitney drops in real art here #}
+  <div class="home-logo" aria-hidden="true">
+    {% if site.logo %}
+    <img src="{{ site.logo }}" alt="{{ site.title }}" />
+    {% endif %}
+  </div>
+
+  <h1 class="home-title">{{ site.title }}</h1>
+  <p class="home-tagline">{{ site.description }}</p>
+
+  {#
+    BLOOB SLOT: bubble-nav visualizer
+    index.md contains :::bubble-nav block — visualizer renders it into .bubble-nav-container.
+    Until bubble-nav visualizer is built, content renders as a fallback link list.
+  #}
+  <div class="home-nav-area">
+    {{ content | safe }}
+  </div>
+</div>
