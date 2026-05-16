@@ -9,7 +9,7 @@
     "dev": "npm run dev:marbles",
     "dev:buffbaby": "node scripts/dev-local.js --site=buffbaby --content=../buffbaby",
     "dev:marbles": "node scripts/dev-local.js --site=marbles --content=../bloob-haus-marbles",
-    "dev:melt": "node scripts/dev-local.js --site=melt \"--content=/Users/lsanten/Library/CloudStorage/GoogleDrive-leon.santen@googlemail.com/.shortcut-targets-by-id/1Y4i8vxExCNMPz13xbWkTjMb-7gl_2Yzx/MELT materials/MELT Website/melt-website\"",
+    "dev:melt": "node scripts/dev-local.js --site=melt --content=../melt-website",
     "dev:alter-engineers": "node scripts/dev-local.js --site=alter-engineers \"--content=G:/Shared drives/ACE_Drive/04_Marketing/Website/_live-website-content-obsidian-repo\"",
     "dev:magic-machine": "node scripts/dev-magic-machine.js",
     "assemble": "node scripts/assemble-src.js",
