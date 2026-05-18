@@ -397,6 +397,23 @@ export async function preprocessContent({
       outputFrontmatter.templateEngineOverride = "njk,md";
     }
 
+    // Strip leading H1 from content body if it duplicates the page title.
+    // page.njk always renders <h1>{{ title }}</h1> from frontmatter — if the
+    // markdown also starts with "# Same Title" that heading is redundant.
+    const leadingH1 = processedContent.match(/^\s*# (.+?)(?:\s*\{#[^}]+\})?\s*\n/);
+    if (leadingH1) {
+      const headingText = leadingH1[1]
+        .replace(/\*\*(.+?)\*\*/g, "$1")
+        .replace(/\*(.+?)\*/g, "$1")
+        .replace(/`(.+?)`/g, "$1")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .trim();
+      if (headingText.toLowerCase() === pageTitle.toLowerCase()) {
+        processedContent = processedContent.replace(/^\s*# .+\n\n?/, "");
+        console.log(`[process]   Stripped leading H1 matching title: "${pageTitle}"`);
+      }
+    }
+
     // Reconstruct the file with frontmatter
     const outputContent = matter.stringify(processedContent, outputFrontmatter);
 
