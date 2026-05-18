@@ -58,9 +58,21 @@ Requires `publish_mode: status_field` in `_bloob-settings.md`. Field absent = `p
 | `marbles-pouch` | — | — | — |
 | `warm-kitchen` | — | — | — |
 
-### Site-Wide (features: in _bloob-settings.md)
+### Site-Wide (top-level keys in `_bloob-settings.md`)
 
-#### Publish Mode (`_bloob-settings.md` top-level keys)
+#### Logo & Favicon
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `logo` | string | Site logo — used in nav and as favicon source if `favicon` is not set |
+| `favicon` | string | Favicon source image — takes priority over `logo` for favicon generation. Generates `favicon.png` (64×64) and `apple-touch-icon.png` (310×310) |
+
+Both fields accept the same value formats:
+- `"[[filename.png]]"` — wiki-link (resolves to `/media/filename.png`)
+- `"[](media/filename.png)"` or `"[label](path/to/file.png)"` — markdown link (path kept as-is, prefixed with `/` if relative)
+- `"plain/path.png"` — plain path (passed through unchanged)
+
+#### Publish Mode
 
 | Key | Values | Description |
 |-----|--------|-------------|
@@ -248,10 +260,28 @@ No theme-specific page-level settings beyond the universal contract.
 
 ## marbles-pouch
 
+#### Per-Page Frontmatter
+
+| Setting | Type | Default | Scope | Description |
+|---------|------|---------|-------|-------------|
+| `date_created` | string | — | `layouts/page.njk` | Creation date pill shown above content. Format: `YYYY-MM-DD` or `YYYY-MM-DD, Custom label`. Label defaults to "Started on". |
+
+#### Site-Wide
+
 | Setting | Type | Default | Scope | Description |
 |---------|------|---------|-------|-------------|
 | `theme_settings.banner_height` | string | `normal` | Site-wide | Banner height variant (`tall`, `normal`, `short`) |
 | `theme_settings.wave_color` | color | — | Site-wide | SVG wave color in footer |
+
+---
+
+## melt
+
+#### Per-Page Frontmatter
+
+| Setting | Type | Default | Scope | Description |
+|---------|------|---------|-------|-------------|
+| `date_created` | string | — | `layouts/page.njk` | Creation date pill shown in page header. Format: `YYYY-MM-DD` or `YYYY-MM-DD, Custom label`. Label defaults to "Written on". |
 
 ---
 

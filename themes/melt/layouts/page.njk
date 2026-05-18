@@ -9,6 +9,22 @@ layout: layouts/base.njk
     {% if typeData and typeData.banner_text %}<p class="page-banner-text">{{ typeData.banner_text }}</p>{% endif %}
     {% if author %}<p class="page-author">By {{ author }}</p>{% endif %}
     {% if byline %}<p class="page-byline">{{ byline }}</p>{% endif %}
+
+    {#
+      Date created pill.
+      Frontmatter: date_created: 2024-11-07
+               or: date_created: 2024-11-07, Written on
+      First comma-split: date | optional label (defaults to "Written on")
+    #}
+    {% if date_created %}
+    {% set dcStr = date_created | string %}
+    {% set dcParts = dcStr | split(",") %}
+    {% set dcDate = dcParts[0] | trim %}
+    {% set dcLabel = (dcParts[1] | trim) if dcParts.length > 1 else "Written on" %}
+    <p class="page-date" data-pagefind-ignore>{{ dcLabel }} {{ dcDate | dateFormat }}</p>
+    {% endif %}
+
+    {% include "partials/share-bar.njk" %}
   </header>
 
   <div class="page-body">
