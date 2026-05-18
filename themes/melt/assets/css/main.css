@@ -444,6 +444,9 @@ body {
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 
+.transclusion-embed > *:first-child { margin-top: 0; }
+.transclusion-embed > *:last-child { margin-bottom: 0; }
+
 .transclusion-placeholder {
   border: 1px dashed var(--color-border);
   border-radius: var(--radius);
