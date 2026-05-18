@@ -70,13 +70,19 @@ document.addEventListener('DOMContentLoaded', function () {
     a.className = 'heading-anchor';
     a.href = '#' + h.id;
     a.setAttribute('aria-label', 'Copy link to this section');
-    a.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+    var linkIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+    var checkIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+    a.innerHTML = linkIcon;
     a.addEventListener('click', function (e) {
       e.preventDefault();
       history.pushState(null, '', '#' + h.id);
       copyText(location.href, function () {
+        a.innerHTML = checkIcon;
         a.classList.add('heading-anchor--copied');
-        setTimeout(function () { a.classList.remove('heading-anchor--copied'); }, 2000);
+        setTimeout(function () {
+          a.innerHTML = linkIcon;
+          a.classList.remove('heading-anchor--copied');
+        }, 2000);
       });
     });
     h.appendChild(a);
