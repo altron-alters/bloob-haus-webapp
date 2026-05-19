@@ -9,6 +9,7 @@
  */
 
 import { execSync } from "child_process";
+import { rmSync, existsSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -64,6 +65,14 @@ async function devLocal() {
   // Derive per-site src/ directory and expose to all child scripts via env
   const srcDir = getSrcDir(config.site?.url);
   process.env.SRC_DIR = srcDir;
+
+  // Step 0: Clean output directory so no stale files from a previous site's build carry over.
+  // src-*/ directories persist (preprocessed cache + image optimizations stay warm).
+  const outputDir = path.join(ROOT_DIR, config.mount_path ? `_site/${config.mount_path}` : "_site");
+  if (existsSync(outputDir)) {
+    console.log(`\n--- Cleaning ${path.relative(ROOT_DIR, outputDir)}/ ---`);
+    rmSync(outputDir, { recursive: true, force: true });
+  }
 
   // Step 1: Preprocess content (must run before assemble — copies attachments needed for favicons)
   await preprocessContent({ contentDir, ...(pageFilter && { pageFilter }) });
