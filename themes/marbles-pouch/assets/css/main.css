@@ -536,10 +536,16 @@ article.marble-page {
   padding: var(--spacing-sm) 0;
 }
 
-/* Prevent embeds (Spotify, YouTube, etc.) from overflowing on mobile */
+/* Embeds (YouTube, Spotify, etc.) — full-width responsive 16:9 */
 .marble-content iframe,
-.marble-content video,
 .marble-content embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+}
+
+.marble-content video {
   max-width: 100%;
 }
 
