@@ -290,8 +290,11 @@ export async function preprocessContent({
         ...wikiLinkResult.resolved.map((r) => r.url),
         ...mdLinkResult.resolved.map((r) => r.url),
       ];
+      const fileDir = path.dirname(file.relativePath).replace(/\\/g, "/");
       perPageLinks[pageInfo.url] = {
         title: pageTitle,
+        filename: path.basename(file.relativePath, ".md"),
+        folder: fileDir === "." ? null : fileDir,
         outgoing,
         ...(frontmatter.website_status && { website_status: frontmatter.website_status }),
         ...(frontmatter.type && { content_type: frontmatter.type }),
@@ -312,6 +315,7 @@ export async function preprocessContent({
       ...frontmatter,
       title: pageTitle,
       slug: pageInfo?.slug,
+      ...(pageInfo?.slug && { slug_spaced: pageInfo.slug.replace(/-/g, " ") }),
       tags: pageTags,
       ...(bloobObject && { bloob_object: bloobObject }),
       ...(resolvedRedirect && { redirect: resolvedRedirect }),

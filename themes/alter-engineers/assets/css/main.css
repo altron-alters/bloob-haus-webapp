@@ -445,3 +445,16 @@ html { margin-top: 0 !important; }
 .image-text--image-right .image-text__text-container {
   direction: ltr;
 }
+
+/* --- Generic page layout (page.njk) --- */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  /* Inherits global h1 styles; override here if needed */
+}
+
+.page-content {
+  /* Content area — styles applied globally via h2, p, ul etc. */
+}

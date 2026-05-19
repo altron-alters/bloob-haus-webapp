@@ -269,10 +269,8 @@ pre code {
     margin-bottom: var(--spacing-xl);
 }
 
-/* Style the first heading in recipe content with underline */
-.recipe-content h1:first-child,
-.recipe-content h2:first-child,
-.recipe-content h3:first-child {
+/* Recipe title — moved out of content body, styled here */
+.recipe-title {
     border-bottom: 3px solid var(--accent-color);
     padding-bottom: var(--spacing-md);
     margin-bottom: var(--spacing-lg);

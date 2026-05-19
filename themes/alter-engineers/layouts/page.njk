@@ -1,4 +1,15 @@
 ---
 layout: layouts/base.njk
 ---
-{{ content | safe }}
+<article class="page-article" data-pagefind-body>
+  <header class="page-header">
+    <h1 class="page-title">{{ title }}</h1>
+  </header>
+
+  {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}
+  {% if slug %}
+  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug }}{% if slug_spaced %} {{ slug_spaced }}{% endif %}</span>
+  {% endif %}
+
+  <div class="page-content">{{ content | safe }}</div>
+</article>

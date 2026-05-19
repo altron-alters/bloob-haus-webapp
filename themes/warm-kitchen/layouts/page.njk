@@ -5,6 +5,16 @@ layout: layouts/base.njk
     {% if image %}
     <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden />
     {% endif %}
+
+    <header class="recipe-header">
+      <h1 class="recipe-title">{{ title }}</h1>
+    </header>
+
+    {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}
+    {% if slug %}
+    <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug }}{% if slug_spaced %} {{ slug_spaced }}{% endif %}</span>
+    {% endif %}
+
     <div class="recipe-content">{{ content | safe }}</div>
 
     {% if tags or prep_time or cook_time or servings %}
@@ -32,24 +42,8 @@ layout: layouts/base.njk
     </div>
     {% endif %}
 
-    {# Commented out until we have a better style for recipe cascade/provenance
-    {% if source %}
-    <footer class="recipe-footer">
-        <div class="recipe-source">
-            <strong>Source:</strong>
-            {% for src in source %}
-            <span>{{ src }}</span>
-            {% endfor %}
-        </div>
-    </footer>
-    {% endif %}
-    #}
-
     {% include "partials/backlinks.njk" %}
 
-    {# Graph visualizer — shown when the "graph" visualizer is bundled for this site.
-       browser.js hides the container automatically when only_if_linked:true and
-       the page has no connections. Per-page overrides via frontmatter graph: key. #}
     {% for vis in visualizers %}{% if vis.name == "graph" and vis.hasJs %}
     <div class="graph-visualizer"
          data-current-page="{{ page.url }}"
