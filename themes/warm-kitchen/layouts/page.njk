@@ -8,6 +8,7 @@ layout: layouts/base.njk
 
     <header class="recipe-header">
       <h1 class="recipe-title">{{ title }}</h1>
+      {% if subtitle %}<p class="recipe-subtitle">{{ subtitle }}</p>{% endif %}
     </header>
 
     {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}

@@ -493,6 +493,9 @@ export default async function (eleventyConfig) {
         // no-pswp      → optimize normally, skip PhotoSwipe (inside Swiper etc.)
         // ─────────────────────────────────────────────────────────────────────────
 
+        // Hidden images (OG/pagefind meta): leave untouched — wrapping in <a> would make them visible.
+        if ((before + after).includes("hidden")) continue;
+
         // no-optimize: skip ALL processing — leave original <img> tag unchanged.
         // Ensure the src is properly URL-encoded so browsers can load files with spaces.
         // Example: ![alt](image.png){.no-optimize}

@@ -112,7 +112,22 @@ export function resolveAttachments(content, attachmentIndex, { sourceVaultPath =
       const resolvedPath = resolve(srcPath);
       if (resolvedPath) {
         resolved.push({ original: srcPath, resolved: resolvedPath });
-        return `<${tag}${before}src="${resolvedPath}"${after}>`;
+        let resolvedTag = `<${tag}${before}src="${resolvedPath}"${after}>`;
+        // <img> tags with relative paths are user-authored HTML — add no-optimize so
+        // the image optimizer preserves inline attributes (style, width, class, etc.)
+        // rather than wrapping in PhotoSwipe markup.
+        if (tag.toLowerCase() === "img" && !resolvedTag.includes("no-optimize")) {
+          const classMatch = resolvedTag.match(/\bclass=(["'])([^"']*)\1/);
+          if (classMatch) {
+            resolvedTag = resolvedTag.replace(
+              classMatch[0],
+              `class="${classMatch[2]} no-optimize"`,
+            );
+          } else {
+            resolvedTag = resolvedTag.replace(/>$/, ' class="no-optimize">');
+          }
+        }
+        return resolvedTag;
       }
       broken.push({ original: srcPath });
       return match;

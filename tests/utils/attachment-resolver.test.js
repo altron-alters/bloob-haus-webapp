@@ -120,24 +120,44 @@ describe('resolveAttachments', () => {
           index,
           { sourceVaultPath: 'marbles/my-page.md' },
         );
-        expect(result.content).toBe('<img src="/media/image.jpg">');
+        expect(result.content).toBe('<img src="/media/image.jpg" class="no-optimize">');
         expect(result.resolved).toHaveLength(1);
       });
 
-      it('preserves other attributes', () => {
+      it('preserves other attributes and adds no-optimize class', () => {
+        // User-authored HTML <img> tags must pass through the image optimizer unchanged.
+        // no-optimize class tells the optimizer to preserve inline styles, width, etc.
         const result = resolveAttachments(
           '<img src="../media/image.jpg" width="150" style="display:block; margin:auto;">',
           index,
           { sourceVaultPath: 'marbles/my-page.md' },
         );
         expect(result.content).toBe(
-          '<img src="/media/image.jpg" width="150" style="display:block; margin:auto;">',
+          '<img src="/media/image.jpg" width="150" style="display:block; margin:auto;" class="no-optimize">',
         );
+      });
+
+      it('merges no-optimize into an existing class attribute', () => {
+        const result = resolveAttachments(
+          '<img src="../media/image.jpg" class="centered">',
+          index,
+          { sourceVaultPath: 'marbles/my-page.md' },
+        );
+        expect(result.content).toBe('<img src="/media/image.jpg" class="centered no-optimize">');
+      });
+
+      it('does not duplicate no-optimize if already present', () => {
+        const result = resolveAttachments(
+          '<img src="../media/image.jpg" class="no-optimize">',
+          index,
+          { sourceVaultPath: 'marbles/my-page.md' },
+        );
+        expect(result.content).toBe('<img src="/media/image.jpg" class="no-optimize">');
       });
 
       it('resolves a bare filename src via basename fallback', () => {
         const result = resolveAttachments('<img src="image.jpg">', index);
-        expect(result.content).toBe('<img src="/media/image.jpg">');
+        expect(result.content).toBe('<img src="/media/image.jpg" class="no-optimize">');
       });
 
       it('leaves already-root-relative src unchanged', () => {
@@ -170,7 +190,7 @@ describe('resolveAttachments', () => {
           index,
           { sourceVaultPath: 'marbles/my-page.md' },
         );
-        expect(result.content).toBe('<img src="/media/Pasted%20image%2020250315.jpg">');
+        expect(result.content).toBe('<img src="/media/Pasted%20image%2020250315.jpg" class="no-optimize">');
       });
     });
 
@@ -235,7 +255,7 @@ describe('resolveAttachments', () => {
           index,
           { sourceVaultPath: 'marbles/my-page.md' },
         );
-        expect(result.content).toBe('<img src="/assets/chart.svg">');
+        expect(result.content).toBe('<img src="/assets/chart.svg" class="no-optimize">');
       });
 
       it('handles nested source paths correctly', () => {
@@ -252,7 +272,7 @@ describe('resolveAttachments', () => {
           nestedIndex,
           { sourceVaultPath: 'docs/sub/page.md' },
         );
-        expect(result.content).toBe('<img src="/docs/images/photo.jpg">');
+        expect(result.content).toBe('<img src="/docs/images/photo.jpg" class="no-optimize">');
       });
     });
   });
