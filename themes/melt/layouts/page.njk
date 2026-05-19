@@ -27,6 +27,11 @@ layout: layouts/base.njk
     {% include "partials/share-bar.njk" %}
   </header>
 
+  {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}
+  {% if slug %}
+  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug }}{% if slug_spaced %} {{ slug_spaced }}{% endif %}</span>
+  {% endif %}
+
   <div class="page-body">
     {{ content | safe }}
   </div>
