@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "fs";
+import { execSync } from "child_process";
 import sharp from "sharp";
 import { join, relative, basename, extname } from "path";
 import taskLists from "markdown-it-task-lists";
@@ -664,6 +665,23 @@ export default async function (eleventyConfig) {
 
   if (mountPath) {
     console.log(`[eleventy] Mount path: /${mountPath}/ → output to ${outputDir}`);
+  }
+
+  // Run pagefind after every build (dev and prod) so search index is always current.
+  // This replaces the build-site.js post-build step so both modes stay in sync.
+  if (siteConfig.features?.search) {
+    eleventyConfig.on("eleventy.after", () => {
+      console.log("\n--- Building search index (Pagefind) ---");
+      try {
+        execSync(`npx pagefind --site ${outputDir}`, {
+          stdio: "inherit",
+          cwd: process.cwd(),
+        });
+        console.log("[pagefind] Search index built");
+      } catch (e) {
+        console.warn("[pagefind] Index build failed:", e.message);
+      }
+    });
   }
 
   return {

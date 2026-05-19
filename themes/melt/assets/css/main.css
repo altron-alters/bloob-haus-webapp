@@ -274,13 +274,15 @@ body {
   padding: 60px 24px 120px;
 }
 
-/* Embeds (YouTube, Spotify, etc.) — full-width responsive 16:9 */
+/* Embeds (YouTube, Spotify, etc.) — full-width responsive 16:9 with spacing */
 .page-content iframe,
 .page-content embed {
   width: 100%;
   aspect-ratio: 16 / 9;
   height: auto;
   display: block;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
 }
 
 .page-content video {

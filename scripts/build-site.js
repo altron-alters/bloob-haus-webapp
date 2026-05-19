@@ -202,16 +202,8 @@ async function buildEleventy(config) {
   const files = await fs.readdir(siteDir);
   console.log(`[eleventy] Build complete - ${files.length} entries in _site/`);
 
-  // Step 8: Build Pagefind search index
-  if (config.features?.search) {
-    console.log("\n--- Step 8: Building search index (Pagefind) ---");
-    const pagefindSite = config.mount_path ? `_site/${config.mount_path}` : "_site";
-    execSync(`npx pagefind --site ${pagefindSite}`, {
-      cwd: ROOT_DIR,
-      stdio: "inherit",
-    });
-    console.log("[pagefind] Search index built");
-  }
+  // Pagefind search index is now built via eleventy.after hook in eleventy.config.js
+  // so it runs consistently in both dev and production builds.
 }
 
 /**
