@@ -32,3 +32,81 @@
 .search-visualizer--show-tags .pagefind-ui__filter-panel {
   display: block !important;
 }
+
+/* ================================
+   Pagefind UI — Sizing & Layout
+   Makes the search input fill its container.
+   Pagefind's Svelte-compiled defaults constrain width; !important overrides.
+   Future UI sizing/positioning decisions go here — they propagate to all themes.
+   ================================ */
+
+.pagefind-ui__form {
+  width: 100% !important;
+}
+
+.pagefind-ui__search-input {
+  width: 100% !important;
+  padding: 0.65em 1.25em !important;
+  font-size: 1rem !important;
+  line-height: 1.4 !important;
+}
+
+/* ================================
+   Pagefind UI — Color & Style Overrides
+   Uses standard contract tokens (declared in every theme's :root).
+   Pagefind hardcodes colors via Svelte-scoped selectors; !important is required.
+   Theme-specific deviations (glass effects, accent glows) live in each theme's main.css.
+   ================================ */
+
+.pagefind-ui__search-input {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 999px !important;
+  color: var(--text-color) !important;
+  font-family: var(--font-body) !important;
+}
+
+.pagefind-ui__search-input::placeholder {
+  color: var(--text-light) !important;
+}
+
+.pagefind-ui__search-input:focus {
+  outline: none !important;
+  border-color: var(--accent-color) !important;
+}
+
+.pagefind-ui__search-clear {
+  color: var(--text-light) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.pagefind-ui__filter-panel {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.pagefind-ui__filter-group {
+  border: none !important;
+}
+
+.pagefind-ui__filter-block {
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px !important;
+  background: var(--card-bg) !important;
+}
+
+.pagefind-ui__result {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.pagefind-ui__result-link {
+  color: var(--accent-color) !important;
+}
+
+.pagefind-ui__result-excerpt {
+  color: var(--text-light) !important;
+}

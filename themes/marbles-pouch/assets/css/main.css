@@ -554,7 +554,6 @@ article.marble-page {
 /* THEME STANDARD: date created pill */
 .marble-date {
   display: block;
-  text-align: center;
   font-size: 0.82rem;
   color: var(--text-light);
   background: var(--card-bg);
@@ -564,7 +563,7 @@ article.marble-page {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
   white-space: nowrap;
   width: fit-content;
-  margin: 0 auto var(--spacing-sm);
+  margin: 0 0 var(--spacing-sm);
 }
 
 /* THEME STANDARD: internal link pills */
@@ -849,47 +848,25 @@ details > *:not(summary) {
 }
 
 /* ================================
-   Search (Pagefind UI overrides)
+   Search (Pagefind theme overrides — base sizing+color in lib/visualizers/search/styles.css)
    ================================ */
 
 .home-search {
   margin: 0 0 var(--spacing-xl);
 }
 
+/* Marbles glass effect */
 .pagefind-ui__search-input {
   background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 999px !important;
-  font-family: var(--font-body) !important;
-  color: var(--text-color) !important;
 }
 
+/* Marbles purple focus glow */
 .pagefind-ui__search-input:focus {
-  outline: none !important;
-  border-color: var(--accent-color) !important;
   box-shadow: 0 0 0 3px rgba(145, 76, 154, 0.12) !important;
 }
 
-.pagefind-ui__search-clear {
-  color: var(--text-light) !important;
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-.pagefind-ui__filter-panel {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-.pagefind-ui__filter-group {
-  border: none !important;
-}
-
+/* Slightly more transparent filter blocks */
 .pagefind-ui__filter-block {
-  border: 1px solid var(--border-color) !important;
-  border-radius: 8px !important;
   background: rgba(255, 255, 255, 0.6) !important;
 }
 
@@ -897,12 +874,9 @@ details > *:not(summary) {
   margin-bottom: var(--spacing-2xl, 3rem);
 }
 
+/* marbles-pouch uses --link-color for result links */
 .pagefind-ui__result-link {
   color: var(--link-color) !important;
-}
-
-.pagefind-ui__result-excerpt {
-  color: var(--text-light) !important;
 }
 
 /* ================================

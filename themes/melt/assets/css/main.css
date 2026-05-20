@@ -522,51 +522,24 @@ a.internal-link {
 
 .melt-footer__credit a:hover { color: white; }
 
-/* --- Pagefind search overrides ---
-   Pagefind hardcodes white on the input regardless of --pagefind-ui-* tokens.
-   These !important rules bring the input into melt's dark glass aesthetic. */
+/* --- Pagefind theme overrides (base sizing+color in lib/visualizers/search/styles.css) ---
+   Melt's dark glass aesthetic requires semi-transparent backgrounds instead of --card-bg. */
 .pagefind-ui__search-input {
   background: rgba(255, 255, 255, 0.12) !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: 999px !important;
-  color: var(--color-text) !important;
-  font-family: var(--font-body) !important;
-}
-
-.pagefind-ui__search-input::placeholder {
-  color: var(--color-text-muted) !important;
 }
 
 .pagefind-ui__search-input:focus {
-  outline: none !important;
-  border-color: var(--color-accent) !important;
   background: rgba(255, 255, 255, 0.18) !important;
   box-shadow: 0 0 0 3px rgba(232, 164, 192, 0.2) !important;
 }
 
-.pagefind-ui__search-clear {
-  color: var(--color-text-muted) !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
 .pagefind-ui__search-clear:hover {
-  color: var(--color-text) !important;
+  color: var(--text-color) !important;
 }
 
 .pagefind-ui__result {
   background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid var(--color-border) !important;
   border-radius: var(--radius) !important;
-}
-
-.pagefind-ui__result-link {
-  color: var(--color-accent) !important;
-}
-
-.pagefind-ui__result-excerpt {
-  color: var(--color-text-muted) !important;
 }
 
 /* --- Mobile --- */
