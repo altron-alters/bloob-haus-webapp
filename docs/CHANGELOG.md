@@ -6,6 +6,35 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 38 - May 20, 2026
+**Worked on:** Search visualizer overhaul (melt), folder slug indexing, link resolution regression fix
+
+**Search visualizer — melt theme (major rewrite)**
+- Enabled `features.search: true` in `sites/melt.yaml`; `head.njk` now conditionally loads `pagefind-ui.css`
+- Sticky input bar: wrapped Pagefind's input + clear button in `div.sv-input-wrapper` via `requestAnimationFrame` after mount — sticky so the bar stays visible while results scroll. Must NOT be called from MutationObserver: moving a focused element causes focus loss (requires double-click to re-focus)
+- Preview modal now uses `<iframe>` instead of fetch+innerHTML — visualizer content (JS-rendered) now works inside previews
+- Black-frame flash fix: `backdrop-filter` + `will-change: backdrop-filter` pre-allocates the GPU compositing layer so the first open doesn't stall
+- Pagefind WASM pre-warm: silent `import("/pagefind/pagefind.js")` 800ms after mount, calling `preload()` or `init()` to JIT-compile the WASM engine before the user types — prevents ~100–200ms stall on first search
+- Loupe icon hides when typing; clear button correctly positioned inside `sv-input-wrapper`; empty thumbnails hidden; result message spacing fixed
+- Translations include quoted search terms (`"[SEARCH_TERM]"` in result counts)
+- `show_id`, `show_actions`, `show_tags`, `placeholder` visualizer settings all wired and working
+
+**ID pills — folder slug indexing**
+- Folder index files (`resources/index.md`) now get `slug = parent folder name` ("resources") instead of "index", and `fullSlug = slugifiedFolder` ("resources") instead of "folder/index"
+- `is_folder: true` injected into frontmatter by `preprocess-content.js` for all index files
+- Hidden body span changed from `{{ slug }} {{ slug_spaced }}` to `ID: {{ slug }}/` (folder) or `ID: {{ slug }}` (normal page) — makes the slug searchable AND styled as a recognisable pill when it appears in excerpts
+- `slug_spaced` kept as a separate second hidden span — Pagefind tokenises "contact-us" as one unit so "contact us" (two-word query) requires both tokens to exist separately
+- `browser.js`: `processExcerptId()` wraps `ID: slug` matches in `.sv-id-pill` with a styled `ID` label badge; `injectIdLine()` reads canonical ID from excerpt text (captures trailing `/` for folders) before falling back to href; ID pill appears at bottom of each result card
+- `.sv-id-pill` and `.sv-id-pill-label` styles added to `search/styles.css`
+
+**Link resolution regression fix**
+- Changing `fullSlug` from `"resources/index"` → `"resources"` broke `markdown-link-resolver.js`, which was looking up `index.pages["resources/index"]` directly (bypassing `filenameLookup`) in its fast-path full-path lookup
+- `file-index-builder.js`: also registers `filenameLookup["resources/index"] = "resources"` for every folder index file (backward-compat alias)
+- `markdown-link-resolver.js`: when `pages[key]` misses on a full-path lookup, now falls back to `filenameLookup[key]` → `pages[fullSlug]` so `[index](resources/index.md)` resolves to `/resources/` correctly
+- Root cause: circular-nav links written as `[label](folder/index.md)` were resolving to the last-processed index file's URL (whichever `filenameLookup["index"]` was overwritten by last)
+
+---
+
 ### Session 37 - May 19, 2026
 **Worked on:** Attachment pipeline vault-structure refactor, favicon fix, image optimizer bypass, subtitle extraction
 
@@ -1232,6 +1261,9 @@ Development session history and completed work.
 | 14 | Feb 19, 2026 | Engineering review implementation, marbles site, multi-site isolation |
 | 19 | Mar 4, 2026 | Theme standards, internal link pills, date pill, favicon pipeline, logo in nav |
 | 20 | Mar 5, 2026 | Favicon delivery fix, private content safety, dev/prod pipeline unification |
+| 36 | May 18, 2026 | URL slug defaults, filename sanitization, copy-link-button plugin |
+| 37 | May 19, 2026 | Attachment pipeline vault-structure refactor, favicon fix, subtitle extraction |
+| 38 | May 20, 2026 | Search visualizer overhaul (melt), folder slug ID pills, link resolution regression fix |
 
 ---
 

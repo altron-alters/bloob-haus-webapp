@@ -34,6 +34,7 @@ Tracked items with severity, impact, and target resolution phase.
 | 28 | Transclusion: block-level slice `![[note#^blockid]]` not yet supported | Low | Same fallback as #27 — full page embedded | Phase 3+: pre-pass to build global `{blockId → {file, node}}` map; extract block at embed time | ⬜ Open |
 | 29 | Transclusion heading bump is fixed at +1 level; no context-aware depth | Low | If embedded note appears under an h3, its h1s become h2 (should be h4). Rare in practice. | Detect parent heading depth at embed site and bump by the correct delta | ⬜ Open |
 | 30 | `.transclusion-embed` / `.transclusion-placeholder` CSS only in `melt` theme | Low | Other themes render unstyled embed containers | Add styles to `marbles-pouch`, `warm-kitchen`, `alter-engineers` main.css following melt's pattern | ⬜ Open |
+| 31 | `redirect-resolver.js`: `[[folder/index]]` wiki-link redirect silently returns null | Low | Extremely rare — nobody writes slash-containing wiki-links in `redirect:` frontmatter. But if they did, `pages["resources/index"]` no longer exists after the folder-slug change and the resolver returns null without trying `filenameLookup`. | Apply the same `filenameLookup[key]` fallback added to `markdown-link-resolver.js` | ⬜ Open |
 
 ## Notes
 

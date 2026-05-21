@@ -1,8 +1,8 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-04-28
-**Current Phase:** alter-engineers theme under active development. Multi-site operational.
+**Last Updated:** 2026-05-20
+**Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
 
@@ -37,8 +37,9 @@
 - https://leons.bloob.haus (Leon's Marbles — Cloudflare project name: `leons`, content repo: `LSanten/bloob-haus-marbles`)
 
 **IN DEVELOPMENT:**
+- melt site (`sites/melt.yaml`, theme `themes/melt/`) — Whitney & Vicki's massage collective. Content repo at `../melt-website/`. Dev command: `npm run dev:melt` (port 8083). Circular nav (`circular-nav` visualizer), search visualizer fully wired (sticky input, ID pills, iframe preview, WASM prewarm). Folder index pages use parent folder name as slug + `is_folder: true` flag.
 - alter-engineers site (`sites/alter-engineers.yaml`, theme `themes/alter-engineers/`) — All homepage sections are content-driven from `index.md`. Live: hero, projects (`card-preview`), team (`image-grid`), heading-and-paragraph, services, slideshow (partners logos), image-text (solutions), `quotes-stack` (testimonials carousel), testimonials, folder-preview (articles slider-cards). Redirect support active. Content repo at live ACE Drive vault. Dev command: `npm run dev:alter-engineers`
-- Remaining for launch: deploy pipeline (Cloudflare Pages + GitHub Actions), project images, DNS cutover.
+- Remaining for alter-engineers launch: deploy pipeline (Cloudflare Pages + GitHub Actions), project images, DNS cutover.
 - `ken-burns-zoom-builder` magic machine — working video export (WebCodecs + self-hosted mp4-muxer). Served at `/magic-machine/ken-burns-zoom-builder/` on sites with `features.magic_machines: true`. Disabled on alter-engineers.
 
 ---
@@ -83,7 +84,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Per-file `exclude_files` list in site YAML config
 - Multi-site build isolation (src/ cleaned between builds, repo-switch detection)
 - Reserved directory filtering (media, assets, etc. excluded from section nav)
-- Test suite: 191 tests across 14 files (Vitest), co-located visualizer tests
+- Test suite: 297 tests across 16 files (Vitest), co-located visualizer tests
 - Validation report with `--strict` flag for CI (fails build on broken links)
 
 **Build pipeline:**
@@ -117,7 +118,8 @@ bloob-haus-webapp/
 │
 ├── sites/                       ✅ Per-site configuration (YAML)
 │   ├── buffbaby.yaml            ✅ Buff Baby Kitchen config
-│   └── marbles.yaml             ✅ Leon's Marbles config (preserve-case slugs)
+│   ├── marbles.yaml             ✅ Leon's Marbles config (preserve-case slugs)
+│   └── melt.yaml                ✅ MELT massage collective config (preserve-case slugs, search enabled)
 │
 ├── themes/                      ✅ Theme library
 │   ├── _base/                   ✅ Shared across all themes
@@ -154,7 +156,7 @@ bloob-haus-webapp/
 │   ├── fridge-magnets/          ✅ (see visualizers.md)
 │   ├── scene-nav/               ✅ Hybrid: interactive image scene navigator with builder
 │   ├── tags/                    ✅ Build-time: tag cloud
-│   ├── search/                  ✅ (Pagefind integration)
+│   ├── search/                  ✅ Pagefind integration — sticky input, ID pills, iframe preview, WASM prewarm
 │   ├── latex/                   ✅ Runtime: LaTeX math rendering
 │   └── graph/                   ✅ Hybrid: force-directed link graph
 │       ├── manifest.json        ✅ Settings schema

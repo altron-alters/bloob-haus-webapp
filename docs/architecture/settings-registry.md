@@ -35,6 +35,14 @@ These settings work identically across every theme. They are part of the Bloob H
 |-------|-------------|
 | `byline` | Freeform attribution string displayed as-is below the title — use when you need full control over the attribution line (e.g. "In collaboration with X and Y"). Takes precedence over `author` if both are set. No "By" prefix is added. |
 
+#### Preprocessor-injected fields (set automatically — do not set in content files)
+
+| Field | Type | Set by | Description |
+|-------|------|--------|-------------|
+| `is_folder` | bool | `preprocess-content.js` | `true` on folder index files (`resources/index.md`). Used by `page.njk` to emit a trailing `/` on the `ID:` body search span so search results show `resources/` not `resources`. |
+| `slug` | string | `preprocess-content.js` | URL slug derived from filename. For folder index files, set to the parent folder name (not "index"). |
+| `slug_spaced` | string | `preprocess-content.js` | Space-separated version of the slug (e.g. `"contact us"` for `contact-us`). Emitted as a separate hidden span so multi-word queries like "contact us" still match the slug. |
+
 #### `website_status` — Status Matrix
 
 Requires `publish_mode: status_field` in `_bloob-settings.md`. Field absent = `public`.
