@@ -1,0 +1,70 @@
+/*
+ * Photo Grid Visualizer — self-contained styles
+ *
+ * Layout is driven entirely by CSS custom properties set inline by the renderer:
+ *   --pg-gap      gap between images (default 8px)
+ *   --pg-padding  horizontal inset from prose column (default 6%)
+ *   --pg-cols     column count in uniform mode
+ *   --pg-ratio    aspect-ratio for crop mode
+ *   --row-cols    per-row column count in layout mode
+ *
+ * Two layout modes:
+ *   .photo-grid             — uniform CSS grid, images auto-flow by --pg-cols
+ *   .photo-grid--rows       — flex column of explicit-column row divs
+ *
+ * Lightbox: images are wrapped in <a class="pswp-gallery__item">, picked up
+ * by PhotoSwipe when image_zoom is enabled in the theme (no extra config needed).
+ */
+
+/* ── Container — uniform mode ────────────────────────────────────── */
+
+.photo-grid {
+  padding-left: var(--pg-padding, 6%);
+  padding-right: var(--pg-padding, 6%);
+  display: grid;
+  grid-template-columns: repeat(var(--pg-cols, 3), 1fr);
+  gap: var(--pg-gap, 8px);
+  margin: 2rem 0;
+}
+
+/* ── Container — layout mode (explicit rows) ──────────────────────── */
+
+.photo-grid--rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pg-gap, 8px);
+}
+
+.photo-grid__row {
+  display: grid;
+  grid-template-columns: repeat(var(--row-cols, 1), 1fr);
+  gap: var(--pg-gap, 8px);
+}
+
+/* ── Item ────────────────────────────────────────────────────────── */
+
+.photo-grid__item {
+  display: block;
+  overflow: hidden;
+  /* cursor and hover overlay handled by photoswipe-head.njk for all pswp-gallery__item anchors */
+}
+
+.photo-grid__item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Ratio / crop mode ───────────────────────────────────────────── */
+
+.photo-grid--ratio .photo-grid__item {
+  aspect-ratio: var(--pg-ratio);
+}
+
+.photo-grid--ratio .photo-grid__item img {
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Mobile: intentionally no column collapse — a 3-col grid stays 3 columns on small screens.
+   The images scale down proportionally via the fluid 1fr grid. */
