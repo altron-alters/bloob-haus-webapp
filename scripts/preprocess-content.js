@@ -222,7 +222,13 @@ export async function preprocessContent({
     // 6b: Handle transclusions first (before other ![[]] patterns)
     const currentFilename = path.basename(file.relativePath, ".md");
     const currentSlug = fileIndex.filenameLookup[currentFilename.toLowerCase()] || null;
-    const transclusionResult = handleTransclusions(processedContent, fileIndex, { sourceFile: currentSlug });
+    // Site-wide default from features.transclusion_indicators; per-page frontmatter overrides.
+    const siteTransclusionIndicators = siteConfig.features?.transclusion_indicators ?? true;
+    const showTransclusionIndicators = frontmatter.transclusion_indicators ?? siteTransclusionIndicators;
+    const transclusionResult = handleTransclusions(processedContent, fileIndex, {
+      sourceFile: currentSlug,
+      showIndicators: showTransclusionIndicators,
+    });
     processedContent = transclusionResult.content;
     stats.transclusions += transclusionResult.transclusions.length;
 

@@ -45,9 +45,10 @@ function makePlaceholder(target) {
  * @param {Object} [options]
  * @param {Set<string>} [options.visited] - fullSlugs already in the current embed chain
  * @param {string|null} [options.sourceFile] - fullSlug of the file being processed
+ * @param {boolean} [options.showIndicators=true] - wrap embeds in .transclusion-embed div; false = seamless inline
  * @returns {{ content: string, transclusions: Array<{target: string, original: string}> }}
  */
-export function handleTransclusions(content, fileIndex = null, { visited = new Set(), sourceFile = null } = {}) {
+export function handleTransclusions(content, fileIndex = null, { visited = new Set(), sourceFile = null, showIndicators = true } = {}) {
   const transclusions = [];
   const transclusionPattern = /!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
 
@@ -99,10 +100,14 @@ export function handleTransclusions(content, fileIndex = null, { visited = new S
     const nested = handleTransclusions(embeddedContent, fileIndex, {
       visited: newVisited,
       sourceFile: fullSlug,
+      showIndicators,
     });
     embeddedContent = nested.content;
 
     console.log(`[transclusion] Expanded "${trimmedTarget}"`);
+    if (!showIndicators) {
+      return `\n\n${embeddedContent}\n\n`;
+    }
     return `<div class="transclusion-embed" data-source="${url}">\n\n${embeddedContent}\n\n</div>`;
   });
 

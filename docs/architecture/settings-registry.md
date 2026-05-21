@@ -28,6 +28,7 @@ These settings work identically across every theme. They are part of the Bloob H
 | `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
 | `website_status` | string | `public` (when absent) | Publish visibility for this page. One of `draft` / `unlisted` / `archived` / `public`. Only active when `publish_mode: status_field` is set in `_bloob-settings.md`. See status matrix below. |
+| `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
 
 #### Optional display fields (not in standard YAML, no UI prompt)
 
@@ -100,6 +101,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.tags` | `true` | Tag system |
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |
 | `features.magic_machines` | `true` | Serve magic machine GUI tools at `/magic-machine/*`; disable for client/professional sites |
+| `features.transclusion_indicators` | `true` | Site-wide default for transclusion indicator display. When `false`, all `![[embeds]]` across the site are inlined seamlessly. Override per-page with `transclusion_indicators:` frontmatter. |
 
 ---
 
