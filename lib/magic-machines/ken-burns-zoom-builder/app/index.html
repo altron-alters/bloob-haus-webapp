@@ -1113,6 +1113,16 @@
     <div class="output-section">
       <div class="panel-section-title" style="margin-bottom:12px;">Export</div>
 
+      <div class="field">
+        <div class="field-label">Resolution <span id="res-desc" style="font-size:10px;color:var(--dim);font-weight:400;font-family:var(--mono);"></span></div>
+        <div class="seg-group" id="res-group">
+          <button class="seg-btn" data-res="1080">1080</button>
+          <button class="seg-btn" data-res="1920">1920</button>
+          <button class="seg-btn" data-res="2160">4K</button>
+          <button class="seg-btn active" data-res="native">Native</button>
+        </div>
+      </div>
+
       <button class="btn-primary" id="btn-download" disabled>
         <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M7 1v8M4 6l3 3 3-3M2 11h10"/>
@@ -1180,6 +1190,7 @@
 const state = {
   imageLoaded: false, imageW: 0, imageH: 0,
   duration: 18.5, fps: 24, easing: 'ease-in-out',
+  resolution: 'native',
   ar: '9:16', arW: 9, arH: 16, customArW: 4, customArH: 5,
   playback: 'bounce',  // 'loop' | 'hold' | 'bounce'
   direction: 'in',     // 'in' = start→end (zoom in), 'out' = end→start (zoom out)
@@ -1269,7 +1280,7 @@ function loadImage(file) {
     document.getElementById('image-credit').textContent =
       `${file.name}  ·  ${state.imageW} × ${state.imageH}px`;
     applyAspectRatioToRects();
-    updateRects(); updateSummary();
+    updateRects(); updateSummary(); updateResDesc();
     initPreview();
   };
   previewImg.src = url;
@@ -1322,7 +1333,7 @@ btnClear.addEventListener('click', () => {
   previewPlaceholder.style.display = '';
   previewPlaying = false; playStartMs = null; pausedElapsedMs = 0;
   previewFill.style.width = '0%'; previewTimeEl.textContent = '0.0s';
-  updatePlayIcon();
+  updatePlayIcon(); updateResDesc();
 });
 
 // Rects
@@ -1508,16 +1519,33 @@ document.getElementById('aspect-group').addEventListener('click', e => {
   document.getElementById('custom-ar-row').classList.toggle('visible', state.ar==='custom');
   if (state.ar !== 'custom') applyAspectRatioToRects();
   if (state.imageLoaded) { const vpW = previewViewport.clientWidth; previewViewport.style.height = (vpW * state.arH / state.arW) + 'px'; }
-  updateSummary();
+  updateSummary(); updateResDesc();
 });
 
 document.getElementById('ar-w').addEventListener('input', e => {
   state.customArW=parseInt(e.target.value)||1; state.arW=state.customArW;
-  applyAspectRatioToRects(); updateSummary();
+  applyAspectRatioToRects(); updateSummary(); updateResDesc();
 });
 document.getElementById('ar-h').addEventListener('input', e => {
   state.customArH=parseInt(e.target.value)||1; state.arH=state.customArH;
-  applyAspectRatioToRects(); updateSummary();
+  applyAspectRatioToRects(); updateSummary(); updateResDesc();
+});
+
+function updateResDesc() {
+  const el = document.getElementById('res-desc');
+  if (!el) return;
+  if (!state.imageLoaded) { el.textContent = ''; return; }
+  const { w, h } = computeOutputSize();
+  el.textContent = `— ${w}×${h}px`;
+}
+
+document.getElementById('res-group').addEventListener('click', e => {
+  const btn = e.target.closest('.seg-btn');
+  if (!btn) return;
+  state.resolution = btn.dataset.res;
+  document.querySelectorAll('#res-group .seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+  updateResDesc();
+  updateSummary();
 });
 
 function applyAspectRatioToRects() {
@@ -2014,7 +2042,12 @@ function checkVideoExport() {
 }
 
 function computeOutputSize() {
-  const MAX = 1920;
+  let MAX;
+  if (state.resolution === 'native') {
+    MAX = state.imageLoaded ? Math.min(Math.max(state.imageW, state.imageH), 4096) : 1920;
+  } else {
+    MAX = parseInt(state.resolution, 10);
+  }
   let w, h;
   if (state.arW >= state.arH) { w = MAX; h = Math.round(MAX * state.arH / state.arW); }
   else                         { h = MAX; w = Math.round(MAX * state.arW / state.arH); }
@@ -2088,12 +2121,17 @@ function injectMp4Metadata(buffer) {
     const size = view.getUint32(off, false);
     const type = String.fromCharCode(src[off+4], src[off+5], src[off+6], src[off+7]);
     if (type === 'moov') {
-      const out = new Uint8Array(buffer.byteLength + udtaBox.byteLength);
-      out.set(src.subarray(0, off + size), 0);                               // up to moov end
-      out.set(udtaBox, off + size);                                           // inject udta
-      out.set(src.subarray(off + size), off + size + udtaBox.byteLength);    // rest of file
-      new DataView(out.buffer).setUint32(off, size + udtaBox.byteLength, false); // update moov size
-      dbg(`MP4 metadata injected — ©too + ©cmt (${udtaBox.byteLength} bytes added)`, 'ok');
+      const shift = udtaBox.byteLength;
+      const out = new Uint8Array(buffer.byteLength + shift);
+      out.set(src.subarray(0, off + size), 0);                          // up to moov end
+      out.set(udtaBox, off + size);                                      // inject udta
+      out.set(src.subarray(off + size), off + size + shift);            // rest of file (mdat)
+      const outView = new DataView(out.buffer);
+      outView.setUint32(off, size + shift, false);                      // update moov size
+      // Inserting udta between moov and mdat shifts mdat by `shift` bytes.
+      // stco/co64 chunk offsets are absolute byte positions into mdat — must be updated.
+      fixChunkOffsets(out, outView, off + 8, off + size, shift);
+      dbg(`MP4 metadata injected — ©too + ©cmt (${shift} bytes added)`, 'ok');
       return out.buffer;
     }
     if (size < 8) break;
@@ -2101,6 +2139,33 @@ function injectMp4Metadata(buffer) {
   }
   dbg('MP4 metadata: moov atom not found, skipping injection', 'warn');
   return buffer;
+}
+
+function fixChunkOffsets(arr, view, start, end, shift) {
+  let pos = start;
+  while (pos + 8 <= end) {
+    const boxSize = view.getUint32(pos, false);
+    if (boxSize < 8) break;
+    const boxType = String.fromCharCode(arr[pos+4], arr[pos+5], arr[pos+6], arr[pos+7]);
+    if (boxType === 'stco') {
+      const count = view.getUint32(pos + 12, false);
+      for (let i = 0; i < count; i++) {
+        const p = pos + 16 + i * 4;
+        view.setUint32(p, view.getUint32(p, false) + shift, false);
+      }
+    } else if (boxType === 'co64') {
+      const count = view.getUint32(pos + 12, false);
+      for (let i = 0; i < count; i++) {
+        const p = pos + 16 + i * 8;
+        const lo = view.getUint32(p + 4, false) + shift;
+        view.setUint32(p, view.getUint32(p, false) + (lo > 0xFFFFFFFF ? 1 : 0), false);
+        view.setUint32(p + 4, lo >>> 0, false);
+      }
+    } else if (['trak', 'mdia', 'minf', 'stbl', 'edts'].includes(boxType)) {
+      fixChunkOffsets(arr, view, pos + 8, pos + boxSize, shift);
+    }
+    pos += boxSize;
+  }
 }
 
 function drawCaptionOnCanvas(ctx, w, h, text, alpha) {
@@ -2221,7 +2286,9 @@ async function exportVideo() {
     // Render + encode all frames (faster than real-time — no waiting)
     const canvas = document.createElement('canvas');
     canvas.width = outW; canvas.height = outH;
-    const ctx = canvas.getContext('2d');
+    // willReadFrequently forces software (CPU) rendering — prevents GPU texture readback
+    // race that causes VideoFrame to capture black frames on Chrome and Safari
+    const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
 
     exportProgText.textContent = 'Encoding…';
     for (let i = 0; i < totalFrames; i++) {
@@ -2258,6 +2325,10 @@ async function exportVideo() {
         }
       }
 
+      if (i === 0) {
+        const px = ctx.getImageData(Math.floor(outW / 2), Math.floor(outH / 2), 1, 1).data;
+        dbg(`Frame 0 canvas center pixel: R=${px[0]} G=${px[1]} B=${px[2]} — iw=${iw} ih=${ih}`, px[0]+px[1]+px[2] > 0 ? 'ok' : 'error');
+      }
       const frame = new VideoFrame(canvas, {
         timestamp: Math.round(i / state.fps * 1e6),
         duration:  Math.round(1  / state.fps * 1e6),
@@ -2271,6 +2342,7 @@ async function exportVideo() {
     }
 
     await encoder.flush();
+    encoder.close();
     muxer.finalize();
 
     const { buffer: rawBuffer } = target;
