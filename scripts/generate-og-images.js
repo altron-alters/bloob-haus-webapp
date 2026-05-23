@@ -190,8 +190,9 @@ export async function generateOgImages() {
     const sourcePath = path.join(SRC_DIR, sourceFile);
     const hash = await fileHash(sourcePath);
     const ext = path.extname(sourceFile).toLowerCase();
-    const isGif = ext === ".gif";
-    const outputFormat = isGif ? "gif" : ext === ".png" ? "png" : "jpeg";
+    // GIFs → extract first frame as JPEG (animated GIFs are too large for OG;
+    // sharp reads frame 0 by default when resizing, so no extra config needed).
+    const outputFormat = ext === ".png" ? "png" : "jpeg";
     // Filename on disk uses raw characters (spaces, @, etc.) — NOT URL-encoded.
     // The URL in frontmatter is encodeURIComponent'd, so browser decodes it back
     // to the raw name, which the static server then finds on disk.
@@ -209,15 +210,7 @@ export async function generateOgImages() {
       continue;
     }
 
-    if (isGif) {
-      // Copy GIFs as-is to preserve animation
-      await fs.copy(sourcePath, outputPath);
-      console.log(
-        `[og]   ${path.basename(outputPath)}: copied as-is (GIF, ${((await fs.stat(sourcePath)).size / 1024).toFixed(0)}KB)`,
-      );
-    } else {
-      await generateSingleOgImage(sourcePath, outputPath, outputFormat);
-    }
+    await generateSingleOgImage(sourcePath, outputPath, outputFormat);
     generated++;
   }
 
@@ -228,7 +221,7 @@ export async function generateOgImages() {
     const activeOutputs = new Set(
       [...imageSources.entries()].map(([baseName, sourceFile]) => {
         const ext = path.extname(sourceFile).toLowerCase();
-        const fmt = ext === ".gif" ? "gif" : ext === ".png" ? "png" : "jpeg";
+        const fmt = ext === ".png" ? "png" : "jpeg";
         return `${baseName}-og.${fmt}`;
       }),
     );

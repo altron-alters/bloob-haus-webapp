@@ -387,8 +387,8 @@ export async function preprocessContent({
       const imgFilename = path.basename(decodeURIComponent(firstImage));
       const imgExt = path.extname(imgFilename).toLowerCase();
       const imgBase = imgFilename.replace(/\.[^.]+$/, "");
-      const ogExt =
-        imgExt === ".gif" ? "gif" : imgExt === ".png" ? "png" : "jpeg";
+      // GIFs → first frame extracted as JPEG by generate-og-images.js
+      const ogExt = imgExt === ".png" ? "png" : "jpeg";
       // encodeURIComponent the filename so URLs are valid (spaces → %20, @ → %40, etc.)
       // The OG generator writes files with the same encoding so names match on disk.
       outputFrontmatter.image = `/og/${encodeURIComponent(imgBase)}-og.${ogExt}`;
