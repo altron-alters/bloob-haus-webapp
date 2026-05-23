@@ -333,6 +333,40 @@ describe('extractFirstImage', () => {
   it('matches svg images', () => {
     expect(extractFirstImage('![chart](/assets/chart.svg)')).toBe('/assets/chart.svg');
   });
+
+  it('finds a GIF as the first image', () => {
+    expect(extractFirstImage('![](/media/animation.gif)')).toBe('/media/animation.gif');
+  });
+
+  it('returns null for mp4 — videos are not picked up as OG sources', () => {
+    expect(extractFirstImage('![](/media/animation.mp4)')).toBeNull();
+  });
+
+  it('finds GIF before a later static image', () => {
+    const content = '![](/media/animation.gif) text ![](/media/photo.jpg)';
+    expect(extractFirstImage(content)).toBe('/media/animation.gif');
+  });
+});
+
+// OG path formula: any non-PNG source (including GIFs) maps to -og.jpeg.
+// GIFs get their first frame extracted by generate-og-images.js — never -og.gif.
+describe('OG image path formula (extension → og extension)', () => {
+  function ogExt(srcPath) {
+    const ext = srcPath.split('.').pop().toLowerCase();
+    return ext === 'png' ? 'png' : 'jpeg';
+  }
+
+  it('GIF source → jpeg OG (first frame, not animated gif)', () => {
+    expect(ogExt('/media/animation.gif')).toBe('jpeg');
+  });
+
+  it('PNG source → png OG', () => {
+    expect(ogExt('/media/photo.png')).toBe('png');
+  });
+
+  it('JPEG source → jpeg OG', () => {
+    expect(ogExt('/media/photo.jpg')).toBe('jpeg');
+  });
 });
 
 describe('copyAttachments', () => {
