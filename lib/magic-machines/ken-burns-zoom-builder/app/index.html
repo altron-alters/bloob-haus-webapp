@@ -328,7 +328,7 @@
   }
 
   /* ── RECT OVERLAYS ── */
-  .rect-overlay { position: absolute; cursor: move; z-index: 10; }
+  .rect-overlay { position: absolute; cursor: move; z-index: 10; touch-action: none; }
 
   .start-rect { outline: 2px solid var(--start); border-radius: 2px; }
   .end-rect   { outline: 2px solid var(--end);   border-radius: 2px; }
@@ -359,7 +359,7 @@
   .end-rect   .rect-label { background: var(--end-lbl);   color: white; }
 
   /* Resize handles */
-  .handle { position: absolute; width: 10px; height: 10px; border-radius: 2px; z-index: 20; pointer-events: all; }
+  .handle { position: absolute; width: 10px; height: 10px; border-radius: 2px; z-index: 20; pointer-events: all; touch-action: none; }
   .start-rect .handle { background: white; border: 1.5px solid var(--start); box-shadow: 0 1px 4px oklch(0 0 0 / 0.2); }
   .end-rect   .handle { background: white; border: 1.5px solid var(--end);   box-shadow: 0 1px 4px oklch(0 0 0 / 0.2); }
 
@@ -832,6 +832,157 @@
   .debug-entry.warn  { color: oklch(0.68 0.12 75); }
   .debug-entry.error { color: oklch(0.65 0.16 25); }
   .debug-entry.ok    { color: oklch(0.60 0.12 145); }
+
+  /* ── ADVANCED COLLAPSIBLE ── */
+  .advanced-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--dim);
+    transition: color 0.15s;
+  }
+  .advanced-toggle:hover { color: var(--text); }
+  .advanced-chevron {
+    width: 11px; height: 11px;
+    transition: transform 0.2s ease;
+    stroke: currentColor;
+  }
+  .advanced-toggle[aria-expanded="true"] .advanced-chevron { transform: rotate(180deg); }
+  .advanced-toggle[aria-expanded="true"] { color: var(--text); }
+  .advanced-content { margin-top: 13px; }
+  .advanced-content[hidden] { display: none; }
+  .advanced-content .field:last-child { margin-bottom: 0; }
+
+  /* ── INFO BUTTON + POPOVER (Bloob Haus snippet) ── */
+  .bloob-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .info-btn {
+    width: 16px; height: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--dim);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+  .info-btn svg { width: 13px; height: 13px; display: block; }
+  .info-btn:hover { color: var(--accent); background: oklch(0.60 0.04 55 / 0.10); }
+  .info-btn[aria-expanded="true"] {
+    color: var(--accent);
+    background: oklch(0.60 0.17 42 / 0.12);
+  }
+  .info-popover {
+    margin: 0 0 9px;
+    padding: 10px 12px;
+    background: oklch(0.60 0.17 42 / 0.08);
+    border: 1px solid oklch(0.60 0.17 42 / 0.22);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .info-popover a { color: var(--accent); text-decoration: underline; }
+  .info-popover[hidden] { display: none; }
+
+  /* ── TABLET (≤1024px) ── */
+  @media (max-width: 1024px) {
+    body { font-size: 13px; }
+    html, body { overflow: auto; }
+    .app-shell { height: auto; min-height: 100%; overflow: visible; }
+    .main { flex-direction: column; flex: none; overflow: visible; }
+
+    .canvas-area { flex: none; overflow: visible; }
+    .canvas-wrapper { padding: 20px; overflow: visible; }
+    .image-frame img { max-height: 60vh; }
+    .drop-zone { max-width: 100%; }
+
+    .side-panel {
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid var(--glass-border);
+      box-shadow: 0 -2px 20px oklch(0.60 0.04 55 / 0.08);
+      overflow: visible;
+    }
+    .summary-section { flex: none; }
+  }
+
+  /* ── PHONE (≤640px) ── */
+  @media (max-width: 640px) {
+    .topbar {
+      gap: 8px;
+      padding: 0 12px;
+      height: 44px;
+    }
+    .topbar-logo { font-size: 11px; }
+    .topbar-brand { font-size: 10.5px; gap: 5px; }
+    .brand-mm, .brand-bh { font-size: 10.5px; }
+    .topbar-badge { display: none; }
+
+    .tagline-bar {
+      padding: 8px 12px;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .canvas-toolbar {
+      padding: 8px 12px;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .canvas-toolbar-label { width: 100%; margin: 0 0 2px; }
+    .rect-pill { padding: 5px 10px; }
+    .rect-pill-coords { display: none; }
+    .btn-reset { margin-left: auto; padding: 5px 10px; font-size: 10px; }
+
+    .canvas-wrapper { padding: 12px; }
+    .image-frame img { max-height: 55vh; }
+    .drop-zone { aspect-ratio: 4/3; }
+    .drop-zone-text strong { font-size: 13px; }
+    .drop-zone-text span { font-size: 10.5px; }
+
+    /* Touch-friendlier resize handles */
+    .handle { width: 16px; height: 16px; border-radius: 4px; border-width: 2px; }
+    .handle[data-pos="nw"] { top: -8px;  left: -8px; }
+    .handle[data-pos="n"]  { top: -8px;  left: calc(50% - 8px); }
+    .handle[data-pos="ne"] { top: -8px;  right: -8px; }
+    .handle[data-pos="e"]  { top: calc(50% - 8px); right: -8px; }
+    .handle[data-pos="se"] { bottom: -8px; right: -8px; }
+    .handle[data-pos="s"]  { bottom: -8px; left: calc(50% - 8px); }
+    .handle[data-pos="sw"] { bottom: -8px; left: -8px; }
+    .handle[data-pos="w"]  { top: calc(50% - 8px); left: -8px; }
+
+    .panel-section, .output-section, .summary-section, .preview-section { padding: 13px 14px; }
+
+    .aspect-grid { grid-template-columns: repeat(2, 1fr); }
+    .aspect-btn { font-size: 11px; }
+
+    .seg-btn { padding: 7px 0; font-size: 11.5px; }
+    input[type=range] { height: 5px; }
+    input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
+
+    /* Make export buttons big & comfortable to tap */
+    .btn-primary, .btn-secondary { padding: 12px 14px; font-size: 13px; }
+  }
 </style>
 </head>
 <body>
@@ -975,38 +1126,12 @@
         </div>
         <input type="range" id="dur-slider" min="3" max="30" value="18.5" step="0.5">
       </div>
-      <div class="field">
-        <div class="field-label">Frame rate</div>
-        <div class="seg-group" id="fps-group">
-          <button class="seg-btn" data-fps="15">15 fps</button>
-          <button class="seg-btn active" data-fps="24">24 fps</button>
-          <button class="seg-btn" data-fps="30">30 fps</button>
-        </div>
-      </div>
-      <div class="field">
-        <div class="field-label" style="margin-bottom:3px;">Easing <span style="font-size:10px;color:var(--dim);font-weight:400;">— speed curve</span></div>
-        <div class="seg-group" id="ease-group">
-          <button class="seg-btn" data-ease="linear">linear</button>
-          <button class="seg-btn" data-ease="ease-in">accel</button>
-          <button class="seg-btn" data-ease="ease-out">decel</button>
-          <button class="seg-btn active" data-ease="ease-in-out">s-curve</button>
-        </div>
-      </div>
 
       <div class="field">
         <div class="field-label" style="margin-bottom:3px;">Direction <span style="font-size:10px;color:var(--dim);font-weight:400;">— which frame is first</span></div>
         <div class="seg-group" id="direction-group">
           <button class="seg-btn active" data-dir="in" title="Start wide, end tight">⊕ zoom in</button>
           <button class="seg-btn" data-dir="out" title="Start tight, end wide">⊖ zoom out</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="field-label" style="margin-bottom:3px;">Loop <span style="font-size:10px;color:var(--dim);font-weight:400;">— what happens at the end</span></div>
-        <div class="seg-group" id="playback-group">
-          <button class="seg-btn" data-playback="loop" title="Jump back to start and repeat">↺ loop</button>
-          <button class="seg-btn" data-playback="hold" title="Stop at end frame">■ hold</button>
-          <button class="seg-btn active" data-playback="bounce" title="Smoothly reverse back to start">↔ bounce</button>
         </div>
       </div>
     </div>
@@ -1109,19 +1234,58 @@
       </div>
     </div>
 
+    <!-- Advanced (collapsed) -->
+    <div class="panel-section advanced-section">
+      <button class="advanced-toggle" id="advanced-toggle" type="button" aria-expanded="false">
+        <span class="advanced-toggle-label">Advanced settings</span>
+        <svg class="advanced-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M3 4.5L6 7.5L9 4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="advanced-content" id="advanced-content" hidden>
+        <div class="field">
+          <div class="field-label" style="margin-bottom:3px;">Easing <span style="font-size:10px;color:var(--dim);font-weight:400;">— speed curve</span></div>
+          <div class="seg-group" id="ease-group">
+            <button class="seg-btn" data-ease="linear">linear</button>
+            <button class="seg-btn" data-ease="ease-in">accel</button>
+            <button class="seg-btn" data-ease="ease-out">decel</button>
+            <button class="seg-btn active" data-ease="ease-in-out">s-curve</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Frame rate</div>
+          <div class="seg-group" id="fps-group">
+            <button class="seg-btn" data-fps="15">15 fps</button>
+            <button class="seg-btn active" data-fps="24">24 fps</button>
+            <button class="seg-btn" data-fps="30">30 fps</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label" style="margin-bottom:3px;">Loop <span style="font-size:10px;color:var(--dim);font-weight:400;">— what happens at the end</span></div>
+          <div class="seg-group" id="playback-group">
+            <button class="seg-btn" data-playback="loop" title="Jump back to start and repeat">↺ loop</button>
+            <button class="seg-btn" data-playback="hold" title="Stop at end frame">■ hold</button>
+            <button class="seg-btn active" data-playback="bounce" title="Smoothly reverse back to start">↔ bounce</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Resolution <span id="res-desc" style="font-size:10px;color:var(--dim);font-weight:400;font-family:var(--mono);"></span></div>
+          <div class="seg-group" id="res-group">
+            <button class="seg-btn" data-res="1080">1080</button>
+            <button class="seg-btn" data-res="1920">1920</button>
+            <button class="seg-btn" data-res="2160">4K</button>
+            <button class="seg-btn active" data-res="native">Native</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Export -->
     <div class="output-section">
       <div class="panel-section-title" style="margin-bottom:12px;">Export</div>
-
-      <div class="field">
-        <div class="field-label">Resolution <span id="res-desc" style="font-size:10px;color:var(--dim);font-weight:400;font-family:var(--mono);"></span></div>
-        <div class="seg-group" id="res-group">
-          <button class="seg-btn" data-res="1080">1080</button>
-          <button class="seg-btn" data-res="1920">1920</button>
-          <button class="seg-btn" data-res="2160">4K</button>
-          <button class="seg-btn active" data-res="native">Native</button>
-        </div>
-      </div>
 
       <button class="btn-primary" id="btn-download" disabled>
         <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1147,12 +1311,20 @@
       <div class="btn-footnote" id="export-footnote">Single pass · <span id="export-desc">Start → End</span> · <span id="export-dur">8s</span></div>
     </div>
 
-    <!-- Config summary -->
+    <!-- Bloob Haus snippet -->
     <div class="summary-section">
-      <div class="panel-section-title" style="margin-bottom:10px;">Config Preview</div>
-      <pre class="summary-pre" id="summary-pre">// drop an image to begin</pre>
-
-      <div class="panel-section-title" style="margin-top:14px;margin-bottom:10px;">Bloob Haus Snippet</div>
+      <div class="panel-section-title bloob-title-row" style="margin-bottom:10px;">
+        <span>Bloob Haus Snippet</span>
+        <button class="info-btn" id="bloob-info-btn" type="button" aria-label="What is this?" aria-expanded="false">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5"/>
+            <path d="M8 7.5v4M8 4.7v0.1" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="info-popover" id="bloob-info-popover" hidden>
+        This snippet works as a visualization on any <a href="https://bloob.haus" target="_blank" rel="noopener">Bloob Haus</a> site. Paste it into a markdown file and upload your image alongside it (matching the filename) — the page will render this exact Ken Burns animation.
+      </div>
       <div style="position:relative;">
         <pre class="summary-pre" id="bloob-pre">::: ken-burns-zoom
 // drop an image to begin
@@ -1256,7 +1428,6 @@ const pillStart  = document.getElementById('pill-start');
 const pillEnd    = document.getElementById('pill-end');
 const coordsStart= document.getElementById('coords-start');
 const coordsEnd  = document.getElementById('coords-end');
-const summaryPre = document.getElementById('summary-pre');
 const btnClear   = document.getElementById('btn-clear-img');
 
 // Image loading
@@ -1325,7 +1496,6 @@ btnClear.addEventListener('click', () => {
   imageStage.classList.remove('visible');
   dropZone.style.display = '';
   btnClear.style.display = 'none';
-  summaryPre.textContent = '// drop an image to begin';
   coordsStart.textContent = '—'; coordsEnd.textContent = '—';
   fileInput.value = '';
   if (previewEngine) { previewEngine.destroy(); previewEngine = null; }
@@ -1363,7 +1533,7 @@ let drag = null;
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 const MIN = 5;
 
-imageFrame.addEventListener('mousedown', e => {
+imageFrame.addEventListener('pointerdown', e => {
   const handle = e.target.closest('.handle');
   const rectEl = e.target.closest('.rect-overlay');
   if (!rectEl && !handle) return;
@@ -1383,12 +1553,15 @@ imageFrame.addEventListener('mousedown', e => {
     pos: handle ? handle.dataset.pos : null,
     startX: e.clientX, startY: e.clientY,
     frameW: fr.width, frameH: fr.height,
-    orig: { ...state.rects[which] }
+    orig: { ...state.rects[which] },
+    pointerId: e.pointerId,
+    target: e.currentTarget,
   };
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
   e.preventDefault();
 });
 
-document.addEventListener('mousemove', e => {
+document.addEventListener('pointermove', e => {
   if (!drag) return;
   const dx = (e.clientX - drag.startX) / drag.frameW * 100;
   const dy = (e.clientY - drag.startY) / drag.frameH * 100;
@@ -1460,7 +1633,8 @@ document.addEventListener('mousemove', e => {
   }
   updateRects();
 });
-document.addEventListener('mouseup', () => { drag = null; });
+document.addEventListener('pointerup', () => { drag = null; });
+document.addEventListener('pointercancel', () => { drag = null; });
 
 pillStart.addEventListener('click', () => {
   rectStart.style.zIndex=12; rectEnd.style.zIndex=10;
@@ -1682,31 +1856,6 @@ document.querySelector('.preview-progress-track').addEventListener('click', e =>
 
 // Summary
 function updateSummary() {
-  const r = state.rects;
-  const iw = state.imageW, ih = state.imageH;
-
-  const fmtR = (rect, label) => {
-    if (!state.imageLoaded) return `    ${label}: { x: ?, y: ?, w: ?, h: ? }`;
-    const x=pct2px(rect.x,iw), y=pct2px(rect.y,ih), w=pct2px(rect.w,iw), h=pct2px(rect.h,ih);
-    return `    ${label}: {\n      px:  { x:${pad(x)}, y:${pad(y)}, w:${pad(w)}, h:${pad(h)} },\n      pct: { x:${rect.x.toFixed(1)}%, y:${rect.y.toFixed(1)}%, w:${rect.w.toFixed(1)}%, h:${rect.h.toFixed(1)}% }\n    }`;
-  };
-
-  const arStr = state.ar==='custom' ? `${state.customArW}:${state.customArH} (custom)` : state.ar;
-  const imgInfo = state.imageLoaded ? `${state.imageW} × ${state.imageH}px` : 'no image';
-
-  summaryPre.textContent = [
-    `// ken-burns config`,`{`,
-    `  image: "${imgInfo}",`,
-    `  duration: ${state.duration}s,`,
-    `  fps: ${state.fps},`,
-    `  easing: "${state.easing}",`,
-    `  aspectRatio: "${arStr}",`,
-    `  frames: {`,
-    fmtR(r.start,'start') + ',',
-    fmtR(r.end,'end'),
-    `  }`,`}`
-  ].join('\n');
-
   updateBloobSnippet();
   updateExportFootnote();
   if (previewEngine) previewEngine.configure(buildEngineConfig());
@@ -2390,6 +2539,51 @@ function flashFootnote(msg) {
   clearTimeout(fn._t);
   fn._t = setTimeout(() => { fn.innerHTML = orig; }, 2500);
 }
+
+// ─────────────────────────────────────────────
+// Advanced settings collapsible
+// ─────────────────────────────────────────────
+(function setupAdvancedToggle() {
+  const toggle  = document.getElementById('advanced-toggle');
+  const content = document.getElementById('advanced-content');
+  if (!toggle || !content) return;
+
+  const wasOpen = localStorage.getItem('kb-advanced-open') === 'true';
+  if (wasOpen) {
+    content.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+
+  toggle.addEventListener('click', () => {
+    const open = content.hidden;
+    content.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    localStorage.setItem('kb-advanced-open', String(open));
+  });
+})();
+
+// ─────────────────────────────────────────────
+// Bloob Haus snippet info popover
+// ─────────────────────────────────────────────
+(function setupBloobInfo() {
+  const btn = document.getElementById('bloob-info-btn');
+  const pop = document.getElementById('bloob-info-popover');
+  if (!btn || !pop) return;
+
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = pop.hidden;
+    pop.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  });
+
+  document.addEventListener('click', e => {
+    if (pop.hidden) return;
+    if (pop.contains(e.target) || btn.contains(e.target)) return;
+    pop.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  });
+})();
 
 // Check WebCodecs availability and enable export button
 checkVideoExport();
