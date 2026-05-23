@@ -662,7 +662,7 @@ export default async function (eleventyConfig) {
 
       let result = content;
       for (const viz of buildTimeVisualizers) {
-        result = viz.transform(result);
+        result = viz.transform(result, { siteConfig });
       }
       return result;
     });

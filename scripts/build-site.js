@@ -147,6 +147,11 @@ async function buildSite() {
     console.log("\n--- Step 5.7: Generating bloob-object icons ---");
     await generateBloobIcons({ contentDir, srcDir });
 
+    // Step 5.8: Convert GIFs to MP4 (keeps Cloudflare Pages under 25MB per-file limit)
+    console.log("\n--- Step 5.8: Converting GIFs to MP4 ---");
+    const { optimizeGifs } = await import("./optimize-gifs.js");
+    await optimizeGifs({ srcDir, config });
+
     // Step 6: Bundle visualizers
     console.log("\n--- Step 6: Bundling visualizers ---");
     execSync("node scripts/bundle-visualizers.js", {

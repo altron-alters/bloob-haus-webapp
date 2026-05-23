@@ -66,5 +66,73 @@
   object-fit: cover;
 }
 
+/* ── Video items ─────────────────────────────────────��───────────── */
+
+.photo-grid__item--video {
+  position: relative;
+}
+
+.photo-grid__item--video video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.photo-grid--ratio .photo-grid__item--video {
+  aspect-ratio: var(--pg-ratio);
+}
+
+.photo-grid--ratio .photo-grid__item--video video {
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Play overlay — shown only when autoplay is blocked (is-paused class) ── */
+
+.photo-grid__play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: white;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  border-radius: inherit;
+}
+
+.photo-grid__item--video.is-paused .photo-grid__play-overlay {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.photo-grid__item--video.is-paused .photo-grid__play-overlay:hover {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ── Play-all button — injected by browser.js when any video is paused ── */
+
+.photo-grid-play-all {
+  display: none;
+  margin: 0.75rem auto 1.5rem;
+  padding: 0.4rem 1.2rem;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.photo-grid-play-all:hover {
+  opacity: 1;
+}
+
 /* Mobile: intentionally no column collapse — a 3-col grid stays 3 columns on small screens.
    The images scale down proportionally via the fluid 1fr grid. */
