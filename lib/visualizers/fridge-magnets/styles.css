@@ -1,6 +1,8 @@
-/* ── Fridge Magnets Visualizer ────────────────────────────────────────────
-   No background — the page's own background shows through everywhere.
+/* ── Fridge Magnets Visualizer ─────────────────────────────────────────────
    Uses fm- prefix on all classes to avoid collisions with page styles.
+   Color note: Card whites/darks are intentional fridge-magnet aesthetic and
+   intentionally hardcoded. Interactive chrome (submit buttons, modal actions)
+   uses var(--accent-color) so it adapts to the active theme.
    ───────────────────────────────────────────────────────────────────────── */
 
 .fm-root {
@@ -93,9 +95,9 @@
 }
 
 .fm-card.fm-selected {
-  border: 2px solid #1a56db;
+  border: 2px solid var(--accent-color, #1a56db);
   box-shadow:
-    0 0 0 2px rgba(26, 86, 219, 0.2),
+    0 0 0 2px color-mix(in srgb, var(--accent-color, #1a56db) 20%, transparent),
     2px 2px 6px rgba(0, 0, 0, 0.15);
   z-index: 10;
 }
@@ -106,19 +108,130 @@
   z-index: 100;
 }
 
+/* Custom (user-added) cards — dashed border, accent color */
+.fm-card--custom {
+  border-style: dashed;
+  border-color: var(--accent-color, #1a56db);
+  background: color-mix(in srgb, var(--accent-color, #1a56db) 6%, #fff);
+}
+
+.fm-card--custom.fm-selected {
+  border-style: dashed;
+  border-width: 2px;
+}
+
 /* ── Lasso ── */
 .fm-lasso {
   position: absolute;
-  border: 1.5px dashed #1a56db;
-  background: rgba(26, 86, 219, 0.06);
+  border: 1.5px dashed var(--accent-color, #1a56db);
+  background: color-mix(in srgb, var(--accent-color, #1a56db) 6%, transparent);
   pointer-events: none;
   z-index: 200;
 }
 
-/* ── Input area ── */
-.fm-canvas-input-area {
-  padding: 8px 10px 10px;
+/* ── Feedback bar (submit buttons) ── */
+.fm-feedback-bar {
+  padding: 6px 10px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Both submit buttons share identical style — same color, same weight */
+.fm-submit-btn {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  background: var(--accent-color, #1a56db);
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: opacity 0.1s;
+}
+
+.fm-submit-btn:hover {
+  opacity: 0.85;
+}
+
+/* ── Bottom toolbar (add-word + editor toggle) ── */
+.fm-canvas-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  gap: 8px;
+}
+
+.fm-add-word-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+}
+
+.fm-add-word-input {
+  flex: 1;
+  max-width: 200px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #222;
+  outline: none;
+  transition: border-color 0.1s;
+}
+
+.fm-add-word-input:focus {
+  border-color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.fm-add-word-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  color: #555;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.fm-add-word-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.fm-editor-toggle {
+  padding: 3px 9px;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  color: #555;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.fm-editor-toggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ── Editor panel (collapsible) ── */
+.fm-editor-panel {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 10px 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -130,7 +243,7 @@
   align-items: flex-start;
 }
 
-.fm-canvas-input-area textarea {
+.fm-editor-panel textarea {
   flex: 1;
   height: 56px;
   padding: 7px 9px;
@@ -145,7 +258,7 @@
   outline: none;
 }
 
-.fm-canvas-input-area textarea:focus {
+.fm-editor-panel textarea:focus {
   border-color: rgba(0, 0, 0, 0.4);
   background: rgba(255, 255, 255, 0.9);
 }
@@ -204,4 +317,529 @@
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.35);
   color: #333;
+}
+
+/* ── Submission modal ── */
+.fm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.fm-modal-overlay.fm-open {
+  display: flex;
+}
+
+.fm-modal {
+  background: #fff;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 2px;
+  padding: 24px 20px 20px;
+  max-width: 460px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.fm-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #888;
+  padding: 2px 6px;
+}
+
+.fm-modal-close:hover {
+  color: #222;
+}
+
+.fm-modal-preview-label {
+  font-size: 10px;
+  font-family: "Courier New", monospace;
+  color: #999;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+
+/* Mini static board preview inside modal */
+.fm-modal-board-preview {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 2px;
+  overflow: auto;
+  min-height: 56px;
+  margin-bottom: 16px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Cards inside preview are smaller and non-interactive */
+.fm-modal-board-preview .fm-card {
+  cursor: default;
+  font-size: 12px;
+  height: 30px;
+  padding: 4px 8px;
+  line-height: 20px;
+}
+
+.fm-modal-field {
+  margin-bottom: 12px;
+}
+
+.fm-modal-label {
+  display: block;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  color: #555;
+  margin-bottom: 5px;
+  letter-spacing: 0.2px;
+}
+
+.fm-optional {
+  color: #aaa;
+  font-size: 10px;
+}
+
+.fm-modal-category {
+  width: 100%;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #222;
+  cursor: pointer;
+}
+
+.fm-modal-cat-text {
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #222;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.fm-modal-cat-text:focus {
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.fm-modal-name {
+  width: 100%;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #222;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.fm-modal-name:focus {
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.fm-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.fm-modal-submit-btn {
+  padding: 8px 22px;
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  background: var(--accent-color, #1a56db);
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: opacity 0.1s;
+}
+
+.fm-modal-submit-btn:hover {
+  opacity: 0.85;
+}
+
+.fm-modal-cancel-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: "Courier New", monospace;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  color: #555;
+  transition: background 0.1s;
+}
+
+.fm-modal-cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ── Toast notification ── */
+.fm-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2a2a;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 2px;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2000;
+  white-space: nowrap;
+  transition: opacity 0.25s;
+}
+
+.fm-toast.fm-visible {
+  opacity: 1;
+}
+
+/* ── Display-feedback containers ── */
+.fm-display-root {
+  margin: 1.5rem 0;
+}
+
+.fm-display-empty {
+  color: var(--text-color, #666);
+  opacity: 0.6;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+.fm-display-spinner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 0;
+  color: var(--text-color, #555);
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.fm-spinner-ring {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color, #ccc);
+  border-top-color: var(--accent-color, #1a56db);
+  border-radius: 50%;
+  animation: fm-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes fm-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fm-debug-log {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: #1a1a1a;
+  color: #00ff88;
+  font-family: monospace;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.fm-debug-entry {
+  margin-top: 0.25rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.fm-submission-comment {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-color, #444);
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.fm-modal-comment {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.fm-display-board {
+  margin-bottom: 1rem;
+  border: 1px solid rgba(139, 90, 43, 0.2);
+  border-left: 3px solid rgba(139, 90, 43, 0.45);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--card-bg, #fff) 88%, #c8a97a 12%);
+}
+
+.fm-display-board .fm-root {
+  margin: 0;
+}
+
+.fm-display-board .fm-canvas-wrapper {
+  border: none;
+  border-top: none;
+  margin-bottom: 0;
+  background: transparent;
+}
+
+.fm-display-board .fm-canvas-area {
+  margin: 0 10px 10px;
+}
+
+/* Submission header above each display board */
+.fm-submission-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(139, 90, 43, 0.15);
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+}
+
+.fm-submitter-name {
+  color: #6b4a1f;
+}
+
+.fm-anonymous {
+  color: #a08060;
+  font-style: italic;
+}
+
+.fm-cat-badge {
+  padding: 2px 7px;
+  border: 1px solid rgba(139, 90, 43, 0.25);
+  border-radius: 2px;
+  font-size: 10px;
+  color: #6b4a1f;
+  background: rgba(139, 90, 43, 0.08);
+  letter-spacing: 0.2px;
+}
+
+/* ── Sentence strip (selection submissions) ── */
+.fm-sentence-strip {
+  border: 1px solid rgba(139, 90, 43, 0.2);
+  border-left: 3px solid rgba(139, 90, 43, 0.45);
+  border-radius: 2px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--card-bg, #fff) 88%, #c8a97a 12%);
+}
+
+.fm-sentence-strip-cards {
+  position: relative;
+  min-height: 56px;
+  padding: 10px;
+  overflow-x: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fm-remix-from {
+  font-size: 10px;
+  font-family: "Courier New", monospace;
+  color: #8a6a3f;
+  font-style: italic;
+}
+
+.fm-modal-remix-note {
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  color: #6b4a1f;
+  background: rgba(139, 90, 43, 0.07);
+  border-left: 2px solid rgba(139, 90, 43, 0.35);
+  padding: 4px 8px;
+  border-radius: 0 2px 2px 0;
+  margin: 0 0 10px;
+}
+
+/* Non-positioned cards in strips flow inline */
+.fm-sentence-strip-cards .fm-card:not([style*="left"]) {
+  position: relative;
+  display: inline-block;
+  margin: 0 4px 4px 0;
+  cursor: default;
+}
+
+/* ── Interaction footer (likes + comments on display-feedback boards) ── */
+.fm-interaction-footer {
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(139, 90, 43, 0.12);
+}
+
+.fm-like-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.fm-like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
+  background: transparent;
+  border: 1px solid rgba(139, 90, 43, 0.25);
+  border-radius: 2px;
+  cursor: pointer;
+  color: #6b4a1f;
+  letter-spacing: 0.2px;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.fm-like-btn:hover:not(.fm-liked):not(:disabled) {
+  background: rgba(139, 90, 43, 0.08);
+  border-color: rgba(139, 90, 43, 0.45);
+}
+
+.fm-like-btn.fm-liked {
+  background: rgba(139, 90, 43, 0.1);
+  border-color: rgba(139, 90, 43, 0.4);
+  cursor: default;
+}
+
+.fm-like-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fm-like-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.fm-like-count {
+  min-width: 12px;
+  text-align: center;
+}
+
+.fm-comments-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fm-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fm-comment {
+  padding: 5px 8px;
+  background: rgba(139, 90, 43, 0.05);
+  border-left: 2px solid rgba(139, 90, 43, 0.3);
+  border-radius: 0 2px 2px 0;
+  font-size: 12px;
+}
+
+.fm-comment-name {
+  display: block;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  color: #6b4a1f;
+  font-size: 11px;
+  margin-bottom: 5px;
+}
+
+.fm-comment-text {
+  display: block;
+  color: var(--text-color, #333);
+  line-height: 1.4;
+}
+
+.fm-comment-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.fm-comment-name-input {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #222;
+  outline: none;
+  max-width: 200px;
+}
+
+.fm-comment-name-input:focus {
+  border-color: rgba(139, 90, 43, 0.45);
+}
+
+.fm-comment-textarea {
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #222;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.fm-comment-textarea:focus {
+  border-color: rgba(139, 90, 43, 0.45);
+}
+
+.fm-comment-submit-btn {
+  align-self: flex-end;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-family: "Courier New", monospace;
+  background: var(--accent-color, #1a56db);
+  color: #fff;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  letter-spacing: 0.4px;
+  transition: opacity 0.1s;
+}
+
+.fm-comment-submit-btn:hover {
+  opacity: 0.85;
 }

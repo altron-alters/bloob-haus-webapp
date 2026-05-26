@@ -1,11 +1,11 @@
 {
   "name": "fridge-magnets",
   "type": "hybrid",
-  "version": "1.0.0",
-  "description": "Interactive fridge magnet board — drag and rearrange word cards to compose sentences",
+  "version": "2.0.0",
+  "description": "Interactive fridge magnet board — drag and rearrange word cards, add your own words, and submit favorite arrangements to a Google Form.",
   "activation": {
     "method": "code-fence",
-    "description": "Place a ```fridge-magnets code fence in markdown. Cards pre-load from the 'cards' string. Users can drag, rearrange, and add new canvases."
+    "description": "Place a ```fridge-magnets code fence in markdown. Cards pre-load from the 'cards' string. All boards support add-a-word and drag. Feedback boards also support submission."
   },
   "files": {
     "transform": "index.js",
@@ -16,12 +16,59 @@
     "cards": {
       "type": "string",
       "default": "",
-      "description": "Pre-loaded card text. Use [text] for auto-layout or [text](x,y) for positioned cards: \"[One](10,10) [gas burner](80,10)\""
+      "description": "Pre-loaded card text. Use [text] for auto-layout or [text](x,y) for positioned cards. Custom (user-added) cards use [+text](x,y) in serialized output."
     },
     "height": {
       "type": "number",
       "default": 280,
-      "description": "Initial canvas area height in pixels"
+      "description": "Initial canvas area height in pixels."
+    },
+    "board": {
+      "type": "string",
+      "default": "",
+      "description": "Human-readable board name. Automatically submitted as the 'board' metadata field when feedback-allow is yes."
+    },
+    "show-editor": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show the YAML textarea editor on load. Default (false/no): editor is hidden, toggled via the ⌨ button."
+    },
+    "feedback-allow": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable submission buttons. Requires feedback-gform-url and feedback-fields."
+    },
+    "feedback-gform-url": {
+      "type": "string",
+      "default": "",
+      "description": "Google Form formResponse URL for submissions. Example: https://docs.google.com/forms/d/FORM_ID/formResponse"
+    },
+    "feedback-fields": {
+      "type": "object",
+      "default": {},
+      "description": "Maps Google Form entry IDs to their semantic roles. All five keys required for full functionality. name and category may be omitted to hide those fields.",
+      "properties": {
+        "arrangement": "entry.XXXXXXXXX — the card arrangement string [word](x,y)",
+        "board": "entry.XXXXXXXXX — board name from the 'board' YAML field",
+        "type": "entry.XXXXXXXXX — 'whole-board' or 'selection'",
+        "name": "entry.XXXXXXXXX — submitter name (optional; omit to hide the name input)",
+        "category": "entry.XXXXXXXXX — category label chosen in modal (optional; omit to hide picker)"
+      }
+    },
+    "mode": {
+      "type": "string",
+      "default": "",
+      "description": "Set to 'display-feedback' to render a read-only display of submitted arrangements from a Google Sheets CSV."
+    },
+    "feedback-gsheet-csv": {
+      "type": "string",
+      "default": "",
+      "description": "Google Sheets published CSV URL. Required when mode: display-feedback. Example: https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv"
+    },
+    "feedback-moderation-hours": {
+      "type": "number",
+      "default": 24,
+      "description": "Hours after submission_at during which a row shows automatically (before manual approval). Rows with approved=yes always show; approved=no never show."
     }
   }
 }
