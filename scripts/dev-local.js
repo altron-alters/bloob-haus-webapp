@@ -29,8 +29,10 @@ function getContentDir() {
   const arg = process.argv.find((a) => a.startsWith("--content="));
   if (arg) return path.resolve(ROOT_DIR, arg.split("=")[1]);
 
-  // Default: look for content-source/ (from a previous full build)
-  return path.join(ROOT_DIR, "content-source");
+  console.error(
+    "Error: --content=<path> is required. Example: node scripts/dev-local.js --site=marbles --content=../bloob-haus-marbles"
+  );
+  process.exit(1);
 }
 
 function getPageFilter() {
