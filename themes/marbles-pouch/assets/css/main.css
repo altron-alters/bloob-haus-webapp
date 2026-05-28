@@ -545,6 +545,7 @@ th {
 .footer-search__panel {
   width: 100%;
   margin-top: var(--spacing-sm);
+  text-align: left;
 }
 
 .site-footer__links {
