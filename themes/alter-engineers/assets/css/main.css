@@ -266,9 +266,9 @@ html { margin-top: 0 !important; }
 /* Paragraph text */
 .projects-single__text p {
   font-size: 1.1rem;
-  line-height: 1.5;
+  line-height: 1.6;
   margin-top: 0;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.4rem;
 }
 
 /* Headings inside body text: scale down one tier from theme defaults */
@@ -476,6 +476,86 @@ html { margin-top: 0 !important; }
 .entry-content iframe[src*="vimeo.com"] {
   aspect-ratio: 16 / 9;
   height: auto;
+}
+
+/* --- Project hero slideshow ---
+   theme.min.css locks the swiper wrapper height at 62.5rem with !important.
+   Override to 60% of that; reduce further on narrow screens.
+   Images crop symmetrically via object-fit: cover. */
+
+.projects-single__hero {
+  position: relative;
+}
+
+.projects-single__images-content {
+  height: 37.5rem !important;
+  max-height: 37.5rem !important;
+}
+
+@media (max-width: 768px) {
+  .projects-single__images-content {
+    height: 22rem !important;
+    max-height: 22rem !important;
+  }
+}
+
+.projects-single__image-container {
+  overflow: hidden;
+  height: 100%;
+}
+
+.projects-single__image-container picture {
+  display: block;
+  height: 100%;
+}
+
+.projects-single__image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Buttons overlaid inside the slide, bottom-left */
+.projects-single__buttons-container {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  margin: 0 !important;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* White circle background so buttons are visible over any image */
+.projects-single__prev-button,
+.projects-single__next-button {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  /* Replace the full SVG (circle + arrow) with arrow-only, accent-coloured */
+}
+
+.projects-single__prev-button {
+  background-image: url("data:image/svg+xml,%3Csvg width='43' height='43' viewBox='0 0 43 43' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M26.7578 11.3984L15.7672 17.8096L15.7672 25.3817L26.7578 31.7929L26.7578 26.2617L18.759 21.5957L26.7578 16.9297L26.7578 11.3984Z' fill='%235B5DD3'/%3E%3C/svg%3E") !important;
+}
+
+.projects-single__next-button {
+  background-image: url("data:image/svg+xml,%3Csvg width='43' height='43' viewBox='0 0 43 43' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M16.2422 31.6016L27.2328 25.1904L27.2328 17.6183L16.2422 11.2071L16.2422 16.7383L24.241 21.4043L16.2422 26.0703L16.2422 31.6016Z' fill='%235B5DD3'/%3E%3C/svg%3E") !important;
+}
+
+.projects-single__prev-button:hover,
+.projects-single__next-button:hover {
+  background-color: rgba(255, 255, 255, 1) !important;
+}
+
+/* Counter sits next to the buttons */
+.projects-single__counter {
+  margin: 0 !important;
+  padding: 0.15rem 0.6rem;
+  background: rgba(255,255,255,0.92);
+  font-size: 0.85rem !important;
 }
 
 /* --- Generic page layout (page.njk) --- */

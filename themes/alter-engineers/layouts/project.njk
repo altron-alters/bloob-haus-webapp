@@ -5,10 +5,14 @@ body_class: "single single-projects"
 {#
   project.njk — Layout for bloob-object: project-profile pages.
 
-  Build-time data extraction (no JavaScript DOM manipulation):
-  - extractFirstH1      → pulls the <h1> out of rendered content for the title slot
-  - extractHeroImages   → pulls <img> tags that appear BEFORE the first <h1> for the hero Swiper
-  - stripFirstH1 | stripHeroImages → remaining body text; images after the title stay inline
+  Data sources (set by preprocess-content.js before Eleventy runs):
+  - title         → page title (frontmatter, always present)
+  - hero_images   → array of URLs for images placed BEFORE the title in markdown
+  - content       → body text only (leading h1 + hero images already stripped)
+
+  Content-extraction filters (extractHeroImages, stripHeroImages, extractFirstH1,
+  stripFirstH1) are retained as a fallback only — they fire when hero_images is
+  absent, meaning the page bypassed preprocess (shouldn't happen in normal builds).
 
   Hero Swiper and "More Projects" Swiper are both initialized by theme.min.js.
   Images use the no-pswp class so the image optimizer produces <picture> without
@@ -19,37 +23,56 @@ body_class: "single single-projects"
   Set hide_more_projects: true in page frontmatter to suppress the carousel.
 #}
 
-{% set heroImages = content | extractHeroImages %}
-{% set bodyContent = content | stripHeroImages | stripFirstH1 %}
-{% set titleHtml = content | extractFirstH1 %}
+{#
+  Preprocess extracts images-before-the-title into frontmatter `hero_images` and
+  strips both the leading h1 and those images from the body. Use frontmatter data
+  directly. Fall back to content-extraction filters for any page that bypassed
+  preprocess (shouldn't happen in normal builds, but keeps the template safe).
+#}
+{% if hero_images and hero_images.length %}
+  {% set heroImages = hero_images %}
+  {% set bodyContent = content %}
+{% else %}
+  {% set heroImages = content | extractHeroImages %}
+  {% set bodyContent = content | stripHeroImages | stripFirstH1 %}
+{% endif %}
 
 <div class="projects-single">
   <div class="projects-single__wrapper">
 
     {# Hero image gallery — images that appear BEFORE the title heading #}
     {% if heroImages.length %}
-    <div class="swiper projects-single__images" id="projects-single-swiper">
-      <div class="swiper-wrapper projects-single__images-content">
-        {% for img in heroImages %}
-        <div class="swiper-slide projects-single__image-container">
-          {{ img | replace("<img ", '<img class="no-pswp" ') | safe }}
+    <div class="projects-single__hero">
+      <div class="swiper projects-single__images" id="projects-single-swiper">
+        <div class="swiper-wrapper projects-single__images-content">
+          {% for img in heroImages %}
+          <div class="swiper-slide projects-single__image-container">
+            {# hero_images (frontmatter) contains URL strings; fallback contains raw <img> HTML #}
+            {% if img | string | first == "/" or img | string | first == "." %}
+            <img class="no-pswp" src="{{ img }}" alt="{{ title }}">
+            {% else %}
+            {{ img | replace("<img ", '<img class="no-pswp" ') | safe }}
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
-    </div>
-    <div class="projects-single__buttons-container maxwidth">
-      <div class="projects-single__buttons">
-        <div class="projects-single__prev-button" tabindex="0" role="button" aria-label="Previous slide"></div>
-        <div class="projects-single__next-button" tabindex="0" role="button" aria-label="Next slide"></div>
+      <div class="projects-single__buttons-container">
+        <div class="projects-single__buttons">
+          <div class="projects-single__prev-button" tabindex="0" role="button" aria-label="Previous slide"></div>
+          <div class="projects-single__next-button" tabindex="0" role="button" aria-label="Next slide"></div>
+        </div>
+        <h2 class="h2-medium projects-single__counter"></h2>
       </div>
-      <h2 class="h2-medium projects-single__counter"></h2>
     </div>
     {% endif %}
 
     {# Main content #}
     <div class="projects-single__main-content maxwidth">
 
-      {% if titleHtml %}
+      {% if title %}
+      <h1 class="projects-single__title">{{ title }}</h1>
+      {% elif titleHtml %}
       {{ titleHtml | replace("<h1", '<h1 class="projects-single__title"') | safe }}
       {% endif %}
 

@@ -213,19 +213,23 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
     if (normalized) preferredPrefix = normalized + "/";
   }
 
+  // Normalize all paths to forward slashes before sorting/filtering
+  const normalizedFiles = files.map((f) => f.replace(/\\/g, "/"));
+
   // Process non-preferred files first so preferred-folder files overwrite on collision.
   const orderedFiles = preferredPrefix
     ? [
-        ...files.filter((f) => !f.startsWith(preferredPrefix)),
-        ...files.filter((f) => f.startsWith(preferredPrefix)),
+        ...normalizedFiles.filter((f) => !f.startsWith(preferredPrefix)),
+        ...normalizedFiles.filter((f) => f.startsWith(preferredPrefix)),
       ]
-    : files;
+    : normalizedFiles;
 
   const byBasename = {};
   const byVaultPath = {};
 
-  for (const file of orderedFiles) {
-    // file is vault-relative with forward slashes (glob guarantees this)
+  for (const rawFile of orderedFiles) {
+    // Normalize to forward slashes — glob should guarantee this but Windows can return backslashes
+    const file = rawFile.replace(/\\/g, "/");
     // e.g. "media/logo.png" or "projects/My Diagram.html"
     const filename = path.basename(file);
     const decodedFilename = decodeURIComponent(filename);

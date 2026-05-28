@@ -1,6 +1,7 @@
 {# Auto-resize same-origin iframes to fit their content height.
    Works for any embedded HTML file (charts, interactive graphics, etc.).
    Cross-origin iframes are silently skipped via try/catch.
+   Re-measures on window resize so narrow-screen reflows are handled.
    Opt out per-site: features.iframe_resize: false #}
 {% if site.features.iframe_resize != false %}
 <script>
@@ -8,12 +9,29 @@
   function resizeIframe(iframe) {
     try {
       var doc = iframe.contentDocument || iframe.contentWindow.document;
-      var h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
-      if (h > 0) iframe.style.height = h + 'px';
+      // Small buffer accounts for sub-pixel rounding and post-load font reflows
+      var h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight) + 8;
+      if (h > 8) iframe.style.height = h + 'px';
     } catch (e) {}
   }
+
+  var iframes = [];
   document.querySelectorAll('iframe').forEach(function (iframe) {
-    iframe.addEventListener('load', function () { resizeIframe(iframe); });
+    iframes.push(iframe);
+    iframe.addEventListener('load', function () {
+      resizeIframe(iframe);
+      // Re-measure after a short delay to catch post-load font/chart reflows
+      setTimeout(function () { resizeIframe(iframe); }, 400);
+    });
+  });
+
+  // Re-measure all iframes when the viewport width changes
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      iframes.forEach(resizeIframe);
+    }, 150);
   });
 })();
 </script>
