@@ -76,8 +76,8 @@ export default async function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ [`${SRC}/media`]: "media" });
   // Vault attachment files at vault-relative paths outside src/media/
   // (e.g. src/projects/diagram.html → _site/projects/diagram.html)
-  // Binary files are never templates; HTML uses passthrough to avoid Nunjucks processing
-  // and collection pollution. Themes use .njk exclusively so no theme templates are affected.
+  // templateFormats: ["md", "njk"] (set below) excludes .html from Eleventy's page pipeline entirely —
+  // no output directory, no collection entry. Passthrough-copy handles .html files. Themes use .njk only.
   eleventyConfig.addPassthroughCopy(`${SRC}/**/*.{jpg,jpeg,png,gif,webp,svg,pdf,mp4,webm}`);
   eleventyConfig.addPassthroughCopy(`${SRC}/**/*.html`);
   // OG preview images — serve at /og/ (separate from /media/ to avoid optimization)
@@ -703,7 +703,7 @@ export default async function (eleventyConfig) {
       output: outputDir,
     },
     pathPrefix,
+    templateFormats: ["md", "njk"],
     markdownTemplateEngine: "njk",
-    htmlTemplateEngine: "njk",
   };
 }
