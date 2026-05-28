@@ -7,6 +7,8 @@ site:
 content:
   repo: "altron-alters/website-content"
   branch: "master"
+  exclude_files:
+    - "README.md"
 
 features:
   search: false

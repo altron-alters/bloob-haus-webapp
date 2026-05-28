@@ -1,0 +1,4 @@
+# Keep fork's own workflows when merging from upstream (LSanten/bloob-haus-webapp).
+# Prevents upstream's buffbaby/marbles/melt deploy workflows from overwriting
+# the AE-only deploy-alter-engineers.yml on git merge upstream/main.
+.github/workflows/** merge=ours
