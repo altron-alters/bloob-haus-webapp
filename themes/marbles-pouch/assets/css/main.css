@@ -528,6 +528,25 @@ th {
   color: var(--accent-color);
 }
 
+.site-footer__credit {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.site-footer__credit a {
+  font-family: 'Satoshi', sans-serif;
+  font-variant: small-caps;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.site-footer__credit a:hover {
+  text-decoration: underline;
+}
+
 /* ================================
    Article / Content
    ================================ */
