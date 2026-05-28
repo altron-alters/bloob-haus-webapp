@@ -18,7 +18,15 @@
 export function stripLeadingTitleHeading(content, pageTitle) {
   if (!content || !pageTitle) return { content, subtitle: null };
 
-  const leadingH1 = content.match(/^\s*# (.+?)(?:\s*\{#[^}]+\})?\s*\n/);
+  // Detect hero image prefix: one or more `![alt](url)` lines before the H1.
+  // These images are intentionally placed above the title and should be
+  // extracted to render above the page title in the template, not in the body.
+  const heroMatch = content.match(/^((?:[^\S\n]*!\[[^\]]*\]\([^)]*\)[^\S\n]*\n)+)/);
+  const prefix = heroMatch ? heroMatch[1] : '';
+  const afterPrefix = content.slice(prefix.length);
+
+  // Find the leading H1 (may have leading whitespace when no hero prefix)
+  const leadingH1 = afterPrefix.match(/^\s*# (.+?)(?:\s*\{#[^}]+\})?\s*\n/);
   if (!leadingH1) return { content, subtitle: null };
 
   const headingText = leadingH1[1]
@@ -30,8 +38,13 @@ export function stripLeadingTitleHeading(content, pageTitle) {
 
   if (headingText.toLowerCase() !== pageTitle.toLowerCase()) return { content, subtitle: null };
 
-  // Remove the H1 line (with any leading whitespace)
-  let stripped = content.replace(/^\s*# .+\n/, "");
+  // Extract hero image URLs so the template can render them above the title
+  const heroImages = prefix
+    ? [...prefix.matchAll(/!\[[^\]]*\]\(([^)]*)\)/g)].map((m) => m[1])
+    : [];
+
+  // Strip the H1 (and the hero prefix — images move to frontmatter, not body)
+  let stripped = afterPrefix.replace(/^\s*# .+\n/, "");
 
   // If H2 follows immediately (no blank line), extract it as subtitle
   const subtitleMatch = stripped.match(/^## ([^\n]+)/);
@@ -51,5 +64,5 @@ export function stripLeadingTitleHeading(content, pageTitle) {
     stripped = stripped.replace(/^\n/, "");
   }
 
-  return { content: stripped, subtitle };
+  return { content: stripped, subtitle, heroImages };
 }

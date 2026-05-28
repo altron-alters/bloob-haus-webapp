@@ -126,6 +126,43 @@ describe('stripLeadingTitleHeading', () => {
     });
   });
 
+  describe('hero image before title', () => {
+    it('strips H1 when a single image line precedes it', () => {
+      const input = '![](/media/hero.png)\n# My title\n\nBody.';
+      const { content, subtitle, heroImages } = stripLeadingTitleHeading(input, 'My title');
+      expect(content).toBe('Body.');
+      expect(subtitle).toBeNull();
+      expect(heroImages).toEqual(['/media/hero.png']);
+    });
+
+    it('strips H1 when multiple image lines precede it', () => {
+      const input = '![](/a.png)\n![](/b.png)\n# My title\n\nBody.';
+      const { content, heroImages } = stripLeadingTitleHeading(input, 'My title');
+      expect(content).toBe('Body.');
+      expect(heroImages).toEqual(['/media/a.png', '/media/b.png'].map((_, i) => ['/a.png', '/b.png'][i]));
+    });
+
+    it('does not strip when image precedes a non-matching H1', () => {
+      const input = '![](/hero.png)\n# Different title\n\nBody.';
+      const { content, heroImages } = stripLeadingTitleHeading(input, 'My title');
+      expect(content).toBe(input);
+      expect(heroImages).toBeUndefined();
+    });
+
+    it('extracts subtitle when H2 follows H1 after hero image', () => {
+      const input = '![](/hero.png)\n# My title\n## My subtitle\n\nBody.';
+      const { content, subtitle, heroImages } = stripLeadingTitleHeading(input, 'My title');
+      expect(subtitle).toBe('My subtitle');
+      expect(heroImages).toEqual(['/hero.png']);
+      expect(content).toBe('Body.');
+    });
+
+    it('returns empty heroImages for standard H1 (no prefix)', () => {
+      const { heroImages } = stripLeadingTitleHeading('# My title\n\nBody.', 'My title');
+      expect(heroImages).toEqual([]);
+    });
+  });
+
   describe('edge cases', () => {
     it('returns original content when pageTitle is empty', () => {
       const input = '# Our vision\n\nContent.';

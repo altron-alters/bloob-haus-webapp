@@ -445,13 +445,17 @@ export async function preprocessContent({
     // page.njk always renders <h1>{{ title }}</h1> from frontmatter — if the
     // markdown also starts with "# Same Title" that heading is redundant.
     // If an H2 immediately follows the H1, it is extracted as a subtitle.
-    const { content: deduped, subtitle } = stripLeadingTitleHeading(processedContent, pageTitle);
+    const { content: deduped, subtitle, heroImages } = stripLeadingTitleHeading(processedContent, pageTitle);
     if (deduped !== processedContent) {
       processedContent = deduped;
       console.log(`[process]   Stripped leading H1 matching title: "${pageTitle}"`);
       if (subtitle) {
         outputFrontmatter.subtitle = subtitle;
         console.log(`[process]   Extracted subtitle: "${subtitle}"`);
+      }
+      if (heroImages && heroImages.length > 0) {
+        outputFrontmatter.hero_images = heroImages;
+        console.log(`[process]   Extracted hero images: ${heroImages.join(', ')}`);
       }
     }
 

@@ -661,6 +661,18 @@ a.internal-link:hover {
   flex-shrink: 0;
 }
 
+/* Hero image — rendered above the page title when image precedes # heading in markdown */
+.marble-hero {
+  margin-bottom: var(--spacing-md);
+}
+
+.marble-hero__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--border-radius);
+}
+
 .marble-header {
   margin-bottom: var(--spacing-lg);
 }

@@ -7,6 +7,14 @@ layout: layouts/base.njk
   <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden style="display:none" />
   {% endif %}
 
+  {% if hero_images %}
+  <div class="marble-hero">
+    {% for imgSrc in hero_images %}
+    <img src="{{ imgSrc }}" alt="{{ title }}" class="marble-hero__image">
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <header class="marble-header">
     <h1 class="page-title">{{ title }}</h1>
     {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
