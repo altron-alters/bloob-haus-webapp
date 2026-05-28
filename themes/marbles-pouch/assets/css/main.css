@@ -25,6 +25,8 @@
   /* Typography */
   --font-body: "Nunito Sans", sans-serif;
   --font-heading: "Nunito Sans", sans-serif;
+  --heading-h1-color: #303664;   /* navy/indigo — page title */
+  --heading-h3-color: #046d78;   /* teal — tertiary section heads */
 
   /* Spacing */
   --spacing-xs: 0.5rem;
@@ -109,16 +111,58 @@ a:hover {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.2;
   margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-xs);
   color: var(--accent-dark);
 }
 
-h1 { font-size: 2.05rem; }   /* ~37px (old Jekyll) */
-h2 { font-size: 1.45rem; }   /* ~26px */
-h3 { font-size: 1.1rem; }    /* ~20px */
+/* H1 — page title */
+h1 {
+  font-size: 2.05rem;   /* ~37px */
+  color: var(--heading-h1-color);
+}
+
+/* H2 — two roles: subtitle (after H1) or section heading (in body) */
+h2 {
+  font-size: 1.45rem;   /* ~26px */
+  font-weight: 500;     /* lighter than h1 — clearly subordinate */
+  color: var(--text-color);
+}
+
+/* In-content heading rules — scoped to .marble-content so they don't affect .page-title */
+/* First H1 in content: no top gap; if no H2 subtitle follows, add breathing room below */
+.marble-content h1:first-of-type {
+  margin-top: 0;
+}
+
+.marble-content h1:first-of-type:not(:has(+ h2)) {
+  margin-bottom: 2.8rem;
+}
+
+/* H2 immediately after H1 in content = subtitle treatment */
+.marble-content h1 + h2 {
+  margin-top: 0;
+  color: var(--accent-color);
+  font-weight: 600;
+  margin-bottom: 2.8rem;
+}
+
+/* H3 — tertiary section, teal accent */
+h3 {
+  font-size: 1.1rem;    /* ~20px */
+  color: var(--heading-h3-color);
+}
+
+/* H4–H6 — minor headings, neutral */
 h4 { font-size: 0.95rem; }   /* ~17px */
+h5 { font-size: 0.85rem; }   /* ~15px */
+h6 { font-size: 0.75rem; }   /* ~13px */
+
+/* Consecutive heading spacing — collapse top margin when headings directly follow each other */
+.marble-content h2 + h3 {
+  margin-top: 0;
+}
 
 p {
   margin-bottom: var(--spacing-sm);
@@ -621,9 +665,26 @@ a.internal-link:hover {
 }
 
 .page-title {
-  font-size: 1.6rem;
+  font-size: 2.05rem;   /* ~37px */
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--heading-h1-color);
+  margin-top: 0;
+  margin-bottom: 0;  /* subtitle sits flush under */
+}
+
+/* When there's no subtitle, give the title breathing room before date/body */
+.marble-header:not(:has(.page-subtitle)) .page-title {
   margin-bottom: var(--spacing-md);
-  color: var(--accent-dark);
+}
+
+.page-subtitle {
+  font-size: 1.45rem;   /* ~26px */
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--accent-color);
+  margin-top: 0.25rem;   /* just a breath under the title */
+  margin-bottom: var(--spacing-md);  /* space before date pill / share bar */
 }
 
 /* --- Share bar --- */

@@ -38,20 +38,29 @@
         btn.addEventListener('click', function () {
           var open = panel.hidden;
           panel.hidden = !open;
-          btn.hidden = open;  /* hide button when panel is open */
+          btn.style.display = open ? 'none' : '';  /* hide button when panel is open */
           btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-          if (open && !mounted) {
-            mounted = true;
-            function initSearch() {
-              new PagefindUI({ element: '#footer-search-widget', showSubResults: false, resetStyles: false });
+          if (open) {
+            function focusInput() {
+              var input = panel.querySelector('input[type=text]');
+              if (input) input.focus();
             }
-            if (window.PagefindUI) {
-              initSearch();
+            if (!mounted) {
+              mounted = true;
+              function initSearch() {
+                new PagefindUI({ element: '#footer-search-widget', showSubResults: false, resetStyles: false });
+                setTimeout(focusInput, 50);
+              }
+              if (window.PagefindUI) {
+                initSearch();
+              } else {
+                var s = document.createElement('script');
+                s.src = '/pagefind/pagefind-ui.js';
+                s.onload = initSearch;
+                document.head.appendChild(s);
+              }
             } else {
-              var s = document.createElement('script');
-              s.src = '/pagefind/pagefind-ui.js';
-              s.onload = initSearch;
-              document.head.appendChild(s);
+              focusInput();
             }
           }
         });
