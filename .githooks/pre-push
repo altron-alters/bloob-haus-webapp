@@ -1,0 +1,30 @@
+#!/bin/sh
+# Blocks direct branch pushes to upstream (LSanten/bloob-haus-webapp).
+# The AE fork has diverged (deleted workflows, AE-specific configs) — pushing
+# main directly would overwrite Leon's site workflows.
+# To share a bug fix: git cherry-pick <hash>, then git push upstream main.
+
+remote="$1"
+
+if echo "$remote" | grep -q "LSanten/bloob-haus-webapp"; then
+  # Allow cherry-picked single commits (one commit ahead of upstream)
+  upstream_sha=$(git ls-remote upstream main 2>/dev/null | cut -f1)
+  local_sha=$(git rev-parse HEAD)
+  if [ -z "$upstream_sha" ] || [ "$upstream_sha" = "$local_sha" ]; then
+    exit 0
+  fi
+  ahead=$(git rev-list --count upstream/main..HEAD 2>/dev/null || echo "unknown")
+  if [ "$ahead" != "1" ]; then
+    echo ""
+    echo "⛔ Blocked: pushing $ahead commits to upstream LSanten/bloob-haus-webapp."
+    echo "   The AE fork has AE-specific commits that must NOT go upstream."
+    echo ""
+    echo "   To share a single bug fix:"
+    echo "   1. git cherry-pick <fix-commit-hash>"
+    echo "   2. git push upstream main"
+    echo ""
+    exit 1
+  fi
+fi
+
+exit 0
