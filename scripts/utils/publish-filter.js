@@ -123,9 +123,10 @@ export async function filterPublishableFiles(contentDir, options = {}) {
 
     const relativePath = path.relative(contentDir, filePath);
 
-    // Check file-level exclude list (matches filename without extension)
+    // Check file-level exclude list (matches filename with or without .md extension)
     const fileBaseName = path.basename(filePath, ".md");
-    const isFileExcluded = config.excludeFiles.includes(fileBaseName);
+    const normalizedExcludes = config.excludeFiles.map(f => f.replace(/\.md$/i, ""));
+    const isFileExcluded = normalizedExcludes.includes(fileBaseName);
 
     if (isFileExcluded) {
       excluded.push({
