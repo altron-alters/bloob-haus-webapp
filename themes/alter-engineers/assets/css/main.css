@@ -126,6 +126,29 @@
 }
 
 /* ============================================================
+   FOOTER — BLOOB HAUS GRADIENT STRIP
+   Subtle blue-to-purple tint behind the credits + social row.
+   ============================================================ */
+.footer__design-social {
+  background: linear-gradient(135deg, rgba(91, 93, 211, 0.05) 0%, rgba(110, 60, 210, 0.11) 100%);
+  padding: 1rem 0;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   FOOTER — MOBILE SOCIAL ORDER
+   theme.min.css applies column-reverse only at ≥1024px, so on
+   mobile DOM order wins: credits appear above LinkedIn. Force
+   the same reversed order (LinkedIn first) at all sizes.
+   ============================================================ */
+@media (max-width: 1023px) {
+  .footer__design-social {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+}
+
+/* ============================================================
    FOOTER — LINKEDIN LINK SIZE
    Double the font size relative to the default menu-item.
    ============================================================ */
@@ -588,7 +611,7 @@ html { margin-top: 0 !important; }
 }
 
 .page-content h1 { font-size: clamp(1.7rem, 4vw, 2.1rem); }
-.page-content h2 { font-size: 1.5rem; }
+.page-content h2 { font-size: 1.85rem; }
 .page-content h3 { font-size: 1.2rem; }
 .page-content h4 { font-size: 1rem; }
 .page-content h5 { font-size: 0.9rem; }
@@ -599,12 +622,19 @@ html { margin-top: 0 !important; }
   margin-top: 0;
 }
 
-/* H2 immediately after H1 = subtitle treatment */
+/* H1 with no subtitle following: add breathing room before body */
+.page-content h1:first-child:not(:has(+ h2)) {
+  margin-bottom: 2.5rem;
+}
+
+/* H2 immediately after H1 = subtitle treatment:
+   pull tight under h1, accent color, large gap before body begins */
 .page-content h1 + h2 {
   margin-top: 0.25rem;
   font-weight: 600;
-  margin-bottom: 2rem;
-  color: var(--text-light);
+  font-size: 1.35rem;
+  margin-bottom: 2.5rem;
+  color: var(--accent-color);
 }
 
 /* Consecutive headings: collapse top gap */
