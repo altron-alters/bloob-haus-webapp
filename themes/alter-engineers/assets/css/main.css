@@ -271,10 +271,13 @@ html { margin-top: 0 !important; }
   margin-bottom: 1.4rem;
 }
 
-/* Headings inside body text: scale down one tier from theme defaults */
-.projects-single__text h2 { font-size: 1rem; }
-.projects-single__text h3 { font-size: 0.85rem; }
-.projects-single__text h4 { font-size: 0.75rem; }
+/* Headings inside project body text */
+.projects-single__text h2 { font-size: 1.35rem; margin-top: 2rem; margin-bottom: 0.4rem; }
+.projects-single__text h3 { font-size: 1.1rem;  margin-top: 1.5rem; margin-bottom: 0.35rem; }
+.projects-single__text h4 { font-size: 1rem;    margin-top: 1.25rem; margin-bottom: 0.3rem; }
+.projects-single__text h2:first-child,
+.projects-single__text h3:first-child { margin-top: 0; }
+.projects-single__text h2 + h3 { margin-top: 0.25rem; }
 
 /* Body images (below title): full column width.
    In the grid layout the text column is already constrained by 1fr,
@@ -563,10 +566,54 @@ html { margin-top: 0 !important; }
   margin-bottom: 2rem;
 }
 
-.page-title {
-  /* Inherits global h1 styles; override here if needed */
+/* ============================================================
+   PAGE CONTENT — HEADING HIERARCHY
+   Scoped to .page-content so these don't interfere with
+   theme.min.css sections (.hero-block, .projects, etc.)
+   Pattern mirrors marbles-pouch: clear scale, top gap before
+   each heading, small gap after (before the following body text).
+   ============================================================ */
+.page-content h1,
+.page-content h2,
+.page-content h3,
+.page-content h4,
+.page-content h5,
+.page-content h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-color);
 }
 
-.page-content {
-  /* Content area — styles applied globally via h2, p, ul etc. */
+.page-content h1 { font-size: clamp(1.7rem, 4vw, 2.1rem); }
+.page-content h2 { font-size: 1.5rem; }
+.page-content h3 { font-size: 1.2rem; }
+.page-content h4 { font-size: 1rem; }
+.page-content h5 { font-size: 0.9rem; }
+.page-content h6 { font-size: 0.8rem; }
+
+/* First heading in content: no top gap */
+.page-content :is(h1, h2, h3):first-child {
+  margin-top: 0;
+}
+
+/* H2 immediately after H1 = subtitle treatment */
+.page-content h1 + h2 {
+  margin-top: 0.25rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: var(--text-light);
+}
+
+/* Consecutive headings: collapse top gap */
+.page-content h2 + h3,
+.page-content h3 + h4 {
+  margin-top: 0.25rem;
+}
+
+.page-content p {
+  line-height: 1.65;
+  margin-bottom: 1rem;
 }

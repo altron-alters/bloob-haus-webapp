@@ -10,6 +10,9 @@ content:
   exclude_files:
     - "README.md"
 
+media:
+  widths: [1200, 2400]
+
 features:
   search: false
   og_images: true
