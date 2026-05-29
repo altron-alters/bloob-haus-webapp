@@ -126,16 +126,6 @@
 }
 
 /* ============================================================
-   FOOTER — BLOOB HAUS GRADIENT STRIP
-   Subtle blue-to-purple tint behind the credits + social row.
-   ============================================================ */
-.footer__design-social {
-  background: linear-gradient(135deg, rgba(91, 93, 211, 0.05) 0%, rgba(110, 60, 210, 0.11) 100%);
-  padding: 1rem 0;
-  border-radius: 2px;
-}
-
-/* ============================================================
    FOOTER — MOBILE SOCIAL ORDER
    theme.min.css applies column-reverse only at ≥1024px, so on
    mobile DOM order wins: credits appear above LinkedIn. Force
