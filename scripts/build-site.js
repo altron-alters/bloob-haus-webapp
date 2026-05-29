@@ -92,12 +92,8 @@ async function buildSite() {
     process.env.SRC_DIR = srcDir;
     console.log(`[config] Src dir: ${srcDir}`);
 
-    // Step 4: Assemble src/ from theme
-    // Pass contentDir so assemble-src can detect vault index.md
-    await assembleSrc(config, contentDir);
-
-    // Step 5: Preprocess content
-    console.log("\n");
+    // Step 4: Preprocess content
+    // Must run before assemble-src so media attachments are in srcDir when logo URL resolution runs.
 
     // Pass config values to preprocessor via env vars
     // (preprocessor reads these — keeps its interface unchanged)
@@ -117,8 +113,12 @@ async function buildSite() {
       );
     }
 
+    // Step 5: Assemble src/ from theme
+    // Runs after preprocessing so srcDir has attachments — logo URL resolution finds the file correctly.
+    await assembleSrc(config, contentDir);
+
     // Step 5.1: Remove any theme index.njk files that now conflict with content index.md files.
-    // Assemble runs before preprocess, so it can't always predict what stubs preprocess will generate.
+    // Preprocess may generate stub index.md files that assemble-src could not predict.
     // This cleanup pass resolves any remaining index.md + index.njk permalink collisions in src/.
     {
       const subdirs = (await fs.readdir(srcDir, { withFileTypes: true }))
@@ -138,12 +138,13 @@ async function buildSite() {
       await generateOgImages();
     }
 
-    // Step 5.6: Generate favicons from site logo (runs after preprocessing copies attachments)
+    // Step 5.6: Re-run favicon generation as a safety pass
+    // (assemble-src step 9 now runs after preprocessing, so this is normally redundant)
     console.log("\n--- Step 5.6: Generating favicons ---");
     await generateFavicons({ config });
 
-    // Step 5.7: Generate bloob-object icons (needs src/media/ populated by preprocessing)
-    // assemble-src Step 10 ran too early for content-repo images; this catches them.
+    // Step 5.7: Re-run bloob-object icon generation as a safety pass
+    // (assemble-src step 10 now runs after preprocessing, so this is normally redundant)
     console.log("\n--- Step 5.7: Generating bloob-object icons ---");
     await generateBloobIcons({ contentDir, srcDir });
 
