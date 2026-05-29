@@ -109,6 +109,54 @@ npm test                  # Run all tests
 npm run test:watch        # Watch mode
 ```
 
+## Git Remotes (AE fork only)
+
+This repo is a fork. Two remotes are set:
+
+| Remote | Repo | Purpose |
+|--------|------|---------|
+| `origin` | `altron-alters/bloob-haus-webapp` | AE's fork — primary push target |
+| `upstream` | `LSanten/bloob-haus-webapp` | Leon's personal repo — sync shared fixes |
+
+**Never run `git push upstream main`** — it overwrites Leon's personal repo with AE-specific commits.
+
+### Pushing a shared fix upstream (cherry-pick workflow)
+
+Only cherry-pick **shared pipeline commits** (scripts, lib, eleventy.config.js, tests). Never cherry-pick AE-specific commits (sites/alter-engineers.yaml, .github/workflows/, themes/alter-engineers/).
+
+```bash
+git checkout -b upstream-sync upstream/main
+git cherry-pick <hash>
+git push upstream upstream-sync:main
+git checkout main
+git branch -d upstream-sync
+```
+
+### Pulling improvements from upstream into the fork
+
+```bash
+git fetch upstream
+git merge upstream/main
+git push
+```
+
+Enable the ours merge driver once per clone: `git config merge.ours.driver true`
+
+**Warning — workflow deletion bug:** `merge=ours` in `.gitattributes` protects `.github/workflows/` against conflicting *modifications* but NOT upstream *deletions*. If upstream deletes a file that exists only in the fork, the merge silently drops it. After every upstream merge, verify the AE deploy workflow is still present:
+
+```bash
+ls .github/workflows/
+# Must include: deploy-alter-engineers.yml
+```
+
+If it was deleted, restore it:
+```bash
+git show HEAD~1:.github/workflows/deploy-alter-engineers.yml > .github/workflows/deploy-alter-engineers.yml
+git add .github/workflows/deploy-alter-engineers.yml
+git commit -m "chore(ci): restore AE deploy workflow deleted by upstream merge"
+git push
+```
+
 ## Debugging and Testing the Pipeline
 
 ### Per-site src directories
