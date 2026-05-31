@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stripLeadingTitleHeading } from '../../scripts/utils/title-deduplicator.js';
+import { stripLeadingTitleHeading, stripInlineMarkdown } from '../../scripts/utils/title-deduplicator.js';
 
 describe('stripLeadingTitleHeading', () => {
   describe('strips matching H1', () => {
@@ -47,6 +47,16 @@ describe('stripLeadingTitleHeading', () => {
       expect(content).toBe('Content.');
     });
 
+    it('strips underscore italic before comparing', () => {
+      const { content } = stripLeadingTitleHeading("# The Sanskrit in ARTBAT's _Tabu_\n\nContent.", "The Sanskrit in ARTBAT's Tabu");
+      expect(content).toBe('Content.');
+    });
+
+    it('strips underscore bold before comparing', () => {
+      const { content } = stripLeadingTitleHeading('# __Bold__ Title\n\nContent.', 'Bold Title');
+      expect(content).toBe('Content.');
+    });
+
     it('ignores Eleventy anchor ID syntax in the heading', () => {
       const { content } = stripLeadingTitleHeading('# Our vision {#our-vision}\n\nContent.', 'Our vision');
       expect(content).toBe('Content.');
@@ -73,10 +83,16 @@ describe('stripLeadingTitleHeading', () => {
       expect(content).toBe('Content.');
     });
 
-    it('strips inline formatting from extracted subtitle', () => {
+    it('preserves inline formatting in extracted subtitle', () => {
       const input = '# Title\n## Sub **bold** and *italic*\n\nContent.';
       const { subtitle } = stripLeadingTitleHeading(input, 'Title');
-      expect(subtitle).toBe('Sub bold and italic');
+      expect(subtitle).toBe('Sub **bold** and *italic*');
+    });
+
+    it('preserves underscore italic in extracted subtitle', () => {
+      const input = "# Title\n## The _Philosophical_ Vacuum\n\nContent.";
+      const { subtitle } = stripLeadingTitleHeading(input, 'Title');
+      expect(subtitle).toBe('The _Philosophical_ Vacuum');
     });
 
     it('subtitle content starts after H2 line', () => {
@@ -90,6 +106,41 @@ describe('stripLeadingTitleHeading', () => {
       const input = '# Title\n### Not a subtitle\n\nContent.';
       const { subtitle } = stripLeadingTitleHeading(input, 'Title');
       expect(subtitle).toBeNull();
+    });
+  });
+
+  describe('titleMd return value', () => {
+    it('returns raw H1 text with markdown preserved', () => {
+      const { titleMd } = stripLeadingTitleHeading("# The Sanskrit in ARTBAT's _Tabu_\n\nContent.", "The Sanskrit in ARTBAT's Tabu");
+      expect(titleMd).toBe("The Sanskrit in ARTBAT's _Tabu_");
+    });
+
+    it('returns titleMd without heading anchor syntax', () => {
+      const { titleMd } = stripLeadingTitleHeading('# Our **Bold** Vision {#our-vision}\n\nContent.', 'Our Bold Vision');
+      expect(titleMd).toBe('Our **Bold** Vision');
+    });
+
+    it('returns null titleMd when there is no matching H1', () => {
+      const { titleMd } = stripLeadingTitleHeading('# Different\n\nContent.', 'Our vision');
+      expect(titleMd).toBeNull();
+    });
+  });
+
+  describe('stripInlineMarkdown helper', () => {
+    it('strips asterisk bold and italic', () => {
+      expect(stripInlineMarkdown('Hello **world** and *you*')).toBe('Hello world and you');
+    });
+    it('strips underscore bold and italic', () => {
+      expect(stripInlineMarkdown('The __Bold__ and _Italic_')).toBe('The Bold and Italic');
+    });
+    it('strips inline code', () => {
+      expect(stripInlineMarkdown('Use `npm install`')).toBe('Use npm install');
+    });
+    it('strips link text', () => {
+      expect(stripInlineMarkdown('[Our site](https://example.com)')).toBe('Our site');
+    });
+    it('leaves plain text unchanged', () => {
+      expect(stripInlineMarkdown('Plain text')).toBe('Plain text');
     });
   });
 

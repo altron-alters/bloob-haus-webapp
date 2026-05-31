@@ -669,6 +669,15 @@ blockquote p:last-child {
     display: none;
 }
 
+/* Subtitle line shown above the auto-excerpt in search result cards */
+.pagefind-subtitle {
+    display: block;
+    font-size: 0.78em;
+    opacity: 0.7;
+    margin-bottom: 0.25em;
+    font-style: italic;
+}
+
 /* On mobile, move tag filters below search results */
 @media (max-width: 768px) {
     .pagefind-ui .pagefind-ui__drawer {

@@ -3,8 +3,8 @@ layout: layouts/base.njk
 ---
 <article class="page-article" data-pagefind-body>
   <header class="page-header">
-    <h1 class="page-title">{{ title }}</h1>
-    {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+    <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
+    {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle">{{ subtitle | mdinline | safe }}</p>{% endif %}
   </header>
 
   {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}

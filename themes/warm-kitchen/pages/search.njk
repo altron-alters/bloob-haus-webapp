@@ -21,6 +21,10 @@ eleventyExcludeFromCollections: true
                     placeholder: 'Search recipes and notes...',
                     zero_results: 'No results for "[SEARCH_TERM]"',
                     filters_label: 'Filter by tag'
+                },
+                processResult: function(r) {
+                    if (r.meta && r.meta.subtitle) r.excerpt = '<span class="pagefind-subtitle">' + r.meta.subtitle + '</span>' + r.excerpt;
+                    return r;
                 }
             });
         });

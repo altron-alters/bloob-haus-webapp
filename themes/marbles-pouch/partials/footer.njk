@@ -48,7 +48,10 @@
             if (!mounted) {
               mounted = true;
               function initSearch() {
-                new PagefindUI({ element: '#footer-search-widget', showSubResults: false, resetStyles: false });
+                new PagefindUI({ element: '#footer-search-widget', showSubResults: false, resetStyles: false, processResult: function(r) {
+                  if (r.meta && r.meta.subtitle) r.excerpt = '<span class="pagefind-subtitle">' + r.meta.subtitle + '</span>' + r.excerpt;
+                  return r;
+                } });
                 setTimeout(focusInput, 50);
               }
               if (window.PagefindUI) {

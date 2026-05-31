@@ -5,8 +5,8 @@ layout: layouts/base.njk
 <article class="page-content" data-pagefind-body>
   <header class="page-header">
     {% if typeData and typeData.display_name %}<p class="page-type">{{ typeData.display_name }}</p>{% endif %}
-    <h1 class="page-title">{{ title }}</h1>
-    {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+    <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
+    {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle">{{ subtitle | mdinline | safe }}</p>{% endif %}
     {% if typeData and typeData.banner_text %}<p class="page-banner-text">{{ typeData.banner_text }}</p>{% endif %}
     {% if author %}<p class="page-author">By {{ author }}</p>{% endif %}
     {% if byline %}<p class="page-byline">{{ byline }}</p>{% endif %}

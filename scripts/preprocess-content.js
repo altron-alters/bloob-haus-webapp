@@ -31,7 +31,7 @@ import {
 } from "./utils/attachment-resolver.js";
 import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
-import { stripLeadingTitleHeading } from "./utils/title-deduplicator.js";
+import { stripLeadingTitleHeading, stripInlineMarkdown } from "./utils/title-deduplicator.js";
 import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
@@ -442,21 +442,40 @@ export async function preprocessContent({
     }
 
     // Strip leading H1 from content body if it duplicates the page title.
-    // page.njk always renders <h1>{{ title }}</h1> from frontmatter — if the
-    // markdown also starts with "# Same Title" that heading is redundant.
-    // If an H2 immediately follows the H1, it is extracted as a subtitle.
-    const { content: deduped, subtitle, heroImages } = stripLeadingTitleHeading(processedContent, pageTitle);
+    // page.njk renders <h1>{{ title_md or title }}</h1> — if markdown also
+    // starts with "# Same Title" that heading would double-render.
+    // If an H2 follows the H1, it is extracted as a subtitle (raw markdown preserved).
+    const { content: deduped, subtitle, titleMd, heroImages } = stripLeadingTitleHeading(processedContent, pageTitle);
     if (deduped !== processedContent) {
       processedContent = deduped;
       console.log(`[process]   Stripped leading H1 matching title: "${pageTitle}"`);
+
+      // title_md: raw markdown for template H1 rendering.
+      // Prefer the value from file-index (handles explicit frontmatter titles with markdown).
+      const rawTitleMd = pageInfo?.title_md || titleMd || null;
+      if (rawTitleMd) {
+        outputFrontmatter.title_md = rawTitleMd;
+        console.log(`[process]   Preserved title_md: "${rawTitleMd}"`);
+      }
+
       if (subtitle) {
         outputFrontmatter.subtitle = subtitle;
         console.log(`[process]   Extracted subtitle: "${subtitle}"`);
+        // Add plain subtitle to graph data
+        if (pageInfo && perPageLinks[pageInfo.url]) {
+          perPageLinks[pageInfo.url].subtitle = stripInlineMarkdown(subtitle).trim();
+        }
       }
       if (heroImages && heroImages.length > 0) {
         outputFrontmatter.hero_images = heroImages;
         console.log(`[process]   Extracted hero images: ${heroImages.join(', ')}`);
       }
+    }
+
+    // Also handle title_md for pages where frontmatter.title contains markdown
+    // but no H1 was stripped (e.g. user wrote title: _Italic_ in frontmatter directly).
+    if (!outputFrontmatter.title_md && pageInfo?.title_md) {
+      outputFrontmatter.title_md = pageInfo.title_md;
     }
 
     // Reconstruct the file with frontmatter

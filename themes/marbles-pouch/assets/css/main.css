@@ -965,6 +965,15 @@ details > *:not(summary) {
   color: var(--link-color) !important;
 }
 
+/* Subtitle line shown above the auto-excerpt in search result cards */
+.pagefind-subtitle {
+  display: block;
+  font-size: 0.78em;
+  opacity: 0.7;
+  margin-bottom: 0.25em;
+  font-style: italic;
+}
+
 /* ================================
    Tags Visualizer
    ================================ */

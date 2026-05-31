@@ -5,7 +5,10 @@
   <script src="{{ "/pagefind/pagefind-ui.js" | url }}"></script>
   <script>
     window.addEventListener('DOMContentLoaded', function () {
-      new PagefindUI({ element: "#search", showSubResults: false, resetStyles: false });
+      new PagefindUI({ element: "#search", showSubResults: false, resetStyles: false, processResult: function(r) {
+        if (r.meta && r.meta.subtitle) r.excerpt = '<span class="pagefind-subtitle">' + r.meta.subtitle + '</span>' + r.excerpt;
+        return r;
+      } });
     });
   </script>
 </div>
