@@ -66,11 +66,11 @@ describe('stripLeadingTitleHeading', () => {
       expect(content).toBe('Content.');
     });
 
-    it('does not extract H2 when separated by a blank line', () => {
-      const input = '# Our vision\n\n## Not a subtitle\n\nContent.';
+    it('extracts H2 as subtitle even when separated by a blank line', () => {
+      const input = '# Our vision\n\n## Still a subtitle\n\nContent.';
       const { content, subtitle } = stripLeadingTitleHeading(input, 'Our vision');
-      expect(subtitle).toBeNull();
-      expect(content).toBe('## Not a subtitle\n\nContent.');
+      expect(subtitle).toBe('Still a subtitle');
+      expect(content).toBe('Content.');
     });
 
     it('strips inline formatting from extracted subtitle', () => {

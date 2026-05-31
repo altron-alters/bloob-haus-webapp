@@ -3,7 +3,7 @@
  * the page title. This prevents double-rendering when the template already
  * renders <h1>{{ title }}</h1> from frontmatter.
  *
- * If an H2 immediately follows the stripped H1 (no blank line between),
+ * If an H2 follows the stripped H1 (with or without a blank line between),
  * it is treated as a subtitle and returned separately so templates can
  * render it as a sub-heading below the title.
  *
@@ -46,8 +46,8 @@ export function stripLeadingTitleHeading(content, pageTitle) {
   // Strip the H1 (and the hero prefix — images move to frontmatter, not body)
   let stripped = afterPrefix.replace(/^\s*# .+\n/, "");
 
-  // If H2 follows immediately (no blank line), extract it as subtitle
-  const subtitleMatch = stripped.match(/^## ([^\n]+)/);
+  // If H2 follows (with or without a blank line), extract it as subtitle
+  const subtitleMatch = stripped.match(/^\n?## ([^\n]+)/);
   let subtitle = null;
   if (subtitleMatch) {
     subtitle = subtitleMatch[1]
@@ -57,8 +57,8 @@ export function stripLeadingTitleHeading(content, pageTitle) {
       .replace(/`(.+?)`/g, "$1")
       .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
       .trim();
-    // Strip H2 line and any following blank line
-    stripped = stripped.replace(/^## [^\n]+\n\n?/, "");
+    // Strip optional leading blank line, H2 line, and any following blank line
+    stripped = stripped.replace(/^\n?## [^\n]+\n\n?/, "");
   } else {
     // Remove the optional blank line that was between H1 and remaining content
     stripped = stripped.replace(/^\n/, "");
