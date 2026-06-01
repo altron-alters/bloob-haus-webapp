@@ -25,6 +25,7 @@ These settings work identically across every theme. They are part of the Bloob H
 | `body_class` | string | — | Extra CSS class(es) added to `<body>` |
 | `layout` | string | layout from `bloob-type` or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-type`) |
 | `bloob-type` | string | — | Content type for this page (e.g. `note`, `guide`). Controls layout, graph icon, and banner display. Defined in `_bloob-types.md`. Alias: `bloob-object` (legacy). |
+| `bloob-shape` | string | — | Rendering shape for this page. Routes the entire page body through the named shape's `renderFilescope()` renderer in `lib/visualizers/[name]/index.js`. Separate from `bloob-type:` — a file can have both. Shape config goes in a `::: settings` block in the body (not in frontmatter). See `docs/architecture/visualizers.md` — File-scope Shapes section. |
 | `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
 | `website_status` | string | `public` (when absent) | Publish visibility for this page. One of `draft` / `unlisted` / `archived` / `public`. Only active when `publish_mode: status_field` is set in `_bloob-settings.md`. See status matrix below. |

@@ -33,6 +33,7 @@ import { handleTransclusions } from "./utils/transclusion-handler.js";
 import { stripComments } from "./utils/comment-stripper.js";
 import { stripLeadingTitleHeading, stripInlineMarkdown } from "./utils/title-deduplicator.js";
 import { injectContainerRaw } from "./utils/inject-container-raw.js";
+import { extractSettingsBlock } from "./utils/extract-settings-block.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
@@ -276,6 +277,17 @@ export async function preprocessContent({
       brokenLinkDetails.push({ source: file.relativePath, type: "markdown-link", target: b.target });
     }
 
+    // 6e.3: For file-scope shapes (bloob-shape: in frontmatter), extract the
+    // ::: settings block before injectContainerRaw runs. The block is removed
+    // from the body so it doesn't render as raw markdown or get _raw= injected.
+    const bloobShape = frontmatter["bloob-shape"];
+    let shapeSettings = {};
+    if (bloobShape) {
+      const extracted = extractSettingsBlock(processedContent);
+      shapeSettings = extracted.settings;
+      processedContent = extracted.body;
+    }
+
     // 6e.5: Inject data-vis-raw into ::: container blocks
     // Must run AFTER all link resolution (attachments, wiki-links, markdown-links)
     // so the raw content captured reflects resolved paths.
@@ -284,6 +296,28 @@ export async function preprocessContent({
     // This is what enables visualizer parser.js to be shared across Eleventy,
     // browser live preview, and future Obsidian plugin.
     processedContent = injectContainerRaw(processedContent);
+
+    // 6e.6: File-scope shape rendering.
+    // When bloob-shape is set, route the body through the named shape's
+    // renderFilescope(settings, body) function. The returned HTML replaces
+    // the markdown body entirely — markdown-it will pass it through as an
+    // HTML block. This is the file-scope equivalent of inline ::: visualizers.
+    if (bloobShape) {
+      const shapePath = path.join(ROOT_DIR, "lib/visualizers", bloobShape, "index.js");
+      if (await fs.pathExists(shapePath)) {
+        try {
+          const mod = await import(pathToFileURL(shapePath).href);
+          if (typeof mod.renderFilescope === "function") {
+            console.log(`[shape] Rendering file-scope shape: ${bloobShape}`);
+            processedContent = await mod.renderFilescope(shapeSettings, processedContent);
+          }
+        } catch (e) {
+          console.warn(`[shape] Failed to render ${bloobShape}: ${e.message}`);
+        }
+      } else {
+        console.warn(`[shape] No shape found at lib/visualizers/${bloobShape}/index.js`);
+      }
+    }
 
     // 6f: Extract and normalize tags from frontmatter + inline content
     const pageTags = extractTags(frontmatter, processedContent);
@@ -436,7 +470,9 @@ export async function preprocessContent({
       if (!hasEleventyLayout) {
         outputFrontmatter.layout = bloobObjectLayout ?? "layouts/base.njk";
       }
-      outputFrontmatter.eleventyExcludeFromCollections = true;
+      // Exclude from tag and section listings but keep in collections.all
+      // so embed-pages.njk can generate /folder/embed/ URLs for them.
+      outputFrontmatter.eleventyExcludeFromCollections = ["tagList"];
       outputFrontmatter.templateEngineOverride = "njk,md";
       outputFrontmatter.is_folder = true;
     }

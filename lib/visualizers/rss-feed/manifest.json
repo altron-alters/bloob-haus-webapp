@@ -1,0 +1,26 @@
+{
+  "name": "rss-feed",
+  "type": "file-scope",
+  "version": "1.0.0",
+  "description": "Fetches a podcast RSS feed at build time and renders an episode list",
+  "activation": {
+    "method": "frontmatter",
+    "key": "bloob-shape",
+    "value": "rss-feed"
+  },
+  "files": {
+    "index": "index.js"
+  },
+  "settings": {
+    "rss": {
+      "type": "string",
+      "required": true,
+      "description": "URL of the podcast RSS feed"
+    },
+    "platforms": {
+      "type": "object",
+      "required": false,
+      "description": "Map of platform name to show-level URL, e.g. spotify: https://..."
+    }
+  }
+}
