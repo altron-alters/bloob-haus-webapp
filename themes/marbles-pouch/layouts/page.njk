@@ -36,9 +36,11 @@ layout: layouts/base.njk
     {% include "partials/share-bar.njk" %}
   </header>
 
-  {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}
+  {# Slug indexed for pagefind — "ID: slug" prefix lets the search visualizer style it as a pill.
+     Folder pages get a trailing / so the ID pill signals folder status. #}
   {% if slug %}
-  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug }}{% if slug_spaced %} {{ slug_spaced }}{% endif %}</span>
+  <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
+  {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
   {% endif %}
 
   <div class="marble-content">{{ content | safe }}</div>

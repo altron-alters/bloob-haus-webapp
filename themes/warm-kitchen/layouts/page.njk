@@ -11,9 +11,10 @@ layout: layouts/base.njk
       {% if subtitle %}<p class="recipe-subtitle" data-pagefind-meta="subtitle">{{ subtitle | mdinline | safe }}</p>{% endif %}
     </header>
 
-    {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}
+    {# Slug indexed for pagefind — "ID: slug" prefix lets the search visualizer style it as a pill. #}
     {% if slug %}
-    <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug }}{% if slug_spaced %} {{ slug_spaced }}{% endif %}</span>
+    <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
+    {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
     {% endif %}
 
     <div class="recipe-content">{{ content | safe }}</div>
