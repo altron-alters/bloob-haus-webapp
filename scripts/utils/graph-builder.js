@@ -47,23 +47,42 @@ export function stripAnchor(url) {
  *     type: "page" for normal pages, "tag" for tag nodes
  *   links: [{ source, target }]  — source/target are node IDs (URLs)
  */
+// Fields on perPageLinks entries that are pipeline-internal and must not appear in graph.json.
+// Explicitly-handled fields (title, image, etc.) are safe to omit here — they get written
+// via the spread below. Only skip fields that should never reach the output.
+const GRAPH_SKIP_FIELDS = new Set([
+  "outgoing", "filename", "folder",
+  // explicitly handled below — skip to avoid duplicates
+  "title", "subtitle", "image", "bloobIcon", "website_status", "redirect", "content_type",
+]);
+
 export function buildGraph(perPageLinks, tagIndex = {}) {
   // Build the set of known page URLs (for filtering outgoing links)
   const knownUrls = new Set(Object.keys(perPageLinks));
 
   // Build page nodes array
-  const nodes = Object.entries(perPageLinks).map(([url, page]) => ({
-    id: url,
-    title: page.title,
-    ...(page.subtitle ? { subtitle: page.subtitle } : {}),
-    section: sectionFromUrl(url),
-    type: "page",
-    ...(page.image ? { image: page.image } : {}),
-    ...(page.bloobIcon ? { bloobIcon: page.bloobIcon } : {}),
-    ...(page.website_status ? { website_status: page.website_status } : {}),
-    ...(page.redirect ? { redirect: page.redirect } : {}),
-    ...(page.content_type ? { content_type: page.content_type } : {}),
-  }));
+  const nodes = Object.entries(perPageLinks).map(([url, page]) => {
+    // Collect any extra fields added by preprocess-content (e.g. from graph.extra_fields
+    // config) that are not already handled explicitly or marked as internal-only.
+    const extraFields = {};
+    for (const [key, val] of Object.entries(page)) {
+      if (!GRAPH_SKIP_FIELDS.has(key)) extraFields[key] = val;
+    }
+
+    return {
+      id: url,
+      title: page.title,
+      ...(page.subtitle ? { subtitle: page.subtitle } : {}),
+      section: sectionFromUrl(url),
+      type: "page",
+      ...(page.image ? { image: page.image } : {}),
+      ...(page.bloobIcon ? { bloobIcon: page.bloobIcon } : {}),
+      ...(page.website_status ? { website_status: page.website_status } : {}),
+      ...(page.redirect ? { redirect: page.redirect } : {}),
+      ...(page.content_type ? { content_type: page.content_type } : {}),
+      ...extraFields,
+    };
+  });
 
   // Build page→page links — deduplicated, only between known nodes, no self-links
   const seen = new Set();

@@ -122,6 +122,12 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.magic_machines` | `true` | Serve magic machine GUI tools at `/magic-machine/*`; disable for client/professional sites |
 | `features.transclusion_indicators` | `true` | Site-wide default for transclusion indicator display. When `false`, all `![[embeds]]` across the site are inlined seamlessly. Override per-page with `transclusion_indicators:` frontmatter. |
 
+#### Graph Extra Fields
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `graph.extra_fields` | map | `{}` | Per-`bloob-object` map of frontmatter field names to include in `graph.json` nodes. Used by `folder-preview` SEO mode to display and filter per-page metadata. The special key `tags` maps to the page's extracted tag array. Example in `sites/[site].yaml`: `graph: { extra_fields: { project-profile: [building_type, location, sqft, tags] } }`. Fields not listed here are never written to `graph.json` (keeps the file lean for sites that don't need them). |
+
 #### Media Processing
 
 | Key | Default | Description |
@@ -257,14 +263,22 @@ Settings that apply to specific visualizers regardless of theme.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `folder` | string | (from URL path) | Folder name to list pages from. Required on homepage (URL-based detection fails on `/`). |
+| `folder` | string | (from URL path) | Folder name to list pages from. Required on homepage and required when `seo: true`. |
+| `seo` | bool | `false` | When `true`, renders all cards as static HTML at build time (SEO-indexable). browser.js attaches text search on top. Falls back to runtime render if graph.json is unavailable. |
+| `show_fields` | string / list | — | Comma-separated or YAML list of frontmatter fields to display on each card (e.g. `building_type, location, sqft`). Fields must be configured in `graph.extra_fields` in `sites/[site].yaml`. `seo: true` only. |
 | `sort` | string | `alpha` | Sort order: `alpha`, `reverse-alpha`, `recent` |
 | `limit` | int | `∞` | Max number of pages to show |
-| `style` | string | `list` | Layout: `list` (default) or `slider-cards` (Swiper carousel) |
+| `style` | string | `list` | Layout: `list` (default) or `slider-cards` (Swiper carousel). Only applies when `seo: false`. |
 | `title` | string | `ARTICLES` | Section label shown above slider-cards |
 | `id` | string | `articles` | HTML `id` on the section element (slider-cards only) |
 | `bg` | token/hex | — | Background color for slider-cards section. Supports named tokens and hex. (slider-cards only) |
 | `color` | hex | — | Foreground color override (hex). Used with `bg=hex`. (slider-cards only) |
+
+**SEO mode — how it works:**
+- `index.js` reads `graph.json` at build time, filters nodes by `folder`, and renders `.fp-card` elements with `data-fp-[field]` attributes for each configured `show_fields` value.
+- The rendered HTML includes a `<input class="fp-search-input">` and `<div class="fp-filter-placeholder">` (filter chips are a planned future addition).
+- `browser.js` detects `seo: true` containers, skips the graph.json fetch, and attaches a text search handler to the already-rendered cards.
+- For `show_fields` to include data, the relevant frontmatter keys must be listed in `graph.extra_fields.[bloob-object]` in `sites/[site].yaml` so they are written into `graph.json` nodes during preprocessing.
 
 ---
 
