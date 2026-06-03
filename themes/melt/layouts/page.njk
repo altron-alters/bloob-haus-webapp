@@ -2,11 +2,11 @@
 layout: layouts/base.njk
 ---
 {% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
-<article class="page-content" data-pagefind-body>
+<article class="page-content" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
   <header class="page-header">
     {% if typeData and typeData.display_name %}<p class="page-type">{{ typeData.display_name }}</p>{% endif %}
-    <h1 class="page-title">{{ title }}</h1>
-    {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+    <h1 class="page-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
+    {% if subtitle %}<p class="page-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
     {% if typeData and typeData.banner_text %}<p class="page-banner-text">{{ typeData.banner_text }}</p>{% endif %}
     {% if author %}<p class="page-author">By {{ author }}</p>{% endif %}
     {% if byline %}<p class="page-byline">{{ byline }}</p>{% endif %}

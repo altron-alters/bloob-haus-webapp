@@ -55,6 +55,7 @@ export function buildGraph(perPageLinks, tagIndex = {}) {
   const nodes = Object.entries(perPageLinks).map(([url, page]) => ({
     id: url,
     title: page.title,
+    ...(page.subtitle ? { subtitle: page.subtitle } : {}),
     section: sectionFromUrl(url),
     type: "page",
     ...(page.image ? { image: page.image } : {}),

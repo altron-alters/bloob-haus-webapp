@@ -1,8 +1,9 @@
 /**
  * GIF→MP4 conversion step
  *
- * Converts all .gif files in srcDir to .mp4 using the bundled ffmpeg binary,
- * then removes the originals so they are never deployed to Cloudflare Pages.
+ * Converts all .gif files in srcDir to .mp4 using the bundled ffmpeg binary.
+ * GIFs under 25 MiB are kept alongside their MP4 (for direct-download access).
+ * GIFs over 25 MiB are removed after conversion — Cloudflare Pages rejects them.
  *
  * Skips files that already have a .mp4 counterpart (cache-safe for dev rebuilds).
  * Opt-out: set `media: convert_gif_to_mp4: false` in _bloob-settings.md.
@@ -14,9 +15,11 @@
  */
 
 import { execSync } from "child_process";
-import { existsSync, unlinkSync, readdirSync } from "fs";
+import { existsSync, unlinkSync, readdirSync, statSync } from "fs";
 import path from "path";
 import ffmpegPath from "ffmpeg-static";
+
+const CF_PAGES_LIMIT = 25 * 1024 * 1024; // 25 MiB — Cloudflare Pages per-file limit
 
 function findGifs(dir) {
   const results = [];
@@ -65,8 +68,13 @@ export async function optimizeGifs({ srcDir, config }) {
     const name = path.basename(gifPath);
 
     if (existsSync(mp4Path)) {
-      console.log(`[optimize-gifs] Cached — removing GIF: ${name}`);
-      unlinkSync(gifPath);
+      const gifSize = statSync(gifPath).size;
+      if (gifSize > CF_PAGES_LIMIT) {
+        console.log(`[optimize-gifs] Cached — removing oversized GIF (${(gifSize / 1024 / 1024).toFixed(1)} MiB): ${name}`);
+        unlinkSync(gifPath);
+      } else {
+        console.log(`[optimize-gifs] Cached — keeping GIF: ${name}`);
+      }
       skipped.push(name);
       continue;
     }
@@ -77,11 +85,25 @@ export async function optimizeGifs({ srcDir, config }) {
         `"${ffmpegPath}" -i "${gifPath}" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "${mp4Path}" -y`,
         { stdio: "pipe" },
       );
-      unlinkSync(gifPath);
+      const gifSize = statSync(gifPath).size;
+      if (gifSize > CF_PAGES_LIMIT) {
+        unlinkSync(gifPath);
+        console.log(`[optimize-gifs] ✓ ${name} → ${path.basename(mp4Path)} (GIF removed, ${(gifSize / 1024 / 1024).toFixed(1)} MiB > CF limit)`);
+      } else {
+        console.log(`[optimize-gifs] ✓ ${name} → ${path.basename(mp4Path)} (GIF kept)`);
+      }
       converted.push(name);
-      console.log(`[optimize-gifs] ✓ ${name} → ${path.basename(mp4Path)}`);
     } catch (err) {
       console.warn(`[optimize-gifs] ✗ Failed to convert ${name}: ${err.message}`);
+      try {
+        const gifSize = statSync(gifPath).size;
+        if (gifSize > CF_PAGES_LIMIT) {
+          console.warn(`[optimize-gifs]   Removing oversized GIF (${(gifSize / 1024 / 1024).toFixed(1)} MiB) — conversion failed, too large to deploy`);
+          unlinkSync(gifPath);
+        }
+      } catch {
+        // GIF may already be gone — nothing to do
+      }
       errors.push({ file: name, error: err.message });
     }
   }

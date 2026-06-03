@@ -6,23 +6,5 @@ eleventyExcludeFromCollections: true
 ---
 <div data-pagefind-ignore>
     <h1>Search</h1>
-    <link href="{{ "/pagefind/pagefind-ui.css" | url }}" rel="stylesheet">
-    <script src="{{ "/pagefind/pagefind-ui.js" | url }}"></script>
-    <div id="search"></div>
-    <script>
-        window.addEventListener('DOMContentLoaded', function() {
-            new PagefindUI({
-                element: '#search',
-                showSubResults: true,
-                showImages: true,
-                showEmptyFilters: false,
-                openFilters: ['tag'],
-                translations: {
-                    placeholder: 'Search recipes and notes...',
-                    zero_results: 'No results for "[SEARCH_TERM]"',
-                    filters_label: 'Filter by tag'
-                }
-            });
-        });
-    </script>
+    <div class="search-visualizer" data-search-settings='{"placeholder":"Search recipes and notes..."}'></div>
 </div>

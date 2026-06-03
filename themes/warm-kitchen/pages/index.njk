@@ -9,25 +9,7 @@ permalink: /
     </header>
 
     <div class="home-search" data-pagefind-ignore>
-        <div id="search"></div>
-        <script src="{{ "/pagefind/pagefind-ui.js" | url }}"></script>
-        <script>
-            window.addEventListener('DOMContentLoaded', function() {
-                new PagefindUI({
-                    element: '#search',
-                    showSubResults: true,
-                    showImages: true,
-                    showEmptyFilters: false,
-                    openFilters: ['tag'],
-                    resetStyles: false,
-                    translations: {
-                        placeholder: 'Search recipes and notes...',
-                        zero_results: 'No results for "[SEARCH_TERM]"',
-                        filters_label: 'Filter by tag'
-                    }
-                });
-            });
-        </script>
+        <div class="search-visualizer" data-search-settings='{"placeholder":"Search recipes and notes..."}'></div>
     </div>
 
     {% if collections.tagList.length %}

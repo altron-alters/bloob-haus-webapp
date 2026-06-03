@@ -1,19 +1,20 @@
 ---
 layout: layouts/base.njk
 ---
-<article class="recipe-page" data-pagefind-body>
+<article class="recipe-page" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
     {% if image %}
     <img data-pagefind-meta="image[src]" src="{{ image }}" alt="{{ title }}" hidden style="display:none" />
     {% endif %}
 
     <header class="recipe-header">
-      <h1 class="recipe-title">{{ title }}</h1>
-      {% if subtitle %}<p class="recipe-subtitle">{{ subtitle }}</p>{% endif %}
+      <h1 class="recipe-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
+      {% if subtitle %}<p class="recipe-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
     </header>
 
-    {# Filename indexed for pagefind search — both hyphenated and space-separated forms #}
+    {# Slug indexed for pagefind — "ID: slug" prefix lets the search visualizer style it as a pill. #}
     {% if slug %}
-    <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug }}{% if slug_spaced %} {{ slug_spaced }}{% endif %}</span>
+    <span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">ID: {{ slug }}{% if is_folder %}/{% endif %}</span>
+    {% if slug_spaced and slug_spaced != slug %}<span aria-hidden="true" style="position:absolute;clip:rect(0,0,0,0)">{{ slug_spaced }}</span>{% endif %}
     {% endif %}
 
     <div class="recipe-content">{{ content | safe }}</div>

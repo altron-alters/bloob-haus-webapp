@@ -477,6 +477,26 @@
   }
 }
 
+/* ───── Result subtitle ─────
+   Injected above the excerpt via processResult when r.meta.subtitle exists.
+   Defined here (not in theme main.css) so it works for all themes via the
+   bundled visualizer CSS. Remove .pagefind-subtitle from any theme main.css. */
+.pagefind-subtitle {
+  display: block;
+  font-size: 0.95em;
+  opacity: 0.72;
+  margin-bottom: 0.35em;
+  font-style: italic;
+  color: var(--text-light, inherit);
+  line-height: 1.3;
+}
+
+/* Tighten the gap between title and subtitle — the excerpt div normally has
+   0.5rem top margin, but when a subtitle leads it the gap feels too large. */
+.pagefind-ui__result-excerpt:has(> .pagefind-subtitle:first-child) {
+  margin-top: 0.15rem !important;
+}
+
 /* ───── Search preview modal ─────
    Lightweight modal injected by browser.js. Independent from the
    page-preview visualizer — no shared state, no theme JS required. */

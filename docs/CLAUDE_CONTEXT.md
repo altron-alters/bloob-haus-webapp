@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-05-20
+**Last Updated:** 2026-05-31
 **Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -73,6 +73,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - robots.txt
 - Custom 404 page
 - Image optimization (WebP + JPEG at 600w/1200w, lazy loading)
+- **File-scope shapes** (`bloob-shape:` frontmatter key) — a page's entire body is rendered by the named shape's `renderFilescope(settings, body)` function. Config declared in a `::: settings` block at the top of the body. Dispatch wired in `preprocess-content.js` steps 6e.3 + 6e.6. First live shape: `rss-feed` (fetches podcast RSS at build time, renders episode list). See `docs/architecture/visualizers.md` for full type documentation.
 - Modular visualizer architecture with auto-discovery
 - `:::` container visualizers (image-grid, photo-grid live; `markdownItContainer` parses key=value settings → `data-vis-settings`)
 - `photo-grid` visualizer: `cols: N` uniform or `layout: 1,3,1` mixed-row grids; `ratio`/`gap`/`padding` params; PhotoSwipe lightbox automatic; columns preserved on mobile

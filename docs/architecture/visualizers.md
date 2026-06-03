@@ -37,7 +37,7 @@ This enables:
 
 ---
 
-## Three Types of Visualizers
+## Four Types of Visualizers
 
 ### Build-time Visualizers
 Run during preprocessing (Node.js). Parse custom markdown syntax into data, then render to HTML.
@@ -214,6 +214,71 @@ Container settings (e.g., `time=3s`) are parsed at build time by `renderer.js` a
 
 **Future examples:**
 - Timeline: code fence parses timeline entries → JSON, runtime renders interactive timeline
+
+---
+
+### File-scope Shapes
+
+**Status: Implemented — `rss-feed` is the first live shape (2026-05-31).**
+
+A file-scope shape owns the *entire page*. Instead of a block inside a page, the shape IS the page. The file declares `bloob-shape: [name]` in frontmatter and configures the shape via a `::: settings` block at the top of the body.
+
+```
+markdown file with bloob-shape: rss-feed
+    ↓ preprocess-content.js step 6e.3:
+        - finds ::: settings block, parses YAML → shapeSettings
+        - removes settings block from body
+    ↓ preprocess-content.js step 6e.6:
+        - imports lib/visualizers/rss-feed/index.js
+        - calls renderFilescope(shapeSettings, body)
+        - replaces entire body with returned HTML
+    ↓ markdown-it passes HTML block through unchanged
+final HTML page (in site chrome from theme layout)
+```
+
+**Authoring syntax:**
+
+```markdown
+---
+bloob-shape: rss-feed
+---
+# Page Title
+
+::: settings
+rss: https://anchor.fm/s/xyz/podcast/rss
+spotify: https://open.spotify.com/show/...
+apple: [Podcast name](https://podcasts.apple.com/...)
+:::
+```
+
+Key points:
+- `# Page Title` in the body becomes the page title (picked up by file-index-builder). No need to set `title:` in frontmatter.
+- The `::: settings` block is stripped from the body before `injectContainerRaw` runs — it never appears in rendered output.
+- YAML values in `::: settings` can use markdown link syntax `[text](url)` — the extractor pre-quotes these before handing to js-yaml (YAML treats bare `[` as an inline sequence).
+- The body text after the settings block is passed to `renderFilescope` as the second argument. Most shapes ignore it; some may use it for supplemental prose.
+- `bloob-shape:` is independent of `bloob-type:` — a file can have both. `bloob-type:` still controls banner image and graph icon; `bloob-shape:` controls rendering.
+
+**Shape module contract (`lib/visualizers/[name]/index.js`):**
+
+```js
+export const type = "file-scope";
+export const name = "shape-name";
+
+// Required: called by preprocess-content.js step 6e.6
+export async function renderFilescope(settings, body) {
+  // settings: parsed YAML from ::: settings block
+  // body: remaining markdown body after settings block removed
+  // returns: HTML string that replaces the entire page body
+}
+```
+
+**Settings parsing utilities:**
+- `scripts/utils/extract-settings-block.js` — finds and removes `::: settings` block, returns `{ settings, body }`
+
+**Live shape: `rss-feed`**
+- Fetches a podcast RSS feed at build time, renders an episode list with platform badges
+- Platform keys (`spotify:`, `apple:`, etc.) are auto-labelled — no nesting required
+- See `lib/visualizers/rss-feed/` for implementation
 
 ---
 

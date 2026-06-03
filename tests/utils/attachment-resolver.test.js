@@ -502,4 +502,26 @@ describe('copyAttachments', () => {
     const dest = await fs.readFile(path.join(staticRootDir, 'media', 'normal.png'), 'utf8');
     expect(dest).toBe('small-png');
   });
+
+  it('copies GIF over 25 MiB regardless of size (optimize-gifs handles size enforcement)', async () => {
+    await writeVaultFile('media/big.gif', 'fake-gif');
+    const sourcePath = path.join(contentDir, 'media', 'big.gif');
+
+    const realStat = fs.stat.bind(fs);
+    vi.spyOn(fs, 'stat').mockImplementation(async (p) => {
+      if (p === sourcePath) return { size: 30 * 1024 * 1024 };
+      return realStat(p);
+    });
+
+    const { copied, skipped } = await copyAttachments(contentDir, 'media', staticRootDir);
+
+    const normCopied = copied.map(f => f.replace(/\\/g, '/'));
+    const normSkipped = skipped.map(s => s.file.replace(/\\/g, '/'));
+    // GIF must be copied — optimize-gifs.js will convert it to MP4 then remove if oversized
+    expect(normCopied).toContain('media/big.gif');
+    expect(normSkipped).not.toContain('media/big.gif');
+    expect(await fs.pathExists(path.join(staticRootDir, 'media', 'big.gif'))).toBe(true);
+
+    vi.restoreAllMocks();
+  });
 });

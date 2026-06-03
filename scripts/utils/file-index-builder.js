@@ -10,39 +10,62 @@ import matter from "gray-matter";
 import { getSlugFunction } from "./slug-strategy.js";
 
 /**
- * Extracts the title from a markdown file.
- * Priority: 1) frontmatter title, 2) first # or ## heading, 3) filename
- * @param {Object} frontmatter - Parsed frontmatter
- * @param {string} content - Markdown content
- * @param {string} filename - Filename without extension
- * @returns {string} The extracted title
+ * Strips inline markdown from a heading string.
+ * Used to normalise titles for plain-text contexts (SEO tags, graph, nav).
+ */
+function stripInlineMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/_(.+?)_/g, "$1")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+}
+
+/**
+ * Extracts the plain-text title from a markdown file.
+ * Priority: 1) frontmatter title (stripped), 2) first # or ## heading (stripped), 3) filename
  */
 function extractTitle(frontmatter, content, filename) {
-  // 1. Explicit frontmatter title
+  // 1. Explicit frontmatter title — strip inline markdown so plain title is
+  //    safe for <title> tags, graph.json, nav, tooltips, etc.
   if (frontmatter.title) {
-    return frontmatter.title;
+    return stripInlineMarkdown(
+      String(frontmatter.title).replace(/\s*\{#[^}]+\}\s*$/, "")
+    ).trim();
   }
 
   // 2. First heading (# or ##) in content
   const headingMatch = content.match(/^#{1,2}\s+(.+)$/m);
   if (headingMatch) {
-    let title = headingMatch[1];
-    // Strip heading ID syntax like {#anchor-id}
-    title = title.replace(/\s*\{#[^}]+\}\s*$/, "");
-    // Strip inline markdown (bold, italic, code, links) — titles are plain text
-    // used in <title> tags, graph.json, nav, tooltips, etc. Raw ** would render as literals.
-    title = title
-      .replace(/\*\*(.+?)\*\*/g, "$1")
-      .replace(/\*(.+?)\*/g, "$1")
-      .replace(/__(.+?)__/g, "$1")
-      .replace(/_(.+?)_/g, "$1")
-      .replace(/`(.+?)`/g, "$1")
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
-    return title.trim();
+    const raw = headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "");
+    return stripInlineMarkdown(raw).trim();
   }
 
   // 3. Filename as fallback
   return filename;
+}
+
+/**
+ * Extracts the raw (markdown-preserved) title from a markdown file.
+ * Returns null when the title has no inline formatting (caller can skip title_md).
+ */
+function extractTitleMd(frontmatter, content, filename) {
+  let raw;
+  if (frontmatter.title) {
+    raw = String(frontmatter.title).replace(/\s*\{#[^}]+\}\s*$/, "").trim();
+  } else {
+    const headingMatch = content.match(/^#{1,2}\s+(.+)$/m);
+    if (headingMatch) {
+      raw = headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "").trim();
+    } else {
+      return null;
+    }
+  }
+  // Only return a value when it actually differs from the stripped version
+  const plain = stripInlineMarkdown(raw).trim();
+  return raw !== plain ? raw : null;
 }
 
 /**
@@ -101,6 +124,7 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     const titleFallback =
       isIndex && hasFolder ? prettifyFolderName(path.basename(folderPath)) : filename;
     const title = extractTitle(frontmatter, body, titleFallback);
+    const titleMd = extractTitleMd(frontmatter, body, titleFallback);
 
     // Build URL with folder prefix if in a subfolder
     // Apply slug strategy to each folder segment
@@ -129,6 +153,7 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
 
     const pageInfo = {
       title,
+      ...(titleMd ? { title_md: titleMd } : {}),
       slug,
       fullSlug,
       folder: hasFolder ? folderPath : null,

@@ -71,5 +71,12 @@
   });
 
   lightbox.init();
+
+  // Expose a programmatic open for the search visualizer (and anything else that
+  // needs to pop open a PhotoSwipe gallery with arbitrary items).
+  // browser.js calls this when the user clicks a search-result thumbnail.
+  window.bloobOpenLightbox = function (items, startIndex) {
+    lightbox.loadAndOpen(startIndex || 0, items);
+  };
 </script>
 {% endif %}

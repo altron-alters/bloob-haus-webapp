@@ -65,6 +65,32 @@ export async function assembleSrc(config, contentDir = null) {
     await fs.copy(path.join(baseDir, "assets"), path.join(SRC_DIR, "assets"));
   }
 
+  // Step 2c: Copy base layouts (theme layouts in Step 3 override these)
+  if (fs.existsSync(path.join(baseDir, "layouts"))) {
+    console.log("[assemble] Copying base layouts...");
+    await fs.copy(
+      path.join(baseDir, "layouts"),
+      path.join(SRC_DIR, "_includes", "layouts"),
+    );
+  }
+
+  // Step 2d: Copy base pages (theme pages in Step 5 override these)
+  if (fs.existsSync(path.join(baseDir, "pages"))) {
+    console.log("[assemble] Copying base pages...");
+    const basePageEntries = await fs.readdir(path.join(baseDir, "pages"));
+    for (const entry of basePageEntries) {
+      if (entry === "feed.njk" && config.features?.rss === false) {
+        console.log("[assemble] Skipping base feed.njk (features.rss: false)");
+        continue;
+      }
+      await fs.copy(
+        path.join(baseDir, "pages", entry),
+        path.join(SRC_DIR, entry),
+        { overwrite: true },
+      );
+    }
+  }
+
   // Step 3: Copy theme layouts
   if (fs.existsSync(path.join(themeDir, "layouts"))) {
     console.log("[assemble] Copying theme layouts...");
@@ -152,6 +178,16 @@ export async function assembleSrc(config, contentDir = null) {
     for (const entry of entries) {
       if (entry === "sections") continue; // already handled above
       if (entry === "index.njk" && vaultHasIndex) continue; // vault index takes precedence
+      // Skip embed-pages.njk when features.embed is explicitly disabled
+      if (entry === "embed-pages.njk" && config.features?.embed === false) {
+        console.log("[assemble] Skipping embed-pages.njk (features.embed: false)");
+        continue;
+      }
+      // Skip feed.njk when features.rss is explicitly disabled
+      if (entry === "feed.njk" && config.features?.rss === false) {
+        console.log("[assemble] Skipping feed.njk (features.rss: false)");
+        continue;
+      }
       const srcPath = path.join(pagesDir, entry);
       const destPath = path.join(SRC_DIR, entry);
       await fs.copy(srcPath, destPath, { overwrite: true });

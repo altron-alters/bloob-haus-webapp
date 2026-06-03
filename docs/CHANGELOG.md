@@ -6,6 +6,34 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 43 — May 31, 2026
+**Worked on:** Shapes architecture foundations + first file-scope shape (RSS feed)
+
+**Shapes architecture — new conventions (not yet fully implemented — foundational slice only)**
+- Aligned on new terminology from `2026-05-31-BLOOB-HAUS-SHAPES-ARCHITECTURE.md`: `bloob-type` / `visualizer` / `:::` block are all the same concept — a **shape**. `bloob-shape:` is the new frontmatter key; `visualizer` remains the code-level word.
+- A shape at file scope means the *entire page body* is rendered by the shape's renderer — not just a block inside a page.
+- `::: settings` block at the top of the body is the standard way for file-scope shapes to declare per-instance configuration (keeps config visible in Obsidian, avoids nested YAML in frontmatter).
+
+**New infrastructure**
+- `scripts/utils/extract-settings-block.js` — parses `::: settings ... :::` from a markdown body, returns `{ settings, body }`. Pre-quotes unquoted markdown link values `[text](url)` before handing to `js-yaml` (YAML treats `[` as inline sequence opener — silent bug without this fix).
+- `preprocess-content.js` — two new steps:
+  - **6e.3**: if `bloob-shape:` is in frontmatter, extract `::: settings` block and remove it from body *before* `injectContainerRaw` runs
+  - **6e.6**: dispatch to the named shape's `renderFilescope(settings, body)` — replaces the entire page body with returned HTML. Shape module lives at `lib/visualizers/[name]/index.js`, same discovery path as existing visualizers.
+
+**New shape: `rss-feed`** (`lib/visualizers/rss-feed/`)
+- First file-scope shape. Activated by `bloob-shape: rss-feed` in frontmatter.
+- Fetches podcast RSS at build time (Node.js `fetch` — no CORS, no browser dependency).
+- Parses episodes via targeted regex: handles CDATA, `<itunes:*>` namespace, `<enclosure>` for audio URLs.
+- Platform links (Spotify, Apple Podcasts, etc.) declared as flat YAML keys — `spotify: url`, `apple: url`. Auto-labels using known platform map. Supports both plain URLs and `[text](url)` markdown link syntax as values.
+- Episode numbers only render when the `<itunes:episode>` value is numeric (feeds using `full`/`trailer` type values are suppressed).
+- 31 tests covering parser, renderer, platform extraction, URL parsing, HTML escaping, fallback URLs.
+- Live content file: `bloob-haus-marbles/ESJP/podcast.md`
+
+**Embed system — designed, not yet built**
+- Decision: every `.md` file gets a `/[slug]/embed/` URL automatically (not just shape pages). Chromeless layout, no nav/header. Implementation: one `src/embed-pages.njk` Eleventy pagination template + `layouts/embed.njk`. Deferred to next session.
+
+---
+
 ### Session 42 — May 28, 2026
 **Worked on:** AE fork setup, Cloudflare Pages deploy pipeline, pipeline bug fixes
 

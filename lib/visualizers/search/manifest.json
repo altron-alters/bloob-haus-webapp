@@ -1,8 +1,8 @@
 {
   "name": "search",
   "type": "hybrid",
-  "version": "1.0.0",
-  "description": "Pagefind search widget embedded via ```search code fences. Defaults to warm-kitchen style settings.",
+  "version": "1.1.0",
+  "description": "Pagefind search widget embedded via ```search code fences. Theme layouts must emit a hidden span with 'ID: {slug}' text so the visualizer can render the slug as a styled pill in excerpts and result cards.",
   "activation": {
     "method": "auto-detect",
     "pattern": ".search-visualizer"

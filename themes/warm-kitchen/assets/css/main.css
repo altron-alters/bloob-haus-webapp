@@ -669,6 +669,8 @@ blockquote p:last-child {
     display: none;
 }
 
+/* .pagefind-subtitle moved to lib/visualizers/search/styles.css */
+
 /* On mobile, move tag filters below search results */
 @media (max-width: 768px) {
     .pagefind-ui .pagefind-ui__drawer {
