@@ -203,6 +203,19 @@ export async function copyAttachments(contentDir, attachmentFolder, staticRootDi
     await fs.ensureDir(path.dirname(destPath));
     const ext = path.extname(file).replace(".", "").toLowerCase();
 
+    // GIFs bypass size checks — optimize-gifs.js converts them to MP4 and removes
+    // the original only if it exceeds the Cloudflare Pages 25 MiB limit.
+    if (ext === "gif") {
+      try {
+        await fs.copy(sourcePath, destPath);
+        copied.push(file);
+      } catch (error) {
+        errors.push({ file, error: error.message });
+        console.error(`[attachments] Error copying ${file}: ${error.message}`);
+      }
+      continue;
+    }
+
     if (stat.size > MAX_FILE_SIZE && COMPRESSIBLE.has(ext)) {
       const sizeMiB = (stat.size / 1024 / 1024).toFixed(1);
       console.warn(`[attachments] ⚠️  Large file (${sizeMiB} MiB), auto-compressing: ${file}`);
