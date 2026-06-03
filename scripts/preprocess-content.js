@@ -409,6 +409,21 @@ export async function preprocessContent({
       }
     }
 
+    // Propagate extra frontmatter fields to the graph node.
+    // Sites configure which fields to include per bloob-object type in
+    // sites/[site].yaml under graph.extra_fields.[type]: [field, ...].
+    // The special key "tags" maps to the already-extracted pageTags array.
+    if (bloobObject && pageInfo && perPageLinks[pageInfo.url]) {
+      const extraFieldList = siteConfig?.graph?.extra_fields?.[bloobObject] || [];
+      for (const field of extraFieldList) {
+        if (field === "tags") {
+          if (pageTags.length > 0) perPageLinks[pageInfo.url].tags = pageTags;
+        } else if (frontmatter[field] !== undefined && frontmatter[field] !== null) {
+          perPageLinks[pageInfo.url][field] = frontmatter[field];
+        }
+      }
+    }
+
     // Collect page data for tag index
     if (pageTags.length > 0 && pageInfo) {
       allPageData.push({

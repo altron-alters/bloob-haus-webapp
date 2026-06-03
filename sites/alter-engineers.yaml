@@ -15,3 +15,14 @@ features:
   og_images: true
   magic_machines: false
   embed: false
+
+graph:
+  extra_fields:
+    project-profile:
+      - building_type
+      - construction_type
+      - location
+      - sqft
+      - services
+      - target
+      - tags

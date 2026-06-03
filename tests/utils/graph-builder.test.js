@@ -183,4 +183,59 @@ describe("buildGraph", () => {
     const { links } = buildGraph(pages);
     expect(links).toHaveLength(3);
   });
+
+  // ─── extra fields (graph.extra_fields) ────────────────────────────────────
+
+  it("spreads extra fields from perPageLinks onto graph nodes", () => {
+    const pages = {
+      "/projects/library/": {
+        title: "Library Project",
+        outgoing: [],
+        building_type: "Library",
+        location: "Campbell, CA",
+        sqft: 26240,
+      },
+    };
+    const { nodes } = buildGraph(pages);
+    expect(nodes[0].building_type).toBe("Library");
+    expect(nodes[0].location).toBe("Campbell, CA");
+    expect(nodes[0].sqft).toBe(26240);
+  });
+
+  it("spreads array extra fields (e.g. tags) onto graph nodes", () => {
+    const pages = {
+      "/projects/library/": {
+        title: "Library Project",
+        outgoing: [],
+        tags: ["net-zero", "library", "renovation"],
+      },
+    };
+    const { nodes } = buildGraph(pages);
+    expect(nodes[0].tags).toEqual(["net-zero", "library", "renovation"]);
+  });
+
+  it("does not spread internal pipeline fields (outgoing, filename, folder)", () => {
+    const pages = {
+      "/projects/library/": {
+        title: "Library Project",
+        outgoing: ["/projects/other/"],
+        filename: "library",
+        folder: "projects",
+      },
+    };
+    const { nodes } = buildGraph(pages);
+    expect(nodes[0].outgoing).toBeUndefined();
+    expect(nodes[0].filename).toBeUndefined();
+    expect(nodes[0].folder).toBeUndefined();
+  });
+
+  it("pages with no extra fields produce nodes identical to before", () => {
+    const pages = makePages([["/recipes/chai/", "Masala Chai"]]);
+    const { nodes } = buildGraph(pages);
+    expect(Object.keys(nodes[0])).toEqual(
+      expect.arrayContaining(["id", "title", "section", "type"])
+    );
+    expect(nodes[0].outgoing).toBeUndefined();
+    expect(nodes[0].filename).toBeUndefined();
+  });
 });
