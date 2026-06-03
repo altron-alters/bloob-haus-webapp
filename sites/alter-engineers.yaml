@@ -14,3 +14,4 @@ features:
   search: false
   og_images: true
   magic_machines: false
+  embed: false

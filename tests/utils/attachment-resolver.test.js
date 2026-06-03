@@ -432,8 +432,8 @@ describe('copyAttachments', () => {
 
     expect(copied).toHaveLength(2);
     expect(errors).toHaveLength(0);
-    expect(copied).toContain('media/a.png');
-    expect(copied).toContain('projects/b.jpg');
+    expect(copied).toContain(path.join('media', 'a.png'));
+    expect(copied).toContain(path.join('projects', 'b.jpg'));
   });
 
   it('excludes .obsidian/ system folder', async () => {
@@ -442,7 +442,7 @@ describe('copyAttachments', () => {
     const { copied } = await copyAttachments(contentDir, 'media', staticRootDir);
 
     expect(copied).toHaveLength(1);
-    expect(copied[0]).toBe('media/real.png');
+    expect(copied[0]).toBe(path.join('media', 'real.png'));
   });
 
   it('auto-compresses PNG over 20 MiB using sharp instead of plain copy', async () => {
