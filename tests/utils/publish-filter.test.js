@@ -44,7 +44,7 @@ describe('filterPublishableFiles', () => {
       });
       expect(published).toHaveLength(0);
       expect(excluded).toHaveLength(1);
-      expect(excluded[0].relativePath).toBe('notes/private.md');
+      expect(excluded[0].relativePath).toBe(path.join('notes', 'private.md'));
     });
 
     it('excludes files with # prefixed blocklist tag in frontmatter', async () => {
@@ -228,7 +228,7 @@ describe('filterPublishableFiles', () => {
         blocklistTag: 'not-for-public',
       });
       expect(published).toHaveLength(1);
-      expect(published[0].relativePath).toBe('recipes/good.md');
+      expect(published[0].relativePath).toBe(path.join('recipes', 'good.md'));
     });
 
     it('handles files with no frontmatter', async () => {
