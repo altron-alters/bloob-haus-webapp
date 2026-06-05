@@ -275,7 +275,7 @@
 
 .fp-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-md, 1.5rem);
 }
 
@@ -367,8 +367,4 @@
   opacity: 0.8;
 }
 
-@media (max-width: 480px) {
-  .fp-cards {
-    grid-template-columns: 1fr;
-  }
-}
+/* 900px and 480px breakpoints for .fp-cards are defined in the default grid section above */
