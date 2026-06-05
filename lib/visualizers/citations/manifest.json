@@ -1,0 +1,13 @@
+{
+  "name": "citations",
+  "type": "runtime",
+  "version": "1.0.0",
+  "description": "Styles Pandoc-style footnotes ([^label]) rendered by markdown-it-footnote. No JS — CSS only.",
+  "activation": {
+    "method": "auto-detect",
+    "pattern": ".footnote-ref"
+  },
+  "files": {
+    "css": "citations.css"
+  }
+}
