@@ -144,6 +144,7 @@ export default async function (eleventyConfig) {
   // Single line breaks → <br> by default (matches Obsidian behavior).
   // Opt out per-site with features: { soft_breaks: false } in _bloob-settings.md.
   eleventyConfig.amendLibrary("md", (mdLib) => {
+    mdLib.set({ linkify: true });
     if (siteConfig.features?.soft_breaks !== false) {
       mdLib.set({ breaks: true });
     }
