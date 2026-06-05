@@ -54,9 +54,32 @@ theme layouts      (highest priority — always wins)
 
 Themes that want custom folder chrome create their own `layouts/folder-index.njk`. Themes that don't get the shape's default for free.
 
+## Two shape variables in the preprocessor
+
+The preprocessor maintains two distinct variables for shape resolution:
+
+| Variable | Source | Purpose |
+|----------|--------|---------|
+| `bloobShape` | `frontmatter["bloob-shape"]` — explicit only | Drives **body rendering** (`renderFilescope`) and `::: settings` extraction. Never set from the site default. |
+| `effectiveShape` | `bloobShape ?? siteConfig.default_shape` | Drives **layout selection** only. Falls back to the site-wide default when no shape is declared in frontmatter. |
+
+This distinction matters: if `default_shape: marble` is configured and the `marble` shape later gains a `renderFilescope` renderer, regular pages won't have their bodies replaced — only pages with an explicit `bloob-shape: marble` declaration get that treatment.
+
+## Site-wide default shape
+
+Set `default_shape` in `_bloob-settings.md` to apply a shape's layout to all pages that don't declare one explicitly:
+
+```yaml
+default_shape: marble
+```
+
+- Only influences layout selection — body rendering never fires from the default
+- If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk` — safe to declare a future shape name in advance
+- Documented in `docs/architecture/settings-registry.md` → Shapes
+
 ## How the preprocessor selects the layout
 
-When a page declares `bloob-shape: X`, the preprocessor resolves the layout in this priority order (highest wins):
+The preprocessor resolves the layout in this priority order (highest wins):
 
 1. Explicit `layout: layouts/…` in the file's frontmatter
 2. Layout from the `bloob-type` registry (`_bloob-objects.md`)
@@ -64,7 +87,17 @@ When a page declares `bloob-shape: X`, the preprocessor resolves the layout in t
 4. `shapeManifestLayout` — read from `manifest.json.defaultLayout` when the shape has `renderFilescope` (e.g. `folder-preview` → `layouts/folder-index.njk`)
 5. Default: `layouts/page.njk` (or `layouts/base.njk` for `index.md` files)
 
-This means **a user only needs `bloob-shape: folder-preview`** — no `layout:` required. The preprocessor reads the manifest and injects the correct layout automatically. For index.md files the preprocessor also auto-injects `folder`, `folder_display`, and `title` from the directory name when the user hasn't provided them.
+Steps 3 and 4 use `effectiveShape` — so both an explicitly declared shape and the site's `default_shape` can supply a layout through these steps.
+
+**A user only needs `bloob-shape: folder-preview`** — no `layout:` required. The preprocessor reads the manifest and injects the correct layout automatically. For index.md files the preprocessor also auto-injects `folder`, `folder_display`, and `title` from the directory name when the user hasn't provided them.
+
+## Unknown shape names — fallback behaviour
+
+When `effectiveShape` names a shape with no `lib/visualizers/[name]/` folder:
+- If the shape was **explicitly declared** in frontmatter → logs a warning, falls back to `page.njk`
+- If the shape came from **`default_shape`** → silent, falls back to `page.njk`
+
+This means content files can use `bloob-shape: note` today even though `lib/visualizers/note/` doesn't exist yet — the build won't crash. When the `note` shape is eventually built and its folder appears, those files will automatically pick up its layout.
 
 ## Deferred: body-only shape declaration
 
@@ -78,6 +111,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `rss-feed` | file-scope | Partial | Missing `layout.njk`, `schema.md`, `styles.css` |
 | `card-preview` | build-time | Partial | Missing `schema.md` |
 | `checkbox-tracker` | runtime | Partial | — |
+| `citations` | runtime (CSS-only) | ✓ | — |
 | `circular-nav` | hybrid | Partial | Missing `schema.md` |
 | `fridge-magnets` | hybrid | Partial | Missing `schema.md` |
 | `graph` | hybrid | Partial | Missing `schema.md` |
@@ -86,6 +120,8 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `image-text` | build-time | ✓ | — |
 | `ken-burns-zoom` | unknown | Incomplete | Missing `manifest.json` entirely |
 | `latex` | runtime | Partial | Missing `schema.md` |
+| `marble` | — | Not yet built | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
+| `note` | — | Not yet built | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
 | `page-preview` | runtime | Partial | — |
 | `photo-grid` | build-time | Partial | — |
 | `quotes-stack` | hybrid | Partial | Missing `schema.md` |
