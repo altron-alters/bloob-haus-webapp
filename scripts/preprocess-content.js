@@ -280,7 +280,11 @@ export async function preprocessContent({
     // 6e.3: For file-scope shapes (bloob-shape: in frontmatter), extract the
     // ::: settings block before injectContainerRaw runs. The block is removed
     // from the body so it doesn't render as raw markdown or get _raw= injected.
-    const bloobShape = frontmatter["bloob-shape"];
+    //
+    // bloobShape   = explicitly declared shape (drives body rendering + settings extraction)
+    // effectiveShape = bloobShape ?? site default (drives layout selection only)
+    const bloobShape = frontmatter["bloob-shape"] || null;
+    const effectiveShape = bloobShape || siteConfig.default_shape || null;
     let shapeSettings = {};
     if (bloobShape) {
       const extracted = extractSettingsBlock(processedContent);
@@ -297,41 +301,52 @@ export async function preprocessContent({
     // browser live preview, and future Obsidian plugin.
     processedContent = injectContainerRaw(processedContent);
 
-    // 6e.6: File-scope shape rendering.
-    // Two roles for bloob-shape:
+    // 6e.6: File-scope shape rendering + layout selection.
+    //
+    // bloobShape    = explicitly declared in frontmatter — drives body rendering AND layout
+    // effectiveShape = bloobShape ?? siteConfig.default_shape — drives layout selection only
+    //
+    // Body rendering (renderFilescope) only fires for explicitly declared shapes.
+    // The default shape only influences which layout wraps the page.
+    //
+    // Two roles for the resolved shape name:
     //   a) Body renderer — shape has renderFilescope(settings, body) in its index.js.
     //      The returned HTML replaces the markdown body entirely.
     //   b) Layout shape — shape has no renderFilescope (or no index.js at all).
     //      Treated as a layout reference: layouts/[name].njk wraps the page as chrome.
-    //      Enables the convention bloob-shape: article → layouts/article.njk.
     let bloobShapeLayout = null;
-    if (bloobShape) {
-      const shapePath = path.join(ROOT_DIR, "lib/visualizers", bloobShape, "index.js");
+    if (effectiveShape) {
+      const shapePath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape, "index.js");
       if (await fs.pathExists(shapePath)) {
         try {
           const mod = await import(pathToFileURL(shapePath).href);
           if (typeof mod.renderFilescope === "function") {
-            console.log(`[shape] Rendering file-scope shape: ${bloobShape}`);
-            processedContent = await mod.renderFilescope(shapeSettings, processedContent);
+            if (bloobShape) {
+              // Only render body for explicitly declared shapes
+              console.log(`[shape] Rendering file-scope shape: ${effectiveShape}`);
+              processedContent = await mod.renderFilescope(shapeSettings, processedContent);
+            }
+            // Default shape with renderFilescope: layout is handled via shapeManifestLayout below
           } else {
             // Module exists but no renderFilescope — treat as layout shape
-            bloobShapeLayout = `layouts/${bloobShape}.njk`;
-            console.log(`[shape] "${bloobShape}" has no renderFilescope — using as layout: ${bloobShapeLayout}`);
+            bloobShapeLayout = `layouts/${effectiveShape}.njk`;
+            console.log(`[shape] "${effectiveShape}" has no renderFilescope — using as layout: ${bloobShapeLayout}`);
           }
         } catch (e) {
-          console.warn(`[shape] Failed to load ${bloobShape}: ${e.message}`);
+          console.warn(`[shape] Failed to load ${effectiveShape}: ${e.message}`);
         }
       } else {
         // No index.js — only treat as a layout shape if the visualizer folder exists.
-        // An unknown name (e.g. bloob-shape: note with no lib/visualizers/note/) is
-        // likely a content annotation, not a shape — fall back to page.njk silently.
-        const shapeDirPath = path.join(ROOT_DIR, "lib/visualizers", bloobShape);
+        // An unknown name (e.g. bloob-shape: note or default_shape: marble with no folder yet)
+        // falls back to page.njk — declaring a future shape name is safe.
+        const shapeDirPath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape);
         if (await fs.pathExists(shapeDirPath)) {
-          bloobShapeLayout = `layouts/${bloobShape}.njk`;
-          console.log(`[shape] "${bloobShape}" is a layout shape → ${bloobShapeLayout}`);
-        } else {
-          console.warn(`[shape] bloob-shape: "${bloobShape}" not found in lib/visualizers/ — falling back to page.njk`);
+          bloobShapeLayout = `layouts/${effectiveShape}.njk`;
+          console.log(`[shape] "${effectiveShape}" is a layout shape → ${bloobShapeLayout}`);
+        } else if (bloobShape) {
+          console.warn(`[shape] bloob-shape: "${effectiveShape}" not found in lib/visualizers/ — falling back to page.njk`);
         }
+        // default_shape not yet in lib/visualizers/ — silent, just use page.njk
       }
     }
 
@@ -492,12 +507,13 @@ export async function preprocessContent({
     const bloobObjectLayout =
       objLayout ? `layouts/${objLayout.replace(/^layouts\//, "")}` : null;
 
-    // Read defaultLayout from the shape's manifest.json when bloob-shape is declared.
+    // Read defaultLayout from the shape's manifest.json when a shape is active.
     // Fills the gap for renderFilescope shapes (bloobShapeLayout is only set for
-    // layout-only shapes without renderFilescope).
+    // layout-only shapes without renderFilescope). Uses effectiveShape so the
+    // default_shape setting also gets its manifest layout picked up.
     let shapeManifestLayout = null;
-    if (bloobShape && !bloobShapeLayout && BUILD_TARGET === "eleventy") {
-      const manifestPath = path.join(ROOT_DIR, "lib/visualizers", bloobShape, "manifest.json");
+    if (effectiveShape && !bloobShapeLayout && BUILD_TARGET === "eleventy") {
+      const manifestPath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape, "manifest.json");
       if (await fs.pathExists(manifestPath)) {
         try {
           const manifest = JSON.parse(await fs.readFile(manifestPath, "utf-8"));
