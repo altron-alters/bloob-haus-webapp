@@ -2,8 +2,9 @@
    ALTER ENGINEERS — DESIGN TOKENS
    ============================================================ */
 :root {
+  /* Brand */
   --accent-color: #5b5dd3;
-  --accent-dark:  #3d4fcc;
+  --accent-dark:  #3d40b8;
   --bg-color:     #ffffff;
   --text-color:   #1a1a1a;
   --text-light:   #555555;
@@ -11,16 +12,26 @@
   --card-bg:      #ffffff;
   --color-mint:   #b6fad1;
   --color-orange: #e0643d;
+
+  /* Shape */
   --border-radius:    0px;
   --border-radius-sm: 0px;
+
+  /* Typography */
   --font-body:    'Satoshi', sans-serif;
   --font-heading: 'Satoshi', sans-serif;
+
+  /* Spacing */
   --spacing-xs: 0.5rem;
   --spacing-sm: 1rem;
   --spacing-md: 2rem;
   --spacing-lg: 4rem;
   --spacing-xl: 8rem;
-  --max-width: 1200px;
+  --max-width:   1200px;
+
+  /* Layout */
+  --nav-height:     3rem;   /* fixed header-navigation-bar height */
+  --article-width:  820px;  /* max reading width for bloob-shape: article */
 }
 
 /* ============================================================
@@ -574,10 +585,16 @@ html { margin-top: 0 !important; }
   font-size: 0.85rem !important;
 }
 
+/* --- Article shape override: offset fixed nav bar --- */
+.article-page {
+  padding-top: calc(var(--nav-height) + var(--spacing-lg));
+}
+
 /* --- Generic page layout (page.njk) --- */
 .page-header {
   margin-bottom: 2rem;
 }
+
 
 /* ============================================================
    PAGE CONTENT — HEADING HIERARCHY
