@@ -30,8 +30,13 @@
   --max-width:   1200px;
 
   /* Layout */
-  --nav-height:     3rem;   /* fixed header-navigation-bar height */
-  --article-width:  820px;  /* max reading width for bloob-shape: article */
+  --nav-height:          3rem;   /* fixed header-navigation-bar height */
+  --article-width:       820px;  /* max reading width for bloob-shape: article */
+  --article-padding-top: calc(var(--nav-height) + var(--spacing-lg));
+
+  /* Article shape — AE brand colors */
+  --article-title-color:    var(--accent-color);
+  --article-subtitle-color: var(--accent-color);
 }
 
 /* ============================================================
@@ -583,11 +588,6 @@ html { margin-top: 0 !important; }
   padding: 0.15rem 0.6rem;
   background: rgba(255,255,255,0.92);
   font-size: 0.85rem !important;
-}
-
-/* --- Article shape override: offset fixed nav bar --- */
-.article-page {
-  padding-top: calc(var(--nav-height) + var(--spacing-lg));
 }
 
 /* --- Generic page layout (page.njk) --- */
