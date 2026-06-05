@@ -472,7 +472,8 @@ export async function preprocessContent({
     // Priority order (highest → lowest):
     //   1. Explicit `layout: layouts/…` in the file's own frontmatter
     //   2. Layout declared on the bloob-type in _bloob-types.md / _bloob-objects.md
-    //   3. bloob-shape as a layout shape (no renderFilescope) → layouts/[name].njk
+    //   3a. bloob-shape as layout shape (no renderFilescope) → layouts/[name].njk
+    //   3b. defaultLayout from the shape's manifest.json (renderFilescope shapes)
     //   4. Default: layouts/page.njk (layouts/base.njk for index.md files)
     const hasEleventyLayout =
       frontmatter.layout && String(frontmatter.layout).startsWith("layouts/");
@@ -484,9 +485,23 @@ export async function preprocessContent({
     const bloobObjectLayout =
       objLayout ? `layouts/${objLayout.replace(/^layouts\//, "")}` : null;
 
+    // Read defaultLayout from the shape's manifest.json when bloob-shape is declared.
+    // Fills the gap for renderFilescope shapes (bloobShapeLayout is only set for
+    // layout-only shapes without renderFilescope).
+    let shapeManifestLayout = null;
+    if (bloobShape && !bloobShapeLayout && BUILD_TARGET === "eleventy") {
+      const manifestPath = path.join(ROOT_DIR, "lib/visualizers", bloobShape, "manifest.json");
+      if (await fs.pathExists(manifestPath)) {
+        try {
+          const manifest = JSON.parse(await fs.readFile(manifestPath, "utf-8"));
+          shapeManifestLayout = manifest.defaultLayout || null;
+        } catch (e) { /* ignore malformed manifest */ }
+      }
+    }
+
     if (BUILD_TARGET === "eleventy") {
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? "layouts/page.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? shapeManifestLayout ?? "layouts/page.njk";
       }
     }
 
@@ -501,7 +516,27 @@ export async function preprocessContent({
         dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
       outputFrontmatter.permalink = permalink;
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? "layouts/base.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? shapeManifestLayout ?? "layouts/base.njk";
+      }
+      // Auto-inject folder slug and display title from directory name when not set by user.
+      if (dir !== ".") {
+        const folderSlug = path.basename(dir).replace(/\\/g, "/");
+        if (!frontmatter.folder) {
+          outputFrontmatter.folder = folderSlug;
+        }
+        // Only inject title when no real title exists — pageTitle falls back to
+        // the filename stem ("index") when neither frontmatter title nor an H1
+        // heading provides one. If a user wrote "# My Title", pageTitle is already
+        // "My Title" (set via file-index-builder) and we must not overwrite it.
+        const filenameStem = path.basename(file.relativePath, ".md");
+        if (pageTitle === filenameStem) {
+          const folderDisplay = folderSlug
+            .split(/[-_\s]+/)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
+          outputFrontmatter.title = folderDisplay;
+          outputFrontmatter.folder_display = folderDisplay;
+        }
       }
       // Exclude from tag and section listings but keep in collections.all
       // so embed-pages.njk can generate /folder/embed/ URLs for them.
@@ -672,30 +707,27 @@ export async function preprocessContent({
         continue;
       }
 
-      // camelCase the folder name (e.g. "lists-of-favorites" → "listsOfFavorites")
-      const collectionName = folderSlug.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
       // Display name: capitalise each word
       const folderDisplay = folderSlug
-        .split(/[-_]/)
+        .split(/[-_\s]+/)
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ");
 
-      // Stub uses the same format as themes/marbles-pouch/_templates/folder-index.md
-      // so users see exactly this pattern when they browse the auto-generated file.
+      // Stub bypasses the preprocessor's Step 6 (it's written directly to src-*/).
+      // All frontmatter that Step 6 would auto-inject for user-written index.md files
+      // must be baked in here. The bloob-shape is declared for documentation/tooling;
+      // renderFilescope() does not run on stubs — the container div is inlined directly.
       const stub = [
         "---",
-        `layout: layouts/base.njk`,
-        `templateEngineOverride: njk,md`,
+        `bloob-shape: folder-preview`,
+        `layout: layouts/folder-index.njk`,
         `permalink: /${folderSlug}/`,
-        `eleventyExcludeFromCollections: true`,
         `folder: ${folderSlug}`,
+        `title: ${folderDisplay}`,
         `folder_display: ${folderDisplay}`,
         "---",
         "",
-        `# {{ folder_display }}`,
-        "",
-        "```folder-preview",
-        "```",
+        `<div class="folder-preview-visualizer" data-pagefind-ignore data-fp-settings='{}'></div>`,
         "",
       ].join("\n");
 

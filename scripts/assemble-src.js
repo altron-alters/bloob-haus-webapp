@@ -65,6 +65,31 @@ export async function assembleSrc(config, contentDir = null) {
     await fs.copy(path.join(baseDir, "assets"), path.join(SRC_DIR, "assets"));
   }
 
+  // Step 2b.5: Copy shape-owned layouts from lib/visualizers/*/layout.njk
+  // Each file-scope shape carries its own default layout template.
+  // These are copied first so _base and theme layouts can override them.
+  // Layout destination is read from the shape's manifest.json defaultLayout field.
+  const visualizersDir = path.join(ROOT_DIR, "lib", "visualizers");
+  const vizEntries = await fs.readdir(visualizersDir, { withFileTypes: true });
+  for (const entry of vizEntries) {
+    if (!entry.isDirectory()) continue;
+    const layoutSrc = path.join(visualizersDir, entry.name, "layout.njk");
+    const manifestSrc = path.join(visualizersDir, entry.name, "manifest.json");
+    if (!fs.existsSync(layoutSrc) || !fs.existsSync(manifestSrc)) continue;
+    try {
+      const manifest = JSON.parse(await fs.readFile(manifestSrc, "utf-8"));
+      const defaultLayout = manifest.defaultLayout;
+      if (!defaultLayout) continue;
+      // defaultLayout is like "layouts/folder-index.njk" — strip the "layouts/" prefix
+      const layoutFilename = path.basename(defaultLayout);
+      const layoutDest = path.join(SRC_DIR, "_includes", "layouts", layoutFilename);
+      await fs.copy(layoutSrc, layoutDest, { overwrite: true });
+      console.log(`[assemble] Shape layout: ${entry.name}/layout.njk → layouts/${layoutFilename}`);
+    } catch (e) {
+      console.warn(`[assemble] Skipping shape layout for ${entry.name}: ${e.message}`);
+    }
+  }
+
   // Step 2c: Copy base layouts (theme layouts in Step 3 override these)
   if (fs.existsSync(path.join(baseDir, "layouts"))) {
     console.log("[assemble] Copying base layouts...");
