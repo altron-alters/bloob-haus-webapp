@@ -5,6 +5,7 @@ import { join, relative, basename, extname } from "path";
 import taskLists from "markdown-it-task-lists";
 import markdownItContainer from "markdown-it-container";
 import markdownItAttrs from "markdown-it-attrs";
+import markdownItFootnote from "markdown-it-footnote";
 import pluginRss from "@11ty/eleventy-plugin-rss";
 import Image from "@11ty/eleventy-img";
 import {
@@ -143,9 +144,11 @@ export default async function (eleventyConfig) {
   // Single line breaks → <br> by default (matches Obsidian behavior).
   // Opt out per-site with features: { soft_breaks: false } in _bloob-settings.md.
   eleventyConfig.amendLibrary("md", (mdLib) => {
+    mdLib.set({ linkify: true });
     if (siteConfig.features?.soft_breaks !== false) {
       mdLib.set({ breaks: true });
     }
+    mdLib.use(markdownItFootnote);
     mdLib.use(taskLists, { enabled: false, label: true });
     // {.class} {#id} {attr=value} attribute syntax on links, images, headings
     // e.g. [CONTACT US](#footer){.button} → <a href="#footer" class="button">

@@ -100,6 +100,14 @@ Both fields accept the same value formats:
 - `"[](media/filename.png)"` or `"[label](path/to/file.png)"` — markdown link (path kept as-is, prefixed with `/` if relative)
 - `"plain/path.png"` — plain path (passed through unchanged)
 
+#### Shapes
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `default_shape` | string | — | Shape name applied to pages with no `bloob-shape:` in frontmatter. Only influences layout selection — body rendering (`renderFilescope`) never fires from the default. If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk`. This lets you declare a future shape name without breaking the build. Example: `default_shape: marble`. |
+
+**How to wire in a new theme:** No theme-level changes needed. Layout selection is handled entirely by the preprocessor — it reads the shape's `manifest.json.defaultLayout`, copies the shape's `layout.njk` into `src/_includes/layouts/`, and injects the `layout:` key into each page's frontmatter automatically.
+
 #### Publish Mode
 
 | Key | Values | Description |

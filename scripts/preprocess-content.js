@@ -280,7 +280,11 @@ export async function preprocessContent({
     // 6e.3: For file-scope shapes (bloob-shape: in frontmatter), extract the
     // ::: settings block before injectContainerRaw runs. The block is removed
     // from the body so it doesn't render as raw markdown or get _raw= injected.
-    const bloobShape = frontmatter["bloob-shape"];
+    //
+    // bloobShape   = explicitly declared shape (drives body rendering + settings extraction)
+    // effectiveShape = bloobShape ?? site default (drives layout selection only)
+    const bloobShape = frontmatter["bloob-shape"] || null;
+    const effectiveShape = bloobShape || siteConfig.default_shape || null;
     let shapeSettings = {};
     if (bloobShape) {
       const extracted = extractSettingsBlock(processedContent);
@@ -297,34 +301,52 @@ export async function preprocessContent({
     // browser live preview, and future Obsidian plugin.
     processedContent = injectContainerRaw(processedContent);
 
-    // 6e.6: File-scope shape rendering.
-    // Two roles for bloob-shape:
+    // 6e.6: File-scope shape rendering + layout selection.
+    //
+    // bloobShape    = explicitly declared in frontmatter — drives body rendering AND layout
+    // effectiveShape = bloobShape ?? siteConfig.default_shape — drives layout selection only
+    //
+    // Body rendering (renderFilescope) only fires for explicitly declared shapes.
+    // The default shape only influences which layout wraps the page.
+    //
+    // Two roles for the resolved shape name:
     //   a) Body renderer — shape has renderFilescope(settings, body) in its index.js.
     //      The returned HTML replaces the markdown body entirely.
     //   b) Layout shape — shape has no renderFilescope (or no index.js at all).
     //      Treated as a layout reference: layouts/[name].njk wraps the page as chrome.
-    //      Enables the convention bloob-shape: article → layouts/article.njk.
     let bloobShapeLayout = null;
-    if (bloobShape) {
-      const shapePath = path.join(ROOT_DIR, "lib/visualizers", bloobShape, "index.js");
+    if (effectiveShape) {
+      const shapePath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape, "index.js");
       if (await fs.pathExists(shapePath)) {
         try {
           const mod = await import(pathToFileURL(shapePath).href);
           if (typeof mod.renderFilescope === "function") {
-            console.log(`[shape] Rendering file-scope shape: ${bloobShape}`);
-            processedContent = await mod.renderFilescope(shapeSettings, processedContent);
+            if (bloobShape) {
+              // Only render body for explicitly declared shapes
+              console.log(`[shape] Rendering file-scope shape: ${effectiveShape}`);
+              processedContent = await mod.renderFilescope(shapeSettings, processedContent);
+            }
+            // Default shape with renderFilescope: layout is handled via shapeManifestLayout below
           } else {
             // Module exists but no renderFilescope — treat as layout shape
-            bloobShapeLayout = `layouts/${bloobShape}.njk`;
-            console.log(`[shape] "${bloobShape}" has no renderFilescope — using as layout: ${bloobShapeLayout}`);
+            bloobShapeLayout = `layouts/${effectiveShape}.njk`;
+            console.log(`[shape] "${effectiveShape}" has no renderFilescope — using as layout: ${bloobShapeLayout}`);
           }
         } catch (e) {
-          console.warn(`[shape] Failed to load ${bloobShape}: ${e.message}`);
+          console.warn(`[shape] Failed to load ${effectiveShape}: ${e.message}`);
         }
       } else {
-        // No visualizer module — treat as layout shape
-        bloobShapeLayout = `layouts/${bloobShape}.njk`;
-        console.log(`[shape] "${bloobShape}" is a layout shape → ${bloobShapeLayout}`);
+        // No index.js — only treat as a layout shape if the visualizer folder exists.
+        // An unknown name (e.g. bloob-shape: note or default_shape: marble with no folder yet)
+        // falls back to page.njk — declaring a future shape name is safe.
+        const shapeDirPath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape);
+        if (await fs.pathExists(shapeDirPath)) {
+          bloobShapeLayout = `layouts/${effectiveShape}.njk`;
+          console.log(`[shape] "${effectiveShape}" is a layout shape → ${bloobShapeLayout}`);
+        } else if (bloobShape) {
+          console.warn(`[shape] bloob-shape: "${effectiveShape}" not found in lib/visualizers/ — falling back to page.njk`);
+        }
+        // default_shape not yet in lib/visualizers/ — silent, just use page.njk
       }
     }
 
@@ -472,7 +494,8 @@ export async function preprocessContent({
     // Priority order (highest → lowest):
     //   1. Explicit `layout: layouts/…` in the file's own frontmatter
     //   2. Layout declared on the bloob-type in _bloob-types.md / _bloob-objects.md
-    //   3. bloob-shape as a layout shape (no renderFilescope) → layouts/[name].njk
+    //   3a. bloob-shape as layout shape (no renderFilescope) → layouts/[name].njk
+    //   3b. defaultLayout from the shape's manifest.json (renderFilescope shapes)
     //   4. Default: layouts/page.njk (layouts/base.njk for index.md files)
     const hasEleventyLayout =
       frontmatter.layout && String(frontmatter.layout).startsWith("layouts/");
@@ -484,9 +507,24 @@ export async function preprocessContent({
     const bloobObjectLayout =
       objLayout ? `layouts/${objLayout.replace(/^layouts\//, "")}` : null;
 
+    // Read defaultLayout from the shape's manifest.json when a shape is active.
+    // Fills the gap for renderFilescope shapes (bloobShapeLayout is only set for
+    // layout-only shapes without renderFilescope). Uses effectiveShape so the
+    // default_shape setting also gets its manifest layout picked up.
+    let shapeManifestLayout = null;
+    if (effectiveShape && !bloobShapeLayout && BUILD_TARGET === "eleventy") {
+      const manifestPath = path.join(ROOT_DIR, "lib/visualizers", effectiveShape, "manifest.json");
+      if (await fs.pathExists(manifestPath)) {
+        try {
+          const manifest = JSON.parse(await fs.readFile(manifestPath, "utf-8"));
+          shapeManifestLayout = manifest.defaultLayout || null;
+        } catch (e) { /* ignore malformed manifest */ }
+      }
+    }
+
     if (BUILD_TARGET === "eleventy") {
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? "layouts/page.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? shapeManifestLayout ?? "layouts/page.njk";
       }
     }
 
@@ -501,7 +539,27 @@ export async function preprocessContent({
         dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
       outputFrontmatter.permalink = permalink;
       if (!hasEleventyLayout) {
-        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? "layouts/base.njk";
+        outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? shapeManifestLayout ?? "layouts/base.njk";
+      }
+      // Auto-inject folder slug and display title from directory name when not set by user.
+      if (dir !== ".") {
+        const folderSlug = path.basename(dir).replace(/\\/g, "/");
+        if (!frontmatter.folder) {
+          outputFrontmatter.folder = folderSlug;
+        }
+        // Only inject title when no real title exists — pageTitle falls back to
+        // the filename stem ("index") when neither frontmatter title nor an H1
+        // heading provides one. If a user wrote "# My Title", pageTitle is already
+        // "My Title" (set via file-index-builder) and we must not overwrite it.
+        const filenameStem = path.basename(file.relativePath, ".md");
+        if (pageTitle === filenameStem) {
+          const folderDisplay = folderSlug
+            .split(/[-_\s]+/)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
+          outputFrontmatter.title = folderDisplay;
+          outputFrontmatter.folder_display = folderDisplay;
+        }
       }
       // Exclude from tag and section listings but keep in collections.all
       // so embed-pages.njk can generate /folder/embed/ URLs for them.
@@ -672,30 +730,27 @@ export async function preprocessContent({
         continue;
       }
 
-      // camelCase the folder name (e.g. "lists-of-favorites" → "listsOfFavorites")
-      const collectionName = folderSlug.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
       // Display name: capitalise each word
       const folderDisplay = folderSlug
-        .split(/[-_]/)
+        .split(/[-_\s]+/)
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ");
 
-      // Stub uses the same format as themes/marbles-pouch/_templates/folder-index.md
-      // so users see exactly this pattern when they browse the auto-generated file.
+      // Stub bypasses the preprocessor's Step 6 (it's written directly to src-*/).
+      // All frontmatter that Step 6 would auto-inject for user-written index.md files
+      // must be baked in here. The bloob-shape is declared for documentation/tooling;
+      // renderFilescope() does not run on stubs — the container div is inlined directly.
       const stub = [
         "---",
-        `layout: layouts/base.njk`,
-        `templateEngineOverride: njk,md`,
+        `bloob-shape: folder-preview`,
+        `layout: layouts/folder-index.njk`,
         `permalink: /${folderSlug}/`,
-        `eleventyExcludeFromCollections: true`,
         `folder: ${folderSlug}`,
+        `title: ${folderDisplay}`,
         `folder_display: ${folderDisplay}`,
         "---",
         "",
-        `# {{ folder_display }}`,
-        "",
-        "```folder-preview",
-        "```",
+        `<div class="folder-preview-visualizer" data-pagefind-ignore data-fp-settings='{}'></div>`,
         "",
       ].join("\n");
 

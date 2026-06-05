@@ -1,0 +1,54 @@
+/* Inline citation superscript */
+.footnote-ref {
+  font-size: 0.75em;
+  line-height: 1;
+  vertical-align: super;
+}
+
+.footnote-ref a {
+  color: var(--accent-color);
+  text-decoration: none;
+  padding: 0 0.1em;
+}
+
+.footnote-ref a:hover {
+  text-decoration: underline;
+}
+
+/* Reference list at bottom of page */
+.footnotes-sep {
+  margin: var(--spacing-lg) 0 var(--spacing-sm);
+  border: none;
+  border-top: 1px solid var(--border-color);
+}
+
+.footnotes {
+  font-size: 0.85em;
+  color: var(--text-light);
+  font-family: var(--font-body);
+}
+
+.footnotes-list {
+  padding-left: var(--spacing-md);
+  margin: 0;
+}
+
+.footnote-item {
+  margin-bottom: var(--spacing-xs);
+  line-height: 1.6;
+}
+
+.footnote-item p {
+  margin: 0;
+}
+
+.footnote-backref {
+  color: var(--accent-color);
+  text-decoration: none;
+  margin-left: 0.25em;
+  font-size: 0.9em;
+}
+
+.footnote-backref:hover {
+  text-decoration: underline;
+}

@@ -115,6 +115,14 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
     merged.mount_path = bloobSettings.mount_path;
   }
 
+  // Default shape — applied to pages with no explicit bloob-shape in frontmatter.
+  // Only influences layout selection; body rendering (renderFilescope) is never triggered
+  // by the default. When the named shape has no visualizer folder yet, it logs a warning
+  // and falls through to page.njk — so declaring a future shape name is safe.
+  if (bloobSettings.default_shape) {
+    merged.default_shape = bloobSettings.default_shape;
+  }
+
   // Theme-specific settings — opaque bag passed through to site.theme_settings in templates
   if (bloobSettings.theme_settings) {
     merged.theme_settings = {

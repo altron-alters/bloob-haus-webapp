@@ -6,6 +6,28 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 44 — June 5, 2026
+**Worked on:** Citations rendering, base-wide link improvements, shape fallback fix
+
+**Citations / footnotes (`lib/visualizers/citations/`)**
+- Added `markdown-it-footnote` package and registered it in `eleventy.config.js` — Pandoc-style `[^label]` / `[^label]: text` footnotes now render as linked superscripts + reference section at bottom of page
+- New `citations` visualizer (CSS-only, no JS) — styles the generated HTML using existing CSS tokens; auto-included on all pages via the visualizer manifest. No new CSS tokens required.
+
+**Universal base stylesheet (`themes/_base/assets/css/base.css`)**
+- Created `themes/_base/assets/css/base.css` as the permanent home for styles that apply across all themes, independent of any feature or visualizer
+- All 4 theme `head.njk` files updated to load `base.css` before `main.css` (theme styles can override as needed)
+- First rule: `overflow-wrap: break-word` on `a` — prevents long URLs from busting page width
+
+**Auto-linking bare URLs**
+- Enabled `markdown-it` `linkify: true` in `eleventy.config.js` — plain `https://` URLs in content become `<a>` tags automatically, no markdown link syntax required
+
+**Shape fallback fix (build was broken)**
+- `METHODOLOGY-CULTURAL-P-VALUE.md` had `bloob-shape: note` — since no `lib/visualizers/note/` folder exists, the preprocessor was setting `layout: layouts/note.njk` (which doesn't exist), crashing the build
+- Fixed preprocessor: only treat `bloob-shape` as a layout-shape when the visualizer folder exists; unknown names now log a warning and fall through to `page.njk`
+- `lib/visualizers/note/` is a future shape — when it exists it will bring its own `layout.njk` and the content files with `bloob-shape: note` will pick it up automatically
+
+---
+
 ### Session 43 — May 31, 2026
 **Worked on:** Shapes architecture foundations + first file-scope shape (RSS feed)
 

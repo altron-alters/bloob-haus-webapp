@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-05-31
+**Last Updated:** 2026-06-05
 **Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -79,6 +79,11 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - `photo-grid` visualizer: `cols: N` uniform or `layout: 1,3,1` mixed-row grids; `ratio`/`gap`/`padding` params; PhotoSwipe lightbox automatic; columns preserved on mobile
 - PhotoSwipe 5 lightbox: shared via `themes/_base/partials/photoswipe-{head,scripts}.njk`; enabled in melt + marbles-pouch; hover zoom-in icon; no upscaling for low-res images
 - CSS Token Standard: all visualizer `styles.css` use `var(--accent-color)` etc. from `main.css` — documented in `docs/architecture/visualizers.md`
+- **`themes/_base/assets/css/base.css`** — universal stylesheet loaded before `main.css` in all theme `head.njk` files. Home for styles that apply across all themes regardless of feature (e.g. `overflow-wrap: break-word` on links). Theme styles override freely.
+- **`markdown-it` `linkify: true`** — bare `https://` URLs in content auto-link without markdown syntax
+- **Pandoc-style footnotes** (`[^label]` / `[^label]: text`) — rendered via `markdown-it-footnote` plugin; styled by `lib/visualizers/citations/` (CSS-only, no JS)
+- **`default_shape` in `_bloob-settings.md`** — site-wide default shape applied to pages with no explicit `bloob-shape:` frontmatter. Only influences layout selection; body rendering never fires from the default. Unknown/future shape names fall back silently to `page.njk`. See `docs/architecture/shapes.md`.
+- **Shape fallback hardening** — `bloob-shape:` values with no matching `lib/visualizers/[name]/` folder no longer crash the build; they log a warning and fall through to `page.njk`
 - `| md` and `| mdinline` Nunjucks filters for rendering markdown frontmatter strings
 - alter-engineers theme: hero partial, Satoshi font via Fontshare CDN, correct brand color tokens
 - Templatized builder: themes in `themes/`, site config in `sites/*.yaml`

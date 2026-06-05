@@ -1,0 +1,10 @@
+/*
+ * Base styles shared across all Bloob Haus themes.
+ * Included in every head.njk before theme main.css.
+ * Theme main.css overrides these as needed.
+ */
+
+/* Prevent long URLs and unbreakable strings from overflowing their container */
+a {
+  overflow-wrap: break-word;
+}
