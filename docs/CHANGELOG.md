@@ -6,6 +6,23 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 46 — June 5, 2026
+**Worked on:** Shapes architecture deep-dive — philosophical exploration and open question documentation
+
+**Shapes architecture open questions documented**
+- Pulled upstream changes (article shape, shape_settings mechanism, AE theme tokens)
+- Held a philosophical exploration of shapes: painting-vs-frame metaphor, chrome as a declared dimension, three-tier declaration model (shape-level / instance-level / page-level)
+- Added `## Open architectural questions` section to `docs/architecture/shapes.md` — 7 questions:
+  1. Chrome vocabulary (what can a shape declare about its frame?)
+  2. Three-tier declaration model (who owns what across manifest/settings/frontmatter)
+  3. `schema.md` canonical template (not yet written — highest leverage doc to write next)
+  4. Settings contract (freeform vs. enumerated validation)
+  5. Closed-state rendering (deferred, but needs a home in the contract)
+  6. Lineage / shape inheritance (deferred)
+  7. Making shapes easy for others to create (creator checklist, reference shapes, vault-local shapes folder)
+
+---
+
 ### Session 45 — June 5, 2026
 **Worked on:** Upstream merge, `article` shape (new layout-only pattern), `shape_settings` mechanism, AE theme tokens + nav offset
 

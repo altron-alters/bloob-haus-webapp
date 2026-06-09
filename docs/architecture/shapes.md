@@ -7,6 +7,85 @@ Shapes are the unified concept for everything that renders content visually: `bl
 - **Inline scope** — authored as a `:::` block inside a page body. Rendered by the visualizer's `transform()` + optional `browser.js`. No layout needed.
 - **File scope** — its own `.md` file with `bloob-shape:` in frontmatter. Requires a `layout.njk` in the shape folder. Two sub-patterns exist (see below): the shape can replace the body entirely via `renderFilescope`, or it can act as a pure layout wrapper and leave the body untouched.
 
+## Inline opener syntax
+
+The `:::` opener line can carry settings inline, without a `:::settings` block:
+
+```
+::: foldable title="Custom label" state=open
+```
+
+**State suffix shorthand** — shapes that have a meaningful open/closed default can declare it with `+` (open) or `-` (closed) appended directly to the shape name:
+
+```
+::: foldable+     open by default
+::: foldable-     closed by default
+::: foldable      uses shape's own default
+```
+
+This is sugar for `state=open` / `state=closed`. The build pipeline normalizes to the verbose form before the renderer runs. Only shapes that declare a state model support this; for shapes without one, `+`/`-` is ignored (or warned on, when settings validation is implemented — see open question 4).
+
+**Sugar-to-primitive preprocessor pattern** — some authoring shortcuts require a dedicated preprocessing step that rewrites content into standard `:::` blocks before markdown-it runs. The foldable heading shortcut (`## > Heading`) is the first example: a utility (`scripts/utils/foldable-heading-sugar.js`) scans for the pattern and rewrites matched sections as `:::foldable` blocks. This must run before `inject-container-raw.js` so the rewritten blocks get picked up by the standard data-vis-raw injection pipeline. See `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` for the full foldable spec.
+
+## The metabolism principle
+
+Shapes do not have constraints with rejections — they have **translation functions**.
+
+When content that doesn't "belong" enters a shape, the shape does something with it. It doesn't refuse. A server rack landing in a garden gets flowered. A sculpture landing in a pond-of-marbles gets marbleized. Every shape has its own answer for what to do with whatever enters it — that answer is its translation function.
+
+This is the foundational design principle behind the whole shape system. It dissolves the question "what's allowed inside this shape?" into a richer question: "what does this shape do with different kinds of things?" No violation language. The shape metabolizes its contents according to its own nature.
+
+**In practice, every shape creator must answer:** *What does my shape do with something that isn't its native content type?*
+
+Common strategies:
+- **Render as native type** — the pond turns everything into a marble. Identity is overridden.
+- **Render as closed icon** — the shape shows the foreign item as its own closed-state visual (its "calling card"), preserving the item's identity.
+- **Render as plain text** — strip to text only, no special presentation.
+- **Pass through** — render using the item's own shape rules (identity preserved — see Container-contents policy below).
+
+## Container-contents policy
+
+Every shape has a policy for how it treats the shapes inside it: **override** or **preserve**.
+
+**Override (transformation lens):** The shape renders everything according to its own type, regardless of the contained item's original shape. A pond-of-marbles renders every contained thing as a marble. The pond is the lens; items lose their individual identity inside it.
+
+**Preserve (place):** The shape lets each contained item render as itself. A garden lets a cactus stay a cactus, a seedling stay a seedling, an essay stay an essay. The garden is a place that holds many things without changing them.
+
+The heuristic that emerges: shapes that are *transformation lenses* tend to override; shapes that are *places* tend to preserve. But this is per-shape policy, not a global rule — each shape decides for itself based on what it is.
+
+This policy is part of the shape's contract and must be declared in `schema.md`. It's also the source of the placement system choice: override shapes usually use a single placement system (everything goes in the same pool); preserve shapes often need richer placement (each item may need its own position).
+
+## Placement systems
+
+Content placement is a property of the shape. Different shapes use different placement systems; a shape declares which one(s) it supports. Authors and AI use whatever the shape provides.
+
+The five systems identified so far (more may emerge as shapes are built):
+
+| System | Description | Best for |
+|--------|-------------|----------|
+| **Flow** | Order in the markdown determines layout (grid, stack, or sequence). | Most shapes. Default assumption. |
+| **Slots** | Named positions: `slot="top-shelf-left"`, `slot="north-wall"`. | Structured containers with fixed zones. |
+| **Regions** | Semantic zones: `region="sunny"`, `region="deep-water"`. | Human-friendly; maps to shape's character. |
+| **Coordinates** | Explicit `x/y` or `x/y/z`: `pos="120, 340"`. | Spatial canvases; precise layout; AI-friendly. |
+| **Relational** | `near="the cactus"`, `between="A and B"`. | Natural-language authoring; loosely positioned. |
+
+**Multiple authoring paths:** a shape can accept more than one placement system for the same authoring goal. A garden's primary system might be regions (human-friendly); it could also accept coordinates (AI-friendly) for precise override. Same shape, two valid paths.
+
+**Placement is recursive:** placement only matters when a shape is in its open state. A closed shape is placement-free — it is just its icon in the parent's space. But open it and you enter its own placement universe, which can contain its own placed shapes, each of which has their own. A city contains placed house icons (closed); open a house and its rooms are placed inside; open a room and its furniture is placed. Each level is its own coordinate system. This is the scenegraph pattern from game engines, emerging naturally from the shapes architecture.
+
+**Current default:** most shapes use flow. Slots and regions are the next-most-authorable. Coordinates and relational require more renderer work. Build flow first; introduce others as specific shapes need them.
+
+## Composability and extraction
+
+Any inline `:::` block can be promoted to its own file (file-scope). The system doesn't force the choice — the author decides when an inline shape earns its own life.
+
+Open authoring patterns:
+- Author inline first, promote to file-scope later when the thing grows
+- Author as a file, transclude inline elsewhere via `[[wikilink]]`
+- Mix both freely — the wikilink appears in the parent as the referenced shape's closed-state visual
+
+The future Obsidian plugin may provide an "extract" gesture — possibly "give it a life of its own" — that promotes a `:::` block to its own `.md` file and replaces the original with a wikilink. The shape is the same thing at both scopes; scope is just where it lives.
+
 ## What a complete shape carries
 
 ```
@@ -136,6 +215,29 @@ The default is "on" (include renders unless explicitly opted out). Users opt out
 - Layout templates read from a single `shape_settings` object, making it obvious which keys come from shape config vs page metadata
 - See DECISIONS.md 2026-06-05 for the full rationale
 
+## Shapes vs. callouts — the boundary
+
+`:::` blocks and `>` callouts coexist in the same content; they serve different purposes and don't compete.
+
+- **`:::` shapes** — substantial containers with internal structure, their own placement systems, their own translation functions, their own renderers. A pond, a garden, a foldable, a book, a research-collection.
+- **`>` callouts** — small, atomic annotations that decorate prose. A side-note, a warning, a pull-quote, a tip.
+
+**Mental test:** if the thing has internal structure worth declaring (nested items, settings, placement), it is a shape (`:::`). If it is a styled annotation sitting next to prose, it is a callout (`>`).
+
+```
+> [!note]
+> This is a callout. A styled annotation. Not a shape.
+
+::: foldable
+## A section worth collapsing
+Content with real internal structure. A shape.
+:::
+```
+
+Ship a small baseline set of callout types — `note`, `tip`, `warning`, `quote`, `cite` — as styled elements in the base theme, not as registered shapes. If a callout type starts wanting internal structure beyond styled prose, that is the signal to promote it to a shape.
+
+**One observation worth noting:** Obsidian's foldable callouts (`[!note]+` / `[!note]-`) already do the closed/open state move at annotation scale. The `+`/`-` suffix convention in the shape architecture is a direct echo of something Obsidian users already know.
+
 ## Token-based `styles.css`
 
 Shapes ship their own `styles.css` using **only** the CSS token contract as variables. This means the shape's styles work correctly in any theme that implements the token contract — no theme-specific overrides needed.
@@ -163,6 +265,26 @@ Shape CSS is copied to `src-*` as part of the build. Themes apply overrides in t
 }
 ```
 This keeps the shape portable while letting themes fine-tune without forking the shape's template.
+
+**CSS cascade rule — no shorthand properties for theme-overridable values:**
+Shape CSS must not use shorthand properties (e.g., `padding: ...`) for any value a theme might need to override individually. Split them into named individual properties with token fallbacks. Without this, a theme's `:root` override of `--article-padding-top` won't apply if the shape's shorthand sets all four padding sides in one declaration — cascade order makes the shorthand win.
+
+```css
+/* wrong — shorthand blocks per-property theme overrides */
+.article-page {
+  padding: var(--article-padding-top, 2.5rem) var(--spacing-md, 1.5rem);
+}
+
+/* correct — each property is independently overridable */
+.article-page {
+  padding-top: var(--article-padding-top, var(--spacing-lg, 2.5rem));
+  padding-bottom: var(--spacing-lg, 2.5rem);
+  padding-left: var(--spacing-md, 1.5rem);
+  padding-right: var(--spacing-md, 1.5rem);
+}
+```
+
+Similarly, any color that a theme might want to vary per-use should be its own named token with a generic fallback — e.g., `--article-title-color` falling back to `--text-color`. Don't hard-code a single token where a shape-specific override slot is useful.
 
 ## `_base` partials in shape layouts
 
@@ -192,6 +314,7 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 |-------|------|-----------|------|
 | `article` | layout-only | ✓ | First layout-only shape; reference implementation |
 | `folder-preview` | hybrid + file-scope | ✓ | — |
+| `foldable` | inline (build-time + runtime) | Not yet built | Plan written: `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` |
 | `rss-feed` | file-scope | Partial | Missing `layout.njk`, `schema.md`, `styles.css` |
 | `card-preview` | build-time | Partial | Missing `schema.md` |
 | `checkbox-tracker` | runtime | Partial | — |
@@ -229,3 +352,109 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 ## Rule: do not convert visualizers wholesale
 
 Convert one shape at a time, starting with shapes that are actively being used as file-scope pages. Inline-only shapes need no conversion beyond documentation gaps. Attempting to convert all shapes at once risks breaking existing content.
+
+---
+
+## Open architectural questions (living section — refine as we learn)
+
+These are unresolved by design. Work through them one at a time as shapes are built and real usage makes the right answers clearer. Last touched: 2026-06-05.
+
+### 1. Chrome — what can a shape declare about its frame?
+
+A shape is the painting. The site chrome (nav, footer, site header) is the frame. The painting should have an opinion about its frame — but the theme (the gallery) is ultimately sovereign over what frames it stocks.
+
+**The gap:** shapes currently have no vocabulary for expressing a chrome preference. They either extend `base.njk` (full chrome) or would extend some hypothetical `bare.njk` (no chrome) — an implicit decision, not an explicit one.
+
+**Candidate vocabulary:**
+- `chrome: full` — standard nav + footer (default for most shapes)
+- `chrome: minimal` — nav only, no footer
+- `chrome: none` — bare HTML, no site UI (landing page, immersive canvas)
+- `chrome: theme` — whatever the theme defaults to (equivalent to not declaring it)
+
+**Open questions to settle:**
+- Where does the chrome preference live? In `manifest.json` as the shape's default, overridable per-page via `:::settings` or frontmatter?
+- Is `chrome:` a frontmatter key (page-level decision) or a settings-block key (shape-behavior decision)? Argument for frontmatter: it affects page structure, not just shape rendering. Argument for settings: it's shape-internal configuration.
+- When the shape requests `chrome: none` but the theme doesn't support it, what's the fallback? Silent fall-through to full chrome?
+- Is "chrome" even the right word user-facing, or is it too jargony?
+
+---
+
+### 2. The three-tier declaration model — who owns what?
+
+There are (or should be) three distinct tiers where shape configuration lives:
+
+| Tier | Where | What it holds | Who sets it |
+|------|-------|---------------|-------------|
+| Shape-level | `manifest.json` + `schema.md` | Identity, type, chrome preference, content policy, placement system, token deps | Shape creator (you or AI) |
+| Instance-level | `:::settings` block | Per-page tuning of shape behavior | Content author |
+| Page-level | YAML frontmatter | Stable identity metadata: title, date, tags, author, `bloob-shape:` | Content author |
+
+**The conflict question:** when all three tiers disagree on the same key (e.g., shape default is `chrome: minimal`, page sets `chrome: full`, theme doesn't support `chrome: minimal`), who wins? Current intuition: theme is the final arbiter of what chrome exists; the page's explicit declaration beats the shape's default; unsupported chrome modes silently fall back.
+
+**Open question:** does instance-level (`:::settings`) always beat shape-level default? Or can a shape mark certain settings as non-overridable?
+
+---
+
+### 3. schema.md — canonical template not yet written
+
+Every shape's `schema.md` is the human- and AI-readable contract. For AI to reliably generate valid content for a shape, all `schema.md` files need to follow the same template. Right now they're missing for most shapes, and no canonical template has been written.
+
+**Candidate sections for the template:**
+```
+## What this shape is
+## What goes inside (allowable native contents)
+## Settings (table: key / type / default / description)
+## Chrome preference (and override behavior)
+## Content policy (override identity vs. preserve identity for contained shapes)
+## Placement system (which system, vocabulary, defaults)
+## Examples (complete .md file mockups)
+## Translation behavior (what happens to non-native content)
+## Closed-state visual (how this shape looks as an icon when referenced from elsewhere)
+```
+
+**Open question:** write the canonical template before building the next shape, or extract it from the first three complete shapes retroactively? Argument for writing it now: prevents inconsistency across 20 shapes. Argument for retroactively: real usage reveals what the template actually needs.
+
+---
+
+### 4. The settings contract — freeform or enumerated?
+
+Currently `:::settings` is freeform YAML — any key is accepted, invalid keys are silently ignored. This is permissive but produces no feedback when authors make typos or use unsupported keys.
+
+**Open question:** should `schema.md` enumerate all valid settings keys so that invalid ones can be warned on at build time? This would require the preprocessor to validate `shape_settings` against the shape's declared schema. Benefit: better author feedback. Cost: preprocessor needs to load and parse every shape's schema during build — performance and complexity concern.
+
+**Current position:** freeform is fine for now. Revisit when invalid-key mistakes become a real pain point.
+
+---
+
+### 5. Closed-state rendering — deferred, but needs a home in the contract
+
+The conceptual architecture says every shape has two states: open (the full page when visited directly) and closed (the iconified form when referenced via `[[wikilink]]` from another page). Almost all technical work has gone into open-state rendering. Closed state is currently handled by one thing: the wikilink pill (`<a class="internal-link">`).
+
+**The gap:** `manifest.json` and `schema.md` have no fields for closed-state renderer. Nothing in the shape contract says what the shape's closed-state visual looks like. The shape table above only covers open-state completeness.
+
+**Open question:** should closed-state be part of the shape contract now (so shape creators think about it from the start), or deferred until wikilink embedding is built properly? 
+
+**Tentative position:** add a `closed-state visual` section to `schema.md` template now (even if it just says "TBD — uses default wikilink pill"), so the question doesn't get forgotten. Don't implement any renderer yet.
+
+---
+
+### 6. Lineage / shape inheritance — deferred
+
+The conceptual doc mentions shapes can declare what shape they were forked from (`lineage:` in the contract). That's powerful: a `pond-of-marbles` could inherit marble rendering logic without copying it. But this is not in the current technical model at all.
+
+**Current position:** deferred until there are enough shapes built that inheritance would actually reduce duplication. Don't design the mechanism until you have two or three concrete pairs of shapes that would benefit from it.
+
+---
+
+### 7. Making shapes easy for others to create
+
+The longer-term goal is that anyone (human or AI) can create a shape by following a clear pattern. The things that need to exist for that to be true:
+
+- [ ] Canonical `schema.md` template (see question 3)
+- [ ] A "shape creator checklist" that covers all three types (inline, layout-only, file-scope) in one place — currently the checklists are scattered
+- [ ] At least one complete reference shape per type: `article` (layout-only ✓), need one for inline-only, need one for file-scope
+- [ ] `schema.md` filled in for those reference shapes so there's something to imitate
+- [ ] Clear documentation of what CSS tokens a shape can safely use (partially done in "Token-based styles.css" above)
+- [ ] Documented: how a vault-local shape in `/bloob-haus-shapes/` gets picked up by the build pipeline (not yet implemented — see conceptual doc)
+
+The vault-local shapes folder (defined in the conceptual doc) is the gateway to shapes becoming a community thing. Nothing in the current build pipeline supports scanning a vault's shape folder yet. That's the missing technical piece between "creator" shapes and "user" shapes.
