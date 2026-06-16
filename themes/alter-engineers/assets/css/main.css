@@ -590,6 +590,18 @@ html { margin-top: 0 !important; }
   font-size: 0.85rem !important;
 }
 
+/* Project single — always show full body text; remove WP read-more truncation on mobile.
+   theme.min.css sets height:10.625rem + overflow:hidden below 768px and shows
+   .projects-single__read-more. We disable both. */
+.projects-single__text {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.projects-single__read-more {
+  display: none !important;
+}
+
 /* Project single — no hero: offset content below fixed nav */
 .projects-single--no-hero .projects-single__main-content {
   padding-top: calc(var(--nav-height) + var(--spacing-md));
