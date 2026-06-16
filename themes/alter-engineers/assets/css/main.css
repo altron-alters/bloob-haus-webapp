@@ -301,7 +301,7 @@ html { margin-top: 0 !important; }
 }
 
 /* Headings inside project body text */
-.projects-single__text h2 { font-size: 1.35rem; margin-top: 2rem; margin-bottom: 0.4rem; }
+.projects-single__text h2 { font-size: 2rem; font-weight: 800; margin-top: 2rem; margin-bottom: 0.4rem; }
 .projects-single__text h3 { font-size: 1.1rem;  margin-top: 1.5rem; margin-bottom: 0.35rem; }
 .projects-single__text h4 { font-size: 1rem;    margin-top: 1.25rem; margin-bottom: 0.3rem; }
 .projects-single__text h2:first-child,
@@ -376,6 +376,22 @@ html { margin-top: 0 !important; }
    ============================================================ */
 .articles.more-projects {
   padding-bottom: 3rem !important;
+}
+
+/* ============================================================
+   FOLDER-PREVIEW CARDS — AE THEME OVERRIDES
+   fp-card__title styled as a small orange label so it reads as an
+   identifier rather than the main headline. Subtitle-as-headline
+   is a separate task (requires browser.js + SEO renderer changes).
+   ============================================================ */
+.fp-card__title {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-orange);
+  margin-bottom: 0.35rem;
 }
 
 /* ============================================================

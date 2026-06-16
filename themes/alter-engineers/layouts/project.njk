@@ -86,8 +86,14 @@ body_class: "single single-projects"
           <a class="button-1">READ MORE </a>
         </div>
 
-        {% if role or owner or sqft or target or photo_credit %}
+        {% if role or owner or sqft or target or date_started or photo_credit %}
         <dl class="project-meta">
+          {% if date_started %}
+          <div class="project-meta__row">
+            <dt class="label">PROJECT STARTED</dt>
+            <dd>{{ date_started | dateFormat }}</dd>
+          </div>
+          {% endif %}
           {% if role %}
           <div class="project-meta__row">
             <dt class="label">ROLE</dt>
