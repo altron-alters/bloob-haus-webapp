@@ -590,7 +590,16 @@ html { margin-top: 0 !important; }
   font-size: 0.85rem !important;
 }
 
+/* Project single — no hero: offset content below fixed nav */
+.projects-single--no-hero .projects-single__main-content {
+  padding-top: calc(var(--nav-height) + var(--spacing-md));
+}
+
 /* --- Generic page layout (page.njk) --- */
+.page-article {
+  padding-top: calc(var(--nav-height) + var(--spacing-md));
+}
+
 .page-header {
   margin-bottom: 2rem;
 }

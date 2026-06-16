@@ -38,7 +38,7 @@ body_class: "single single-projects"
 {% endif %}
 
 <div class="projects-single">
-  <div class="projects-single__wrapper">
+  <div class="projects-single__wrapper{{ ' projects-single--no-hero' if not heroImages.length }}">
 
     {# Hero image gallery — images that appear BEFORE the title heading #}
     {% if heroImages.length %}
