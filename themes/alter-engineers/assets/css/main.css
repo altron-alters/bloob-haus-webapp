@@ -643,6 +643,109 @@ html { margin-top: 0 !important; }
   line-height: 1.2;
 }
 
+/* ============================================================
+   TAG BADGES — shared style used in project profiles, tag pages,
+   and anywhere else tags appear. AE style: mint green chip with
+   sharp edges (--border-radius: 0px), accent-colored text.
+   Mirrors the project-meta dt label chip for visual consistency.
+   ============================================================ */
+.tag-badge::before {
+  content: "#";
+  opacity: 0.6;
+  margin-right: 1px;
+}
+
+.tag-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: var(--color-mint, #b6fad1);
+  color: var(--accent-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  line-height: 1.6;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.tag-badge:hover {
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+/* ============================================================
+   PROJECT TAGS — chip row shown below title + subtitle on
+   project profile pages.
+   ============================================================ */
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.75rem;
+}
+
+/* ============================================================
+   TAG PAGE — per-tag listing at /tags/[tag]/
+   ============================================================ */
+.tag-page {
+  max-width: var(--max-width, 1200px);
+  margin: 0 auto;
+  padding: calc(var(--nav-height) + var(--spacing-lg)) var(--spacing-md) var(--spacing-xl);
+}
+
+.tag-page__header {
+  margin-bottom: 2.5rem;
+}
+
+.tag-page__label {
+  margin: 0 0 0.4rem;
+}
+
+.tag-page__title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  color: var(--accent-dark);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.tag-page__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tag-page__item {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 0;
+}
+.tag-page__item:first-child {
+  border-top: 1px solid var(--border-color);
+}
+
+.tag-page__link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.tag-page__link:hover .tag-page__item-title {
+  color: var(--accent-color);
+}
+
+.tag-page__item-title {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-color);
+  transition: color 0.15s ease;
+}
+
+.tag-page__item-subtitle {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text-light, #555);
+  margin-top: 0.2rem;
+}
+
 /* --- Generic page layout (page.njk) --- */
 .page-article {
   padding-top: calc(var(--nav-height) + var(--spacing-md));

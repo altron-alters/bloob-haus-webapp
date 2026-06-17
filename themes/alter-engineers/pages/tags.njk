@@ -1,0 +1,53 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: collections
+  size: 1
+  alias: tag
+  filter:
+    - all
+    - nav
+    - posts
+    - tagList
+    - not-for-public
+    - sections
+    - withBacklinks
+    - projects
+    - articles
+    - resources
+permalink: /tags/{{ tag | slugify }}/
+eleventyComputed:
+  title: "Tag: {{ tag }}"
+eleventyExcludeFromCollections: true
+---
+<div class="tag-page">
+  <header class="tag-page__header">
+    <p class="label tag-page__label">Tag</p>
+    <h1 class="tag-page__title">{{ tag }}</h1>
+  </header>
+
+  {# Cards reuse the folder-preview card classes (.fp-cards / .fp-card / .fp-card__*)
+     so the styling — and the design decision (title = small orange label, subtitle
+     = catching headline) — carries forward to the future `collection` shape.
+     Build-time render: fully crawlable, no JS, no Pagefind. #}
+  {% set taglist = collections[tag] %}
+  {% if taglist and taglist.length %}
+  <div class="fp-cards">
+    {% for post in taglist %}
+    <a href="{{ post.url }}" class="fp-card">
+      {% if post.data.image %}
+      {# no-pswp: optimize to responsive <picture> but skip the PhotoSwipe <a> wrapper —
+         a nested <a> inside the card's <a href> would be invalid HTML and break the card link. #}
+      <div class="fp-card__image-wrap"><img class="no-pswp" src="{{ post.data.image }}" alt="{{ post.data.title }}" loading="lazy"></div>
+      {% else %}
+      <div class="fp-card__image-wrap fp-card__image-wrap--placeholder"></div>
+      {% endif %}
+      <div class="fp-card__body">
+        <span class="fp-card__title">{{ post.data.title }}</span>
+        {% if post.data.subtitle %}<p class="fp-card__subtitle">{{ post.data.subtitle }}</p>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

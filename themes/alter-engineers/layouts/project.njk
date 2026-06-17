@@ -76,6 +76,19 @@ body_class: "single single-projects"
       {{ titleHtml | replace("<h1", '<h1 class="projects-single__title"') | safe }}
       {% endif %}
 
+      {% if subtitle %}<p class="projects-single__subtitle">{{ subtitle | mdinline | safe }}</p>{% endif %}
+
+      {% if tags %}
+      {% set displayTags = tags | filterTagList %}
+      {% if displayTags.length %}
+      <div class="project-tags">
+        {% for tag in displayTags %}
+        <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge">{{ tag }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endif %}
+
       <div class="projects-single__main-container">
 
         <div class="projects-single__text">
