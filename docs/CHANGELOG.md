@@ -6,6 +6,35 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 47 — June 16, 2026
+**Worked on:** AE theme fine-tuning — project layout fixes, folder-preview subtitle, theme-specific visualizer CSS override system
+
+**Project layout fixes (alter-engineers theme)**
+- Fixed nav overlap on no-hero project pages: added `.projects-single--no-hero` modifier class in `project.njk` and `padding-top: calc(var(--nav-height) + var(--spacing-md))` CSS rule
+- Added `padding-top` offset to `.page-article` for the same reason
+- Added `date_started` field displayed as "PROJECT STARTED" row in the project metadata `<dl>` using the `dateFormat` filter
+- Removed READ MORE truncation: overrode `theme.min.css` mobile height limit with `height: auto !important; overflow: visible !important;` and hid `.projects-single__read-more` button
+- Bumped H2 size inside project body: `.projects-single__text h2 { font-size: 2rem; font-weight: 800; }`
+
+**folder-preview visualizer — subtitle support**
+- Added `.fp-card__subtitle` baseline styles to `lib/visualizers/folder-preview/styles.css`
+- Changed `.fp-card__title` to a `<span>` (label role) in both `index.js` (build-time) and `browser.js` (runtime)
+- Both paths now render `<p class="fp-card__subtitle">` from `node.subtitle` (already in graph.json from `## heading` extraction)
+
+**Theme-specific visualizer CSS override system (new pipeline feature)**
+- Added Step 6.5 to `scripts/assemble-src.js`: auto-scans `themes/[name]/assets/css/visualizers/*.css`, copies to `src-*/assets/css/theme-visualizers/`, writes name list to `src-*/_data/themeVisualizerCss.json`
+- Added cleanup of those directories in `cleanGeneratedFiles()`
+- Updated `themes/_base/partials/head.njk` to loop `themeVisualizerCss` and emit `<link>` tags after shared visualizer CSS
+- Created `themes/alter-engineers/assets/css/visualizers/folder-preview.css` — AE overrides making title orange and subtitle larger
+- Moved `.fp-card__title` color rule out of AE `main.css` (was misplaced there) into the new override file
+
+**Documentation**
+- Added "Theme-specific visualizer CSS overrides" section to `docs/architecture/visualizers.md` with pipeline flow, authoring rules, and example
+- Added `assets/css/visualizers/` row to Tier 3 in `docs/architecture/themes.md`, plus "Theme-specific visualizer overrides" cross-reference section
+- Added two DECISIONS.md entries (2026-06-16): theme CSS override pattern and `fp-card__subtitle`
+
+---
+
 ### Session 46 — June 5, 2026
 **Worked on:** Shapes architecture deep-dive — philosophical exploration and open question documentation
 

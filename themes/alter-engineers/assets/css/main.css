@@ -379,22 +379,6 @@ html { margin-top: 0 !important; }
 }
 
 /* ============================================================
-   FOLDER-PREVIEW CARDS — AE THEME OVERRIDES
-   fp-card__title styled as a small orange label so it reads as an
-   identifier rather than the main headline. Subtitle-as-headline
-   is a separate task (requires browser.js + SEO renderer changes).
-   ============================================================ */
-.fp-card__title {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-orange);
-  margin-bottom: 0.35rem;
-}
-
-/* ============================================================
    FOLDER-PREVIEW SLIDER-CARDS (articles section)
    theme.min.css sets .articles__repeater margin-top up to
    9.3125rem !important — designed for the original WordPress

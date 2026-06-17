@@ -1,0 +1,17 @@
+/* Alter Engineers — folder-preview visualizer overrides
+   Loaded after lib/visualizers/folder-preview/styles.css via the
+   theme-specific visualizer CSS mechanism (assemble-src.js Step 6.5). */
+
+/* Title: small orange identifier label */
+.fp-card__title {
+  color: var(--color-orange);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+/* Subtitle: main catching headline */
+.fp-card__subtitle {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 700;
+  color: var(--text-color);
+}
