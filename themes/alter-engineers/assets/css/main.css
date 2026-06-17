@@ -228,14 +228,31 @@ html { margin-top: 0 !important; }
 }
 
 /* ============================================================
-   PROJECT SINGLE — TITLE
-   theme.min.css sets the content area to color: #5b5dd3 (purple).
-   We darken the title slightly for legibility and cap the size
-   so it doesn't grow unbounded on large screens.
+   PROJECT SINGLE — TITLE (building name)
+   Default (no subtitle present): the building name IS the page title —
+   big, brand-dark, size-capped so it doesn't grow unbounded.
+   theme.min.css sets the content area to #5b5dd3; we darken to
+   --accent-dark for legibility.
    ============================================================ */
 .projects-single__title {
-  color: var(--accent-dark);                  /* #3d4fcc — darker than the theme's #5b5dd3 */
+  color: var(--accent-dark);                  /* darker than the theme's #5b5dd3 */
   font-size: clamp(2rem, 5vw, 3.75rem);       /* fluid: grows up to 3.75rem, no larger */
+  line-height: 1.15;
+}
+
+/* When a ## subtitle follows, the AE hierarchy flips: the building name
+   becomes a small orange identifier label (kicker) and the subtitle below
+   is the dominant headline. Mirrors the folder-preview card
+   (.fp-card__title / .fp-card__subtitle) so the card and the page read the
+   same way. H1 stays above H2 in the DOM because it's the building name.
+   margin-bottom:0 also collapses theme.min.css's large responsive title
+   margin (up to 9.375rem) so the label sits tight above the headline. */
+.projects-single__title:has(+ .projects-single__subtitle) {
+  color: var(--color-orange);
+  font-size: clamp(0.95rem, 1.8vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 0;
 }
 
 /* ============================================================
@@ -605,6 +622,25 @@ html { margin-top: 0 !important; }
 /* Project single — no hero: offset content below fixed nav */
 .projects-single--no-hero .projects-single__main-content {
   padding-top: calc(var(--nav-height) + var(--spacing-md));
+}
+
+/* ============================================================
+   PROJECT SINGLE — SUBTITLE
+   Catching headline from ## H2 immediately after the H1 title.
+   Extracted automatically by the preprocessor's title-deduplicator.
+   ============================================================ */
+/* The ## subtitle is the dominant headline on the project page (the
+   building name above it is demoted to a small orange label — see the
+   .projects-single__title:has(...) rule in the TITLE section). Big and
+   bold in brand-dark; its 0.35rem margin-top gives the tight gap under
+   the label. */
+.projects-single__subtitle {
+  font-size: clamp(1.75rem, 4.5vw, 3rem);
+  font-weight: 800;
+  color: var(--accent-dark);
+  margin-top: 0.35rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
 }
 
 /* --- Generic page layout (page.njk) --- */
