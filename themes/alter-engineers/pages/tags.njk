@@ -17,13 +17,12 @@ pagination:
     - resources
 permalink: /tags/{{ tag | slugify }}/
 eleventyComputed:
-  title: "Tag: {{ tag }}"
+  title: "{{ tag | replace('-', ' ') }}"
 eleventyExcludeFromCollections: true
 ---
 <div class="tag-page">
   <header class="tag-page__header">
-    <p class="label tag-page__label">Tag</p>
-    <h1 class="tag-page__title">{{ tag }}</h1>
+    <h1 class="tag-page__title">#{{ tag | replace("-", " ") }}</h1>
   </header>
 
   {# Cards reuse the folder-preview card classes (.fp-cards / .fp-card / .fp-card__*)

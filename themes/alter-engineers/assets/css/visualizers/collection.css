@@ -1,0 +1,16 @@
+/* Alter Engineers — collection visualizer overrides
+   Mirrors folder-preview.css — same fp-card__* class names, same AE card
+   style. Kept separate so collection cards look correct on pages that don't
+   also load folder-preview (e.g. a future standalone collection-only page). */
+
+.fp-card__title {
+  color: var(--color-orange);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+
+.fp-card__subtitle {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 700;
+  color: var(--text-color);
+}

@@ -706,6 +706,8 @@ html { margin-top: 0 !important; }
   color: var(--accent-dark);
   margin: 0;
   line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .tag-page__list {
