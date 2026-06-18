@@ -6,6 +6,29 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 48 — June 17, 2026
+**Worked on:** Collection shape — Phase 1 (metadata mode, Phases 0–1 + projects index swap)
+
+**New visualizer: `lib/visualizers/collection/`** (upstream-eligible shared infrastructure)
+- `core.js` — pure `parseSource` / `filterNodes` / `sortAndLimit` / `resolvePages`. Supports sources: `folder=X`, `tag=X`, `field:KEY=VAL`, `all`. Works in both Node.js (build-time) and browser (esbuild bundle).
+- `render-card.js` — pure `renderCardHtml` / `renderCardGridHtml` shared by build-time and runtime. Canonical class `fp-card__image-wrap` (fixes drift from legacy `fp-card__img-wrap` in folder-preview runtime). All images carry `class="no-pswp"` (prevents nested-anchor bug when image-optimizer wraps images in PhotoSwipe `<a>`).
+- `index.js` — `transform()` for ` ```collection ``` ` code fences. Renders build-time SEO card grid from graph.json at Eleventy transform time. `renderFilescope()` emits runtime placeholder (graph.json unavailable at preprocess time).
+- `browser.js` — runtime with all five display modes (cards, list, slider, bubbles, marbles). Cards display uses shared `renderCardHtml`. SEO containers get search-only wiring.
+- `styles.css` — complete token-based CSS. `fp-card__image-wrap` canonical. All display modes covered.
+- `schema.md` — shape contract with settings table, source syntax, display modes, placement/content policy, implementation notes.
+- 52 new unit tests: manifest, index exports, core source resolution, render-card HTML output.
+
+**AE content repo: projects `_index.md` swapped** to use `collection` code fence. Same settings as the former `folder-preview` fence; verified: 22 cards render with correct fields, canonical class names, `no-pswp` on images.
+
+**Tags page (Phase 0)** — already shipped in Session 47; verified it uses the same `fp-card*` classes and `no-pswp`. No changes needed.
+
+**Commit hygiene:** two commits — A (shared `lib/visualizers/collection/`) and B (AE content repo `_index.md`). A is upstream-eligible; B is fork-only.
+
+**Not done (Phase 2 — deferred):**
+- Pagefind full-text mode (low-level API + join to graph.json). Needs: `features.search: true` in `sites/alter-engineers.yaml`, `data-pagefind-body` + `data-pagefind-filter` in AE layouts. Requires browser testing — left as a separate session with Opus.
+
+---
+
 ### Session 47 — June 16, 2026
 **Worked on:** AE theme fine-tuning — project layout fixes, folder-preview subtitle, theme-specific visualizer CSS override system
 
