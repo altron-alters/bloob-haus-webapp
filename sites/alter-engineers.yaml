@@ -11,7 +11,7 @@ content:
     - "README.md"
 
 features:
-  search: false
+  search: true
   og_images: true
   magic_machines: false
   embed: false

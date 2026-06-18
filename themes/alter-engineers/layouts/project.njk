@@ -67,8 +67,9 @@ body_class: "single single-projects"
     </div>
     {% endif %}
 
-    {# Main content #}
-    <div class="projects-single__main-content maxwidth">
+    {# Main content — data-pagefind-body scopes indexing to this element;
+       section + tag filters enable collection search: fulltext scoping. #}
+    <div class="projects-single__main-content maxwidth" data-pagefind-body data-pagefind-filter="section:projects">
 
       {% if title %}
       <h1 class="projects-single__title">{{ title }}</h1>
@@ -83,7 +84,7 @@ body_class: "single single-projects"
       {% if displayTags.length %}
       <div class="project-tags">
         {% for tag in displayTags %}
-        <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge">{{ tag | replace("-", " ") }}</a>
+        <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge" data-pagefind-filter="tag:{{ tag }}">{{ tag | replace("-", " ") }}</a>
         {% endfor %}
       </div>
       {% endif %}
