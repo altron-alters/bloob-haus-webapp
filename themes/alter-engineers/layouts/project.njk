@@ -83,7 +83,7 @@ body_class: "single single-projects"
       {% if displayTags.length %}
       <div class="project-tags">
         {% for tag in displayTags %}
-        <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge">{{ tag }}</a>
+        <a href="{{ ("/tags/" + (tag | slugify) + "/") | url }}" class="tag-badge">{{ tag | replace("-", " ") }}</a>
         {% endfor %}
       </div>
       {% endif %}
