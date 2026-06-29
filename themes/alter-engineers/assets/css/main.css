@@ -89,37 +89,45 @@
   font-weight: 500;
 }
 
-/* ── Article header rhythm ──────────────────────────────────────
-   Group title + subtitle as one unit, give that unit room below it, and kill
-   the oversized gap before the body (AE --spacing-lg is 4rem, so the shape's
-   header margin + padding left a ~6rem void). */
-.article-header {
+/* ── Article structural overrides ───────────────────────────────
+   IMPORTANT: the shared article shape's CSS (/assets/css/visualizers/
+   article.css) loads AFTER this file, so an equal-specificity rule here LOSES
+   to it. These rules are therefore scoped under .article-page (the shape's own
+   wrapper, an ancestor of every .article-* element) → specificity (0,2,x),
+   which beats the shape's bare .article-* / .article-body * rules regardless of
+   load order. Don't drop the .article-page prefix or these silently stop
+   working. (Sizes are handled via tokens in :root, which the shape reads.) */
+
+/* Header rhythm: title + subtitle as one tight unit; kill the ~6rem pre-body
+   void left by the shape's header margin (AE --spacing-lg is 4rem). */
+.article-page .article-header {
   padding-bottom: 1.25rem;
   margin-bottom:  1.5rem;
 }
-.article-title {
-  margin-bottom: 0;         /* gap to subtitle comes from line-height, not margin */
+.article-page .article-title {
+  margin-bottom: 0;         /* gap to subtitle comes from leading, not margin */
   line-height: 1.1;         /* tighten leading so the subtitle sits close */
 }
-.article-subtitle {
-  margin-top: 0.1rem;       /* subtitle tucks right under the title */
+.article-page .article-subtitle {
+  margin-top: 0;            /* subtitle tucks right under the title */
   margin-bottom: 1.5rem;    /* breathing room below the title block */
-  line-height: 1.3;
+  line-height: 1.25;
+  opacity: 0.85;
 }
 
 /* More room below in-body ## headings before their content (e.g. the list). */
-.article-body h2 {
-  margin-bottom: 1rem;      /* shared default is 0.5rem */
+.article-page .article-body h2 {
+  margin-bottom: 1.1rem;    /* shared default is 0.5rem */
 }
 
-/* Blockquote accent bar: stop it short of the bottom rather than spanning the
-   full height. Replace the full-height left border with an inset pseudo-bar. */
-.article-body blockquote {
+/* Blockquote accent bar: remove the shape's full-height left border and draw a
+   pseudo-bar that stops short of the bottom. */
+.article-page .article-body blockquote {
   position: relative;
   border-left: 0;
   padding-left: 1.25rem;
 }
-.article-body blockquote::before {
+.article-page .article-body blockquote::before {
   content: "";
   position: absolute;
   left: 0;
