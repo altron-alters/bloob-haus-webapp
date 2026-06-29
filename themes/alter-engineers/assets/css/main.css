@@ -48,7 +48,7 @@
   --article-body-size:        0.9375rem;                  /* 15px reading body */
   --article-body-line-height: 1.65;
   --article-title-size:       clamp(1.6rem, 2.6vw, 2.1rem); /* page title ~26→34px */
-  --article-subtitle-size:    1.0625rem;                  /* 17px */
+  --article-subtitle-size:    1.25rem;                    /* 20px deck under the title */
   --article-h1-size:          1.5rem;                     /* 24px */
   --article-h2-size:          1.25rem;                    /* 20px */
   --article-h3-size:          1.0625rem;                  /* 17px */
@@ -78,6 +78,31 @@
 .page-content ol > li,
 .projects-single__text ol > li {
   list-style-type: decimal;
+}
+
+/* List text must match body. theme.min.css leaves li at weight 400 while p is
+   500, so list items read as a lighter/different font — match them (links keep
+   their accent color + underline, just not a different weight). */
+.article-body li,
+.article-body li a {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+/* ── Article header rhythm ──────────────────────────────────────
+   Group title + subtitle as one unit, give that unit room below it, and kill
+   the oversized gap before the body (AE --spacing-lg is 4rem, so the shape's
+   header margin + padding left a ~6rem void). */
+.article-header {
+  padding-bottom: 1.25rem;
+  margin-bottom:  1.5rem;
+}
+.article-title {
+  margin-bottom: 0.15rem;   /* subtitle tucks tight under the title */
+}
+.article-subtitle {
+  margin-top: 0;
+  margin-bottom: 1.5rem;    /* breathing room below the title block */
 }
 
 /* ============================================================
