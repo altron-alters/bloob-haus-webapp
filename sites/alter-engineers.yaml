@@ -15,6 +15,13 @@ features:
   og_images: true
   magic_machines: false
   embed: false
+  # Pages load only the visualizer CSS/JS they actually use.
+  # Licensed by a clean `node scripts/audit-visualizer-detection.js
+  # --src=src-alterengineers` run on 2026-07-28 (7/7 detection signatures safe,
+  # covering 86/86 pages). Re-run that audit after adding a shape to the theme
+  # or changing a shape's detect selectors — a wrong guess silently strips
+  # styling from a live page.
+  per_page_visualizers: true
 
 graph:
   extra_fields:
