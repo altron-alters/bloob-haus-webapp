@@ -140,10 +140,13 @@ When you push to your content repo, Cloudflare rebuilds the site automatically. 
 
 ```bash
 npm install
-cp .env.local.example .env.local  # add your GITHUB_TOKEN
 
-npm run dev:marbles    # dev server for marbles site
-npm run dev:buffbaby   # dev server for buffbaby site
+# Local dev reads a vault from a LOCAL folder — no GitHub token needed:
+npm run dev:marbles    # dev server for marbles  (reads ../bloob-haus-marbles)
+npm run dev:buffbaby   # dev server for buffbaby (reads ../buffbaby)
+
+# Full build CLONES the content repo from GitHub, so it needs a token
+# (set GITHUB_TOKEN in your environment or a .env.local file):
 npm run build          # full build (defaults to buffbaby)
 npm test               # run the test suite
 ```
@@ -175,12 +178,13 @@ Site configs live in `sites/*.yaml`. Themes live in `themes/`. Content stays in 
 - **sharp** — image optimization (WebP, icons, favicons)
 - **Cloudflare Pages** — hosting and CDN
 - **Obsidian** — content authoring
-- **Vitest** — test suite (195+ tests)
+- **Vitest** — test suite (530+ tests)
 
 ---
 
 ## Documentation
 
+- [`docs/onboarding/`](docs/onboarding/) — **start here to fork and run your own bloob haus** (guided path)
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — session-by-session build history
 - [`docs/CLAUDE_CONTEXT.md`](docs/CLAUDE_CONTEXT.md) — architecture overview and project status
 - [`docs/implementation-plans/DECISIONS.md`](docs/implementation-plans/DECISIONS.md) — why things are the way they are

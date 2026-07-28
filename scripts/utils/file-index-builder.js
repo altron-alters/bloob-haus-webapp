@@ -3,6 +3,7 @@
  * Builds lookup maps for pages and attachments to enable link resolution.
  */
 
+import { isMainModule } from "./is-main.js";
 import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
@@ -178,10 +179,15 @@ export async function buildFileIndex(publishedFiles, contentDir, options = {}) {
     pages[fullSlug] = pageInfo;
     titleLookup[title.toLowerCase()] = fullSlug;
     filenameLookup[filename.toLowerCase()] = fullSlug;
-    // For folder index files also register "folder/index" so resolveLink("resources/index.md")
-    // still works after fullSlug changed from "resources/index" to "resources".
+    // For folder index files also register the path-qualified aliases so a link that
+    // names the index file by path resolves to the folder page. Register BOTH spellings
+    // ("folder/index" and "folder/_index") regardless of the on-disk filename, so links
+    // resolve whether authored the Jekyll way (index.md) or the Obsidian way (_index.md).
+    // The path-qualified key is essential: the bare filename "_index"/"index" collides
+    // across every folder index (last-write-wins) and would resolve to the wrong folder.
     if (isIndex && hasFolder) {
       filenameLookup[`${slugifiedFolder}/index`] = fullSlug;
+      filenameLookup[`${slugifiedFolder}/_index`] = fullSlug;
     }
 
     // Also add filename without special characters for fuzzy matching
@@ -333,7 +339,7 @@ export function resolveLink(target, index) {
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   const contentDir = process.argv[2] || "./content-source";
 
   // Simple test - scan all md files directly

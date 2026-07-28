@@ -6,6 +6,10 @@
  * 2. Copies styles.css → src/assets/css/visualizers/<name>.css
  * 3. Copies engine.js → src/assets/js/visualizers/<name>.engine.js (plain copy, no bundle)
  *    engine.js is a self-contained IIFE shared by the visualizer and its paired magic machine.
+ * 4. Bundles builder/index.js → src/assets/js/visualizers/<name>-builder.js (via esbuild),
+ *    if present. This is a debug-only overlay bundle (e.g. scene-nav's admin builder) that
+ *    browser.js lazy-loads via dynamic import() — it is intentionally NOT added to the
+ *    manifest/visualizers.json, so normal visitors never fetch it.
  *
  * Adding a new visualizer = adding a new folder in lib/visualizers/.
  * No changes to this script needed.
@@ -13,8 +17,10 @@
 
 import {
   readdirSync,
+  readFileSync,
   existsSync,
   copyFileSync,
+  cpSync,
   mkdirSync,
   writeFileSync,
 } from "fs";
@@ -51,6 +57,20 @@ for (const name of visualizerDirs) {
   const engineFile   = join(dir, "engine.js");
   const entry = { name, hasJs: false, hasCss: false, hasEngine: false };
 
+  // Carry the manifest's `detect` block into visualizers.json so the per-page
+  // asset transform can decide whether this shape is used on a given page
+  // (TECH-DEBT #4). A shape with no `detect` block is ALWAYS loaded — see
+  // scripts/utils/visualizer-detection.js for the safety rationale.
+  const manifestFile = join(dir, "manifest.json");
+  if (existsSync(manifestFile)) {
+    try {
+      const parsed = JSON.parse(readFileSync(manifestFile, "utf-8"));
+      if (parsed && parsed.detect) entry.detect = parsed.detect;
+    } catch (e) {
+      console.warn(`[bundle] ${name}: manifest.json unreadable (${e.message}) — shape will always load`);
+    }
+  }
+
   // Bundle browser.js with esbuild
   if (existsSync(browserEntry)) {
     await build({
@@ -65,6 +85,23 @@ for (const name of visualizerDirs) {
     console.log(`[bundle] ${name}: browser.js → ${JS_OUT_DIR}/${name}.js`);
   }
 
+  // Bundle builder/index.js with esbuild (debug-only overlay, dynamically imported
+  // by browser.js — not part of the manifest, so it's excluded from visualizers.json)
+  // format: "esm" (not "iife" like browser.js) — browser.js consumes this via
+  // dynamic import() and reads its default export, which only an ESM bundle exposes.
+  const builderEntry = join(dir, "builder", "index.js");
+  if (existsSync(builderEntry)) {
+    await build({
+      entryPoints: [builderEntry],
+      bundle: true,
+      outfile: join(JS_OUT_DIR, `${name}-builder.js`),
+      format: "esm",
+      minify: process.env.NODE_ENV === "production",
+      sourcemap: process.env.NODE_ENV !== "production",
+    });
+    console.log(`[bundle] ${name}: builder/index.js → ${JS_OUT_DIR}/${name}-builder.js`);
+  }
+
   // Copy styles.css
   if (existsSync(stylesFile)) {
     copyFileSync(stylesFile, join(CSS_OUT_DIR, `${name}.css`));
@@ -77,6 +114,17 @@ for (const name of visualizerDirs) {
     copyFileSync(engineFile, join(JS_OUT_DIR, `${name}.engine.js`));
     entry.hasEngine = true;
     console.log(`[bundle] ${name}: engine.js → ${JS_OUT_DIR}/${name}.engine.js`);
+  }
+
+  // Copy shape-shipped static assets (icons, sprites) into the build output —
+  // per shapes.md "What a complete shape carries": copied like JS/CSS, never
+  // served from a central CDN. URL: /assets/visualizers/<name>/…
+  const assetsDir = join(dir, "assets");
+  if (existsSync(assetsDir)) {
+    const assetsOut = join(SRC, "assets", "visualizers", name);
+    cpSync(assetsDir, assetsOut, { recursive: true, dereference: true });
+    entry.hasAssets = true;
+    console.log(`[bundle] ${name}: assets/ → ${assetsOut}`);
   }
 
   manifest.push(entry);

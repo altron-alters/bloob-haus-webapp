@@ -13,6 +13,9 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
 
+    <!-- Canonical Bloob Haus page ID (host + path, lowercased) — see docs/architecture/urls-and-ids.md -->
+    <meta name="bloob-page-id" content="{{ bloobPageId }}" />
+
     {% if _bloob_unlisted %}
     <meta name="robots" content="noindex,nofollow" />
     {% endif %}
@@ -63,9 +66,7 @@
     <link rel="stylesheet" href="{{ "/assets/css/base.css" | url }}" />
     <link rel="stylesheet" href="{{ "/assets/css/main.css" | url }}" />
     <!-- Visualizer stylesheets (auto-generated from lib/visualizers/) -->
-    {% for vis in visualizers %}{% if vis.hasCss %}
-    <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
-    {% endif %}{% endfor %}
+    <!--bloob:visualizer-css-->
     <!-- Theme-specific visualizer overrides (themes/[name]/assets/css/visualizers/*.css) -->
     {% for name in themeVisualizerCss %}
     <link rel="stylesheet" href="{{ ("/assets/css/theme-visualizers/" + name + ".css") | url }}" />
@@ -74,4 +75,6 @@
     {% if site.features.search != false %}
     <link rel="stylesheet" href="{{ "/pagefind/pagefind-ui.css" | url }}" />
     {% endif %}
+
+    {% include "partials/site-snippets-head.njk" %}
 </head>

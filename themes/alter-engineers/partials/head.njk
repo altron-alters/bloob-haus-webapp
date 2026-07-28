@@ -12,9 +12,16 @@
 
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+    <meta name="bloob-page-id" content="{{ bloobPageId }}" />
 
     {% if website_status == "unlisted" %}
     <meta name="robots" content="noindex" />
+    {% endif %}
+
+    {% if redirect %}
+    <!-- Redirect — set via `redirect:` frontmatter in the content vault -->
+    <meta http-equiv="refresh" content="0; url={{ redirect }}" />
+    <script>window.location.replace("{{ redirect }}");</script>
     {% endif %}
 
     <!-- Open Graph / Facebook -->
@@ -63,11 +70,11 @@
     {% endif %}
 
     <!-- Visualizer stylesheets (auto-generated from lib/visualizers/) -->
-    {% for vis in visualizers %}{% if vis.hasCss %}
-    <link rel="stylesheet" href="{{ ("/assets/css/visualizers/" + vis.name + ".css") | url }}" />
-    {% endif %}{% endfor %}
+    <!--bloob:visualizer-css-->
     <!-- Theme-specific visualizer overrides (themes/alter-engineers/assets/css/visualizers/*.css) -->
     {% for name in themeVisualizerCss %}
     <link rel="stylesheet" href="{{ ("/assets/css/theme-visualizers/" + name + ".css") | url }}" />
     {% endfor %}
+
+    {% include "partials/site-snippets-head.njk" %}
 </head>

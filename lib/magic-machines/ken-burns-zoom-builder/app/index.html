@@ -153,18 +153,15 @@
 
   .tagline-bar {
     flex-shrink: 0;
-    padding: 6px 20px;
-    min-height: 32px;
-    height: auto;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+    padding: 8px 20px;
+    /* Plain text block — a flex container turned the text + inline link into
+       separate flex items, which wrapped at awkward boundaries on narrow phones. */
+    display: block;
     font-family: var(--sans);
     font-size: 11.5px;
     color: var(--dim);
     background: oklch(0.98 0.015 65 / 0.50);
     border-bottom: 1px solid var(--glass-border);
-    gap: 0 4px;
     line-height: 1.6;
   }
   .tagline-bar a {
@@ -533,6 +530,18 @@
     box-shadow: 0 1px 4px oklch(0.40 0.04 55 / 0.08);
   }
   .btn-secondary:hover { background: oklch(1 0 0 / 0.75); border-color: var(--accent); color: var(--accent); }
+  /* "armed" = a video is rendered and cached, waiting for a fresh tap to share to
+     Photos (iOS gesture can't survive a long encode — see DECISIONS.md). */
+  .btn-primary.armed, .btn-secondary.armed {
+    background: var(--accent); color: white; border-color: transparent;
+    box-shadow: 0 2px 10px oklch(0.60 0.17 42 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.2);
+    animation: kb-armed-pulse 1.6s ease-in-out infinite;
+  }
+  .btn-primary.armed:hover, .btn-secondary.armed:hover { background: oklch(0.55 0.15 42); color: white; border-color: transparent; }
+  @keyframes kb-armed-pulse {
+    0%, 100% { box-shadow: 0 2px 10px oklch(0.60 0.17 42 / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.2); }
+    50%      { box-shadow: 0 2px 20px oklch(0.60 0.17 42 / 0.70), inset 0 1px 0 oklch(1 0 0 / 0.2); }
+  }
   .btn-icon { width: 14px; height: 14px; flex-shrink: 0; }
   .btn-footnote { font-family: var(--mono); font-size: 10px; color: var(--dim); text-align: center; margin-top: 9px; line-height: 1.5; }
 
@@ -614,13 +623,43 @@
   }
   .export-progress { margin-top: 9px; display: none; }
   .export-progress.visible { display: block; }
+  .export-progress-head {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    text-align: center;
+  }
   .export-progress-text {
     font-family: var(--mono);
     font-size: 10px;
     color: var(--muted);
-    margin-bottom: 5px;
+    margin-top: 6px;
     text-align: center;
   }
+  /* Toast — one-line confirmation, bottom-center, auto-fades (~3s). */
+  .kb-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+    transform: translate(-50%, 16px);
+    background: oklch(0.30 0.03 55 / 0.96);
+    color: white;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 11px 18px;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px oklch(0.20 0.03 55 / 0.35);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    max-width: min(90vw, 360px);
+    text-align: center;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+  }
+  .kb-toast.show { opacity: 1; transform: translate(-50%, 0); }
   .export-progress-track {
     height: 3px;
     background: oklch(0.60 0.04 55 / 0.15);
@@ -905,6 +944,47 @@
   }
   .info-popover a { color: var(--accent); text-decoration: underline; }
   .info-popover[hidden] { display: none; }
+
+  /* ── Collapsible "Bloob Haus Visual" section ── */
+  /* Size to content (don't inherit summary-section's flex:1, which would leave a
+     large empty gap below the toggle when collapsed). */
+  .bloob-section { flex: 0 0 auto; }
+  .bloob-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+  }
+  .bloob-toggle .panel-section-title { margin: 0; }
+  .bloob-chevron {
+    width: 13px; height: 13px;
+    flex-shrink: 0;
+    color: var(--dim);
+    transition: transform 0.2s ease;
+  }
+  .bloob-section.collapsed .bloob-chevron { transform: rotate(-90deg); }
+  .bloob-section.collapsed .bloob-body { display: none; }
+  .bloob-body { margin-top: 10px; }
+  .bloob-explain {
+    margin: 0 0 9px;
+    padding: 10px 12px;
+    background: oklch(0.60 0.17 42 / 0.08);
+    border: 1px solid oklch(0.60 0.17 42 / 0.22);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .bloob-explain a { color: var(--accent); text-decoration: underline; }
 
   /* ── TABLET (≤1024px) ── */
   @media (max-width: 1024px) {
@@ -1259,8 +1339,8 @@
           <div class="field-label">Frame rate</div>
           <div class="seg-group" id="fps-group">
             <button class="seg-btn" data-fps="15">15 fps</button>
-            <button class="seg-btn active" data-fps="24">24 fps</button>
-            <button class="seg-btn" data-fps="30">30 fps</button>
+            <button class="seg-btn" data-fps="24">24 fps</button>
+            <button class="seg-btn active" data-fps="30">30 fps</button>
           </div>
         </div>
 
@@ -1293,7 +1373,14 @@
         <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M7 1v8M4 6l3 3 3-3M2 11h10"/>
         </svg>
-        <span id="btn-download-label">Export Video</span>
+        <span id="btn-download-label">Download Video</span>
+      </button>
+      <button class="btn-secondary" id="btn-share" disabled style="display:none;">
+        <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="3" r="2"/><circle cx="3" cy="7" r="2"/><circle cx="11" cy="11" r="2"/>
+          <path d="M4.7 6 9.3 3.8M4.7 8l4.6 2.2"/>
+        </svg>
+        <span id="btn-share-label">Share Video</span>
       </button>
       <button class="btn-secondary" id="btn-copy">
         <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1304,30 +1391,29 @@
       </button>
 
       <div class="export-progress" id="export-progress">
-        <div class="export-progress-text" id="export-progress-text">Rendering frames…</div>
+        <div class="export-progress-head" id="export-progress-head">Rendering your video…</div>
         <div class="export-progress-track">
           <div class="export-progress-fill" id="export-progress-fill"></div>
         </div>
+        <div class="export-progress-text" id="export-progress-text">Preparing…</div>
       </div>
 
       <div class="btn-footnote" id="export-footnote">Single pass · <span id="export-desc">Start → End</span> · <span id="export-dur">8s</span></div>
     </div>
 
-    <!-- Bloob Haus snippet -->
-    <div class="summary-section">
-      <div class="panel-section-title bloob-title-row" style="margin-bottom:10px;">
-        <span>Bloob Haus Snippet</span>
-        <button class="info-btn" id="bloob-info-btn" type="button" aria-label="What is this?" aria-expanded="false">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.5"/>
-            <path d="M8 7.5v4M8 4.7v0.1" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="info-popover" id="bloob-info-popover" hidden>
-        This snippet works as a visualization on any <a href="https://bloob.haus" target="_blank" rel="noopener">Bloob Haus</a> site. Paste it into a markdown file and upload your image alongside it (matching the filename) — the page will render this exact Ken Burns animation.
-      </div>
-      <div style="position:relative;">
+    <!-- Bloob Haus Visual (collapsed by default) -->
+    <div class="summary-section bloob-section collapsed" id="bloob-section">
+      <button class="bloob-toggle" id="bloob-toggle" type="button" aria-expanded="false">
+        <span class="panel-section-title">Bloob Haus Visual</span>
+        <svg class="bloob-chevron" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M3 5l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="bloob-body" id="bloob-body">
+        <div class="bloob-explain">
+          A Bloob Haus Visual renders this exact Ken Burns animation on any <a href="https://bloob.haus" target="_blank" rel="noopener">Bloob Haus</a> site. Paste it into a markdown file and upload your image alongside it (matching the filename).
+        </div>
+        <div style="position:relative;">
         <pre class="summary-pre" id="bloob-pre">::: ken-burns-zoom
 // drop an image to begin
 :::</pre>
@@ -1343,6 +1429,7 @@
           cursor: pointer;
           transition: all 0.15s;
         ">copy</button>
+        </div>
       </div>
     </div>
 
@@ -1362,8 +1449,8 @@
 
 <script>
 const state = {
-  imageLoaded: false, imageW: 0, imageH: 0,
-  duration: 18.5, fps: 24, easing: 'ease-in-out',
+  imageLoaded: false, imageName: null, imageW: 0, imageH: 0,
+  duration: 18.5, fps: 30, easing: 'ease-in-out',
   resolution: 'native',
   ar: '9:16', arW: 9, arH: 16, customArW: 4, customArH: 5,
   playback: 'bounce',  // 'loop' | 'hold' | 'bounce'
@@ -1385,18 +1472,42 @@ const debugLogEl    = document.getElementById('debug-log');
 const debugCountEl  = document.getElementById('debug-count');
 const debugToggleEl = document.getElementById('debug-toggle');
 
-function dbg(msg, level = 'info') {
-  const ts = new Date().toISOString().split('T')[1].slice(0, 12);
-  debugEntries.push({ ts, level, msg });
+// Persist the log to localStorage so it survives reloads (collect timing data
+// across several export runs / sessions without losing it). Capped to the most
+// recent entries to stay small.
+const DEBUG_LS_KEY = 'kb-debug-log';
+const DEBUG_LS_MAX = 1000;
+function persistDebug() {
+  try { localStorage.setItem(DEBUG_LS_KEY, JSON.stringify(debugEntries.slice(-DEBUG_LS_MAX))); } catch {}
+}
+
+function appendDebugEl({ ts, level, msg }) {
   const el = document.createElement('div');
-  el.className = `debug-entry ${level}`;
+  el.className = `debug-entry ${level || 'info'}`;
   el.textContent = `[${ts}] ${msg}`;
   debugLogEl.appendChild(el);
+}
+
+function restoreDebug() {
+  let saved = [];
+  try { saved = JSON.parse(localStorage.getItem(DEBUG_LS_KEY) || '[]'); } catch {}
+  if (!Array.isArray(saved) || !saved.length) return;
+  for (const e of saved) { debugEntries.push(e); appendDebugEl(e); }
+  appendDebugEl({ ts: '──────', level: 'info', msg: '──── new session ────' });
+  debugCountEl.textContent = debugEntries.length;
+  if (saved.some(e => e.level === 'error')) debugToggleEl.classList.add('has-error');
+  debugLogEl.scrollTop = debugLogEl.scrollHeight;
+}
+
+function dbg(msg, level = 'info') {
+  const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+  const entry = { ts, level, msg };
+  debugEntries.push(entry);
+  appendDebugEl(entry);
   debugLogEl.scrollTop = debugLogEl.scrollHeight;
   debugCountEl.textContent = debugEntries.length;
-  if (level === 'error') {
-    debugToggleEl.classList.add('has-error');
-  }
+  if (level === 'error') debugToggleEl.classList.add('has-error');
+  persistDebug();
 }
 
 debugToggleEl.addEventListener('click', () => debugPanel.classList.toggle('open'));
@@ -1406,15 +1517,72 @@ document.getElementById('debug-clear-btn').addEventListener('click', () => {
   debugLogEl.innerHTML = '';
   debugCountEl.textContent = '0';
   debugToggleEl.classList.remove('has-error');
+  try { localStorage.removeItem(DEBUG_LS_KEY); } catch {}
 });
+
+// Synchronous execCommand fallback (clipboard API is blocked in some iOS
+// WebViews / non-focused states). Must run inside the click gesture.
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.readOnly = true;
+  ta.contentEditable = 'true';      // iOS needs an editable, selectable field
+  ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
+  document.body.appendChild(ta);
+  const range = document.createRange();
+  range.selectNodeContents(ta);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  sel.removeAllRanges();
+  ta.remove();
+  return ok;
+}
+
+// Last resort: a full-screen, pre-selected textarea the user copies manually
+// (long-press → Copy). Guaranteed to work everywhere.
+function showLogOverlay(text) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:oklch(0.20 0.02 55 / 0.96);display:flex;flex-direction:column;gap:10px;padding:16px;';
+  const hint = document.createElement('div');
+  hint.style.cssText = 'color:white;font-family:var(--sans);font-size:13px;';
+  hint.textContent = 'Select all, then Copy — or Share:';
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'flex:1;width:100%;font-family:var(--mono);font-size:11px;padding:10px;border-radius:8px;border:none;';
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:10px;';
+  const shareBtn = document.createElement('button');
+  shareBtn.textContent = 'Share log';
+  shareBtn.className = 'btn-secondary';
+  shareBtn.onclick = () => { if (navigator.share) navigator.share({ text }).catch(() => {}); };
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'Close';
+  closeBtn.className = 'btn-secondary';
+  closeBtn.onclick = () => ov.remove();
+  row.append(shareBtn, closeBtn);
+  ov.append(hint, ta, row);
+  document.body.appendChild(ov);
+  ta.focus(); ta.select();
+}
+
 document.getElementById('debug-copy-btn').addEventListener('click', () => {
   const text = debugEntries.map(e => `[${e.ts}] [${e.level.toUpperCase()}] ${e.msg}`).join('\n');
   const btn = document.getElementById('debug-copy-btn');
-  navigator.clipboard.writeText(text)
-    .then(() => { btn.textContent = '✓ copied'; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); })
-    .catch(() => { btn.textContent = 'failed'; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); });
+  const flash = (m) => { btn.textContent = m; setTimeout(() => { btn.textContent = 'Copy log'; }, 1800); };
+  // Tier 1: async Clipboard API. Tier 2: execCommand. Tier 3: manual overlay.
+  const fallback = () => { if (legacyCopy(text)) flash('✓ copied'); else { showLogOverlay(text); flash('select/share'); } };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => flash('✓ copied')).catch(fallback);
+  } else {
+    fallback();
+  }
 });
 
+restoreDebug();   // bring back logs from previous sessions before this run's lines
 dbg('Page loaded — ken-burns-zoom-builder v0.2');
 dbg(`User agent: ${navigator.userAgent}`);
 dbg(`SharedArrayBuffer available: ${typeof SharedArrayBuffer !== 'undefined'}`);
@@ -1441,19 +1609,87 @@ dropZone.addEventListener('drop', e => {
   if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
 });
 
+// ── Per-image settings (aspect ratio + crop rects), keyed by filename ─────────
+// Re-uploading the same file restores its saved framing. An unseen image starts
+// at the image's own (native) aspect ratio so nothing is cropped by default.
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a || 1; }
+const imgStoreKey = name => 'kb-img:' + name;
+
+function loadImageSettings(name) {
+  try { return JSON.parse(localStorage.getItem(imgStoreKey(name)) || 'null'); }
+  catch { return null; }
+}
+function saveImageSettings() {
+  if (!state.imageLoaded || !state.imageName) return;
+  localStorage.setItem(imgStoreKey(state.imageName), JSON.stringify({
+    ar: state.ar, arW: state.arW, arH: state.arH,
+    customArW: state.customArW, customArH: state.customArH,
+    start: state.rects.start, end: state.rects.end,
+  }));
+}
+
+// Reflect state.ar/arW/arH into the aspect-ratio buttons + custom inputs.
+function syncAspectUI() {
+  document.querySelectorAll('.aspect-btn').forEach(b => b.classList.toggle('active', b.dataset.ar === state.ar));
+  const isCustom = state.ar === 'custom';
+  document.getElementById('custom-ar-row').classList.toggle('visible', isCustom);
+  if (isCustom) {
+    document.getElementById('ar-w').value = state.customArW || state.arW;
+    document.getElementById('ar-h').value = state.customArH || state.arH;
+  }
+  if (state.imageLoaded && previewViewport) {
+    previewViewport.style.height = (previewViewport.clientWidth * state.arH / state.arW) + 'px';
+  }
+}
+
+// Default an unseen image to its own aspect ratio (reduced to small ints; matches
+// a preset button when one fits, otherwise fills the custom inputs).
+function setNativeAspectRatio() {
+  const g = gcd(state.imageW, state.imageH);
+  const w = Math.round(state.imageW / g);
+  const h = Math.round(state.imageH / g);
+  state.arW = w; state.arH = h;
+  const preset = [...document.querySelectorAll('.aspect-btn')]
+    .find(b => b.dataset.ar === `${w}:${h}`);
+  if (preset) {
+    state.ar = `${w}:${h}`;
+  } else {
+    state.ar = 'custom';
+    state.customArW = w; state.customArH = h;
+  }
+  syncAspectUI();
+  applyAspectRatioToRects();
+}
+
 function loadImage(file) {
   const url = URL.createObjectURL(file);
   previewImg.onload = () => {
     state.imageW = previewImg.naturalWidth;
     state.imageH = previewImg.naturalHeight;
     state.imageLoaded = true;
+    state.imageName = file.name;
     dropZone.style.display = 'none';
     imageStage.classList.add('visible');
     btnClear.style.display = '';
     document.getElementById('image-credit').textContent =
       `${file.name}  ·  ${state.imageW} × ${state.imageH}px`;
-    applyAspectRatioToRects();
-    updateRects(); updateSummary(); updateResDesc();
+
+    const saved = loadImageSettings(file.name);
+    if (saved) {
+      // Restore this image's saved framing exactly — do NOT re-apply the AR
+      // (that would reshape the saved rects).
+      state.ar = saved.ar; state.arW = saved.arW; state.arH = saved.arH;
+      if (saved.customArW) state.customArW = saved.customArW;
+      if (saved.customArH) state.customArH = saved.customArH;
+      if (saved.start) state.rects.start = saved.start;
+      if (saved.end)   state.rects.end   = saved.end;
+      syncAspectUI();
+      updateRects();
+    } else {
+      // First time we've seen this filename → frame at the image's native ratio.
+      setNativeAspectRatio();
+    }
+    updateSummary(); updateResDesc();
     initPreview();
   };
   previewImg.src = url;
@@ -1512,8 +1748,7 @@ btnClear.addEventListener('click', () => {
 function updateRects() {
   setRectStyle(rectStart, state.rects.start);
   setRectStyle(rectEnd, state.rects.end);
-  localStorage.setItem('kb-rect-start', JSON.stringify(state.rects.start));
-  localStorage.setItem('kb-rect-end',   JSON.stringify(state.rects.end));
+  saveImageSettings();   // persists rects + AR under the current image's filename
   updateCoordReadouts(); updateSummary();
 }
 function setRectStyle(el, r) {
@@ -1695,6 +1930,7 @@ document.getElementById('aspect-group').addEventListener('click', e => {
   document.getElementById('custom-ar-row').classList.toggle('visible', state.ar==='custom');
   if (state.ar !== 'custom') applyAspectRatioToRects();
   if (state.imageLoaded) { const vpW = previewViewport.clientWidth; previewViewport.style.height = (vpW * state.arH / state.arW) + 'px'; }
+  saveImageSettings();
   updateSummary(); updateResDesc();
 });
 
@@ -1815,13 +2051,12 @@ function initPreview() {
   previewPlaying = true;
   previewEngine  = new KenBurnsEngine(previewViewport, previewAnimImg, buildEngineConfig());
   previewEngine.onTick(t => {
-    const elapsed = getElapsedSec();
-    const total   = getTotalPreviewDuration();
-    const progress = state.playback === 'loop'
-      ? (elapsed % total) / total
-      : Math.min(1, elapsed / total);
-    previewFill.style.width  = (progress * 100) + '%';
-    previewTimeEl.textContent = elapsed.toFixed(1) + 's';
+    // Drive the timeline from the engine's normalized position (0..1), which
+    // already resets to 0 on loop, holds at 1, or bounces per playback mode.
+    // (Previously it used wall-clock elapsed, so the counter climbed forever
+    // instead of returning to 0 at the end.)
+    previewFill.style.width   = (t * 100) + '%';
+    previewTimeEl.textContent = (t * state.duration).toFixed(1) + 's';
     syncCaptionOverlay(t);
   });
   resetElapsed();
@@ -1860,6 +2095,7 @@ document.querySelector('.preview-progress-track').addEventListener('click', e =>
 function updateSummary() {
   updateBloobSnippet();
   updateExportFootnote();
+  refreshShareButton();
   if (previewEngine) previewEngine.configure(buildEngineConfig());
 }
 
@@ -2178,18 +2414,131 @@ function syncCaptionOverlay(t) {
 // ─────────────────────────────────────────────
 const btnDownload    = document.getElementById('btn-download');
 const btnLabel       = document.getElementById('btn-download-label');
+const btnShare       = document.getElementById('btn-share');
+const btnShareLabel  = document.getElementById('btn-share-label');
 const exportProg     = document.getElementById('export-progress');
+const exportProgHead = document.getElementById('export-progress-head');
 const exportProgText = document.getElementById('export-progress-text');
 const exportProgFill = document.getElementById('export-progress-fill');
+
+// Toast — single reused element, bottom-center, auto-fades. For confirming a
+// completed action ("Saved to Photos") — see DECISIONS.md "Save feedback UX".
+let toastEl = null, toastTimer = null;
+function showToast(msg, ms = 3000) {
+  if (!toastEl) {
+    toastEl = document.createElement('div');
+    toastEl.className = 'kb-toast';
+    document.body.appendChild(toastEl);
+  }
+  toastEl.textContent = msg;
+  void toastEl.offsetWidth;            // reflow so the transition replays
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+// Feature-detect Web Share with files (probe with a tiny dummy mp4). When absent
+// (most desktop Chrome on Windows/Linux), the Share button stays hidden and only
+// Download is offered.
+const shareSupported = !!(navigator.canShare &&
+  navigator.canShare({ files: [new File([new Blob()], 'probe.mp4', { type: 'video/mp4' })] }));
+
+// iPhone/iPad (incl. Chrome-for-iOS, which is WebKit). On iOS the ONLY route to
+// the camera roll is the share sheet's "Save Video" — a plain download reaches
+// Files/Drive only. So on iOS we promote Share to the primary button and demote
+// Download, otherwise users tap the big "Download" button and never reach Photos.
+const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// The Share button's resting label. iOS calls it "Save to Photos"; elsewhere
+// (macOS Safari etc.) it's a generic "Share Video".
+let shareIdleLabel = 'Share Video';
+
+// Cache of the last encode, keyed by everything that affects the rendered video.
+// This is what makes iOS "save to Photos" reliable: navigator.share() must run
+// inside a live user gesture (expires ~5s), but encoding outlives that. By
+// caching, a second tap of Share reuses the file and calls share() instantly in
+// a fresh gesture — long enough for iOS to offer "Save Video".
+let lastEncode = null; // { key, blob, filename }
+
+// iOS Web Share needs a live user gesture, which Safari expires ~5s after the
+// tap — but a full encode can take a minute or more, so we can NEVER share()
+// straight after a long encode (the gesture is long gone → NotAllowedError).
+// Instead we "arm" the Share button once the video is rendered and cached: its
+// next tap is a fresh gesture, and the warm cache lets share() fire instantly
+// *inside that tap*, so iOS offers "Save Video". This works for any encode length.
+let shareArmed = false;
+
+function armShareSave() {
+  shareArmed = true;
+  btnShare.classList.add('armed');
+  // Action-oriented label so the required second tap is unmistakable.
+  btnShareLabel.textContent = '✓ Ready — Tap to Save';
+  btnShare.disabled = false;
+  showToast('✓ Video ready — tap “Save to Photos”', 5000);
+}
+
+// Brief success state on the share button before it reverts to idle.
+function showShareSuccess() {
+  shareArmed = false;
+  btnShare.classList.remove('armed');
+  btnShareLabel.textContent = '✓ Saved';
+  showToast(isIOS ? '✓ Saved to Photos' : '✓ Shared');
+  setTimeout(() => { if (!shareArmed) btnShareLabel.textContent = shareIdleLabel; }, 1600);
+}
+
+function disarmShareSave() {
+  shareArmed = false;
+  btnShare.classList.remove('armed');
+  btnShareLabel.textContent = shareIdleLabel;
+}
+
+// If the user changed any setting since the cached render, the armed file is
+// stale — drop the armed state so "Save to Photos" never lies. Called from
+// updateSummary() (the central per-change hook).
+function refreshShareButton() {
+  if (shareArmed && (!lastEncode || lastEncode.key !== outputStateKey())) {
+    disarmShareSave();
+  }
+}
+
+function outputStateKey() {
+  return JSON.stringify({
+    img: state.imageName, res: state.resolution, fps: state.fps,
+    dur: state.duration, pb: state.playback, ease: state.easing,
+    dir: state.direction, ar: [state.arW, state.arH],
+    rs: state.rects.start, re: state.rects.end, cap: state.caption,
+  });
+}
 
 function checkVideoExport() {
   if (typeof VideoEncoder === 'undefined') {
     dbg('VideoEncoder (WebCodecs) not available in this browser', 'warn');
-    btnLabel.textContent = 'Export Video (unsupported)';
+    btnLabel.textContent = 'Download Video (unsupported)';
     return;
   }
   dbg('VideoEncoder (WebCodecs) available', 'ok');
   btnDownload.disabled = false;
+  if (shareSupported) {
+    btnShare.style.display = '';
+    btnShare.disabled = false;
+    dbg('Web Share API available — Share button enabled', 'ok');
+    if (isIOS) promoteShareForIOS();
+  }
+}
+
+// On iOS, make "Save to Photos" (share) the primary action and demote the
+// download (Files-only) to secondary. Reorders so Save-to-Photos sits on top.
+function promoteShareForIOS() {
+  shareIdleLabel = 'Save to Photos';
+  btnShareLabel.textContent = shareIdleLabel;
+  btnShare.classList.remove('btn-secondary');
+  btnShare.classList.add('btn-primary');
+  btnDownload.classList.remove('btn-primary');
+  btnDownload.classList.add('btn-secondary');
+  btnLabel.textContent = 'Download to Files';
+  btnShare.parentNode.insertBefore(btnShare, btnDownload);
+  dbg('iOS detected — Save to Photos promoted to primary', 'ok');
 }
 
 function computeOutputSize() {
@@ -2212,7 +2561,22 @@ function computeOutputSize() {
   let w, h;
   if (state.arW >= state.arH) { w = MAX; h = Math.round(MAX * state.arH / state.arW); }
   else                         { h = MAX; w = Math.round(MAX * state.arW / state.arH); }
-  return { w: w % 2 === 0 ? w : w - 1, h: h % 2 === 0 ? h : h - 1 };
+
+  // Clamp to the H.264 encoder frame-size budget. Browsers expose at most
+  // Level 5.2 (≈36,864 macroblocks ≈ 9.4 MP — e.g. 4096×2304 or 3072×3072).
+  // A 4096×4096 square (65,536 MBs) needs Level 6, which both Mac VideoToolbox
+  // and Chrome's software encoder reject — so scale proportionally to fit.
+  const MAX_PIXELS = 3072 * 3072;
+  let clamped = false;
+  if (w * h > MAX_PIXELS) {
+    const scale = Math.sqrt(MAX_PIXELS / (w * h));
+    w *= scale; h *= scale;
+    clamped = true;
+  }
+
+  // H.264 requires even *integer* dimensions (chroma subsampling). MAX and the
+  // aspect-ratio math can both be fractional, so floor each side down to even.
+  return { w: Math.floor(w / 2) * 2, h: Math.floor(h / 2) * 2, clamped };
 }
 
 const EASING_FNS = {
@@ -2382,15 +2746,84 @@ function drawCaptionOnCanvas(ctx, w, h, text, alpha) {
   ctx.restore();
 }
 
-async function exportVideo() {
+// Send the encoded video to the user. 'download' writes a file to disk (Files on
+// iOS). 'share' opens the native share sheet — the ONLY web route to the iOS
+// Photo Library ("Save Video"). If the share gesture expired during a slow first
+// encode we do NOT silently download; the encode is cached, so we prompt for a
+// second tap that fires share() in a fresh gesture.
+async function deliver(mode, blob, filename) {
+  const makeFile = () => new File([blob], filename, { type: 'video/mp4' });
+  const canShareFile = navigator.canShare && navigator.canShare({ files: [makeFile()] });
+
+  const saveByDownload = () => {
+    dbg('Saving file via download', 'ok');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    // Revoke after a long delay — short timeouts (5s) cause "couldn't save" on
+    // desktop browsers that need time to copy the file before the URL is freed.
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    showToast(isIOS ? '✓ Saved to Files' : '✓ Video downloaded');
+  };
+
+  if (mode === 'share' && canShareFile) {
+    dbg('Sharing via Web Share API', 'ok');
+    try {
+      // Share the file ALONE — no title/text/url. On iOS, including any of those
+      // fields makes the share sheet treat this as a generic content share and
+      // suppresses the media-specific "Save Video" action (so you only get
+      // Files/Drive). Sharing files-only makes iOS recognize it as a video and
+      // offer "Save Video" → Photos/Camera Roll.
+      await navigator.share({ files: [makeFile()] });
+      showShareSuccess();             // ✓ Saved state + toast, then revert
+    } catch (e) {
+      if (e?.name === 'AbortError') {
+        // Sheet dismissed by the user. The cache is still warm, so keep the
+        // button armed for an immediate retry.
+        dbg('Share cancelled', 'warn');
+        armShareSave();
+      } else if (e?.name === 'NotAllowedError') {
+        // Gesture expired during a long encode. The file is cached now, so arm
+        // the button — the next tap is a fresh gesture and shares instantly.
+        dbg('Share gesture expired — arming "Save to Photos" for next tap', 'warn');
+        armShareSave();
+      } else {
+        dbg(`Share failed: ${e.message}`, 'error');
+      }
+    }
+  } else {
+    if (mode === 'share') dbg('Web Share unavailable — saving file instead', 'warn');
+    saveByDownload();
+  }
+}
+
+async function exportVideo(mode = 'download') {
   if (!state.imageLoaded) { flashFootnote('⚠ Load an image first'); return; }
 
-  await document.fonts.ready;
-  btnDownload.disabled = true;
-  btnLabel.textContent = 'Exporting…';
-  exportProg.classList.add('visible');
+  // Fast path: if nothing affecting the video changed since the last encode,
+  // skip re-encoding and deliver the cached file. Critical for iOS share — the
+  // share() call then runs synchronously inside this fresh tap's gesture.
+  const key = outputStateKey();
+  if (lastEncode && lastEncode.key === key) {
+    return deliver(mode, lastEncode.blob, lastEncode.filename);
+  }
 
-  const { w: outW, h: outH } = computeOutputSize();
+  await document.fonts.ready;
+  const exportT0 = performance.now();   // wall-clock anchor for timing logs
+  btnDownload.disabled = true;
+  btnShare.disabled = true;
+  if (mode === 'share') { btnShare.classList.remove('armed'); btnShareLabel.textContent = 'Rendering…'; }
+  else btnLabel.textContent = 'Exporting…';
+  exportProg.classList.add('visible');
+  exportProgHead.textContent = 'Rendering your video…';
+  exportProgText.textContent = 'Preparing…';
+  exportProgFill.style.width = '0%';
+
+  const { w: outW, h: outH, clamped } = computeOutputSize();
+  if (clamped) {
+    dbg(`Output capped at ${outW}×${outH} — larger frames exceed H.264 encoder limits`, 'warn');
+    flashFootnote(`⚠ Capped to ${outW}×${outH} (max H.264 size)`);
+  }
   const halfFrames  = Math.round(state.duration * state.fps);
   const totalFrames = state.playback === 'bounce' ? halfFrames * 2 : halfFrames;
   const easeFn = EASING_FNS[state.easing] || EASING_FNS['linear'];
@@ -2410,19 +2843,32 @@ async function exportVideo() {
     dbg(`mp4-muxer — Muxer: ${typeof Muxer}, ArrayBufferTarget: ${typeof ArrayBufferTarget}`, typeof Muxer === 'function' ? 'ok' : 'error');
     if (typeof Muxer !== 'function' || typeof ArrayBufferTarget !== 'function') throw new Error(`mp4-muxer bad exports — Muxer: ${typeof Muxer}, ArrayBufferTarget: ${typeof ArrayBufferTarget}`);
 
-    // Find best supported H.264 codec
+    // Bitrate scales with resolution so phones aren't over-allocated.
+    // Declared here (before codec probing) because isConfigSupported needs it —
+    // referencing it later would be a temporal-dead-zone ReferenceError.
+    const bitrate = Math.round(Math.min(outW * outH / (1920 * 1080), 1) * 6_000_000 + 2_000_000);
+
+    // Find best supported H.264 codec. Probe hardware first, then fall back to
+    // software ('prefer-software') — Windows hardware encoders frequently reject
+    // large or non-16:9 frames that the software encoder (OpenH264) handles fine.
     const codecCandidates = ['avc1.640034', 'avc1.4d0034', 'avc1.42003e'];
-    let codec = null;
-    for (const c of codecCandidates) {
-      try {
-        const { supported } = await VideoEncoder.isConfigSupported({
-          codec: c, width: outW, height: outH, framerate: state.fps, bitrate
-        });
-        if (supported) { codec = c; break; }
-      } catch {}
+    let codec = null, accel = 'no-preference';
+    for (const acc of ['no-preference', 'prefer-software']) {
+      for (const c of codecCandidates) {
+        try {
+          const { supported } = await VideoEncoder.isConfigSupported({
+            codec: c, width: outW, height: outH, framerate: state.fps, bitrate,
+            hardwareAcceleration: acc,
+          });
+          if (supported) { codec = c; accel = acc; break; }
+        } catch (e) {
+          dbg(`Codec probe ${c} (${acc}) threw: ${e.message}`, 'warn');
+        }
+      }
+      if (codec) break;
     }
-    if (!codec) throw new Error('No supported H.264 codec found in this browser');
-    dbg(`Codec selected: ${codec}`, 'ok');
+    if (!codec) throw new Error(`No supported H.264 codec found for ${outW}×${outH} @ ${state.fps}fps`);
+    dbg(`Codec selected: ${codec} (${accel})`, 'ok');
 
     // Set up muxer
     const target = new ArrayBufferTarget();
@@ -2432,8 +2878,7 @@ async function exportVideo() {
       fastStart: 'in-memory',
     });
 
-    // Set up encoder — bitrate scales with resolution so phones aren't over-allocated
-    const bitrate = Math.round(Math.min(outW * outH / (1920 * 1080), 1) * 6_000_000 + 2_000_000);
+    // Set up encoder
     const videoChunks = [];
     const encoder = new VideoEncoder({
       output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
@@ -2442,6 +2887,7 @@ async function exportVideo() {
     encoder.configure({
       codec, width: outW, height: outH,
       framerate: state.fps, bitrate,
+      hardwareAcceleration: accel,
       latencyMode: 'quality',
     });
     dbg(`Encoder bitrate: ${(bitrate / 1_000_000).toFixed(1)} Mbps`);
@@ -2454,6 +2900,11 @@ async function exportVideo() {
     const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
 
     exportProgText.textContent = 'Encoding…';
+    const encodeStart = performance.now();
+    let lastEtaShown = 0;
+    // Log the ETA vs reality at quarter marks so the estimator can be tuned
+    // later (bounce ≈ 2× frames of non-bounce — confirm the per-frame pace holds).
+    const etaLogMarks = new Set([0.25, 0.5, 0.75].map(p => Math.max(1, Math.round(totalFrames * p))));
     for (let i = 0; i < totalFrames; i++) {
       // bounce: 0→1 forward, then 1→0 backward (ping-pong)
       let t;
@@ -2499,8 +2950,25 @@ async function exportVideo() {
       encoder.encode(frame, { keyFrame: i % 30 === 0 });
       frame.close();
 
-      exportProgFill.style.width = Math.round((i + 1) / totalFrames * 90) + '%';
-      exportProgText.textContent = `Encoding ${i + 1} / ${totalFrames}`;
+      // Determinate fill, smooth to 96% (last 4% reserved for finalize/share so
+      // the bar never stalls at "done" then jumps). Headline carries the %.
+      const done = i + 1;
+      const frac = done / totalFrames;
+      exportProgFill.style.width = (frac * 96).toFixed(1) + '%';
+      exportProgHead.textContent = `Rendering your video… ${Math.round(frac * 100)}%`;
+      // Estimated time remaining from measured pace (after a few frames so the
+      // estimate isn't wild). Update at most ~once a second to avoid jitter.
+      const elapsed = (performance.now() - encodeStart) / 1000;
+      if (done > 3 && elapsed - lastEtaShown > 0.5) {
+        lastEtaShown = elapsed;
+        const eta = Math.max(0, Math.ceil(elapsed / frac - elapsed));
+        exportProgText.textContent = `~${eta}s left · frame ${done}/${totalFrames}`;
+      } else if (done <= 3) {
+        exportProgText.textContent = `frame ${done}/${totalFrames}`;
+      }
+      if (etaLogMarks.has(done) && elapsed > 0) {
+        dbg(`ETA @ ${Math.round(frac * 100)}% (frame ${done}/${totalFrames}): ${elapsed.toFixed(1)}s elapsed → predict ${(elapsed / frac).toFixed(1)}s total encode`);
+      }
       // Back-pressure: wait when encoder queue is too deep.
       // Without this, frames pile up in memory and iOS kills the tab mid-export.
       while (encoder.encodeQueueSize > 5) {
@@ -2509,9 +2977,17 @@ async function exportVideo() {
       if (i % 10 === 0) await new Promise(r => setTimeout(r, 0)); // keep UI alive
     }
 
+    const encodeSec = (performance.now() - encodeStart) / 1000;
+    dbg(`Encode done: ${totalFrames} frames (${state.playback}) in ${encodeSec.toFixed(1)}s = ${(encodeSec * 1000 / totalFrames).toFixed(1)} ms/frame @ ${outW}×${outH} ${state.fps}fps`, 'ok');
+
+    exportProgHead.textContent = 'Finishing up…';
+    exportProgText.textContent = 'Packaging video';
+    exportProgFill.style.width = '98%';
+    const finalizeStart = performance.now();
     await encoder.flush();
     encoder.close();
     muxer.finalize();
+    dbg(`Finalize (flush + mux): ${((performance.now() - finalizeStart) / 1000).toFixed(2)}s`);
 
     const { buffer: rawBuffer } = target;
     dbg(`Encoded: ${(rawBuffer.byteLength / 1024 / 1024).toFixed(1)} MB MP4`, 'ok');
@@ -2522,40 +2998,35 @@ async function exportVideo() {
     const filename = `ken-burns-animation-${slug}.mp4`;
     const blob = new Blob([buffer], { type: 'video/mp4' });
 
-    // On iOS, <a download> opens a quick-look tab instead of saving to Photos.
-    // The Web Share API with files triggers the native share sheet and allows
-    // the user to save to the camera roll.
-    if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: 'video/mp4' })] })) {
-      dbg('Using Web Share API (mobile/share-sheet path)', 'ok');
-      await navigator.share({
-        files: [new File([blob], filename, { type: 'video/mp4' })],
-        title: 'Ken Burns Animation',
-      });
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename; a.click();
-      // Revoke after a long delay — short timeouts (5s) cause "couldn't save" on
-      // desktop browsers that need time to copy the file before the URL is freed.
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    }
+    // Cache so a follow-up tap (especially Share on iOS) can deliver instantly.
+    lastEncode = { key, blob, filename };
+    await deliver(mode, blob, filename);
 
+    dbg(`Total export: ${((performance.now() - exportT0) / 1000).toFixed(1)}s wall (encode + finalize + deliver) · ${(blob.size / 1024 / 1024).toFixed(1)} MB · mode=${mode}`, 'ok');
     exportProgFill.style.width = '100%';
-    exportProgText.textContent = '✓ Done';
+    exportProgHead.textContent = '✓ Done';
+    exportProgText.textContent = '';
     setTimeout(() => { exportProg.classList.remove('visible'); exportProgFill.style.width = '0%'; }, 2000);
 
   } catch (err) {
     const msg = err?.message || String(err);
     dbg(`Export failed: ${msg}`, 'error');
     if (err?.stack) dbg(err.stack, 'error');
-    exportProgText.textContent = '⚠ Export failed — open debug log';
+    exportProgHead.textContent = '⚠ Export failed';
+    exportProgText.textContent = 'Open the debug log for details';
+    showToast('⚠ Export failed — see debug log', 4000);
   } finally {
     btnDownload.disabled = false;
-    btnLabel.textContent = 'Export Video';
+    btnShare.disabled = !shareSupported;
+    btnLabel.textContent = isIOS ? 'Download to Files' : 'Download Video';
+    // Only clear the transient "Rendering…" loading label here; leave armed /
+    // "✓ Saved" labels that deliver() set so the success/two-step states survive.
+    if (btnShareLabel.textContent === 'Rendering…') btnShareLabel.textContent = shareIdleLabel;
   }
 }
 
-document.getElementById('btn-download').addEventListener('click', exportVideo);
+document.getElementById('btn-download').addEventListener('click', () => exportVideo('download'));
+btnShare.addEventListener('click', () => exportVideo('share'));
 
 document.getElementById('btn-copy').addEventListener('click', () => {
   const text = document.getElementById('bloob-pre').textContent;
@@ -2598,25 +3069,15 @@ function flashFootnote(msg) {
 })();
 
 // ─────────────────────────────────────────────
-// Bloob Haus snippet info popover
+// Bloob Haus Visual — collapsible section (collapsed by default)
 // ─────────────────────────────────────────────
-(function setupBloobInfo() {
-  const btn = document.getElementById('bloob-info-btn');
-  const pop = document.getElementById('bloob-info-popover');
-  if (!btn || !pop) return;
-
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    const open = pop.hidden;
-    pop.hidden = !open;
-    btn.setAttribute('aria-expanded', String(open));
-  });
-
-  document.addEventListener('click', e => {
-    if (pop.hidden) return;
-    if (pop.contains(e.target) || btn.contains(e.target)) return;
-    pop.hidden = true;
-    btn.setAttribute('aria-expanded', 'false');
+(function setupBloobVisual() {
+  const sec = document.getElementById('bloob-section');
+  const btn = document.getElementById('bloob-toggle');
+  if (!sec || !btn) return;
+  btn.addEventListener('click', () => {
+    const collapsed = sec.classList.toggle('collapsed');
+    btn.setAttribute('aria-expanded', String(!collapsed));
   });
 })();
 

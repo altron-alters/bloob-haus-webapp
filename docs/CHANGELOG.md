@@ -6,6 +6,187 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 67 — July 27, 2026
+**Worked on:** Decoupling SEO from the visualization layer, then per-page visualizer loading. Suite 637 → **692 tests**. Spec: `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md`.
+
+- **Pure-renderer standard adopted** (`docs/architecture/visualizers.md`): `parser.js` · `resolve.js` (external data injected) · `renderer.js` (pure, complete markup) · `browser.js` (**behavior only**). Three hosts — Node build, future playground, browser fallback — differ only in data source.
+- **`collection` refactored to it.** Every display mode now renders crawlable HTML at build time, not just `cards`; file-scope too. Measured on melt's Resources page: **0 → 3 crawlable links**, marbles visually unchanged, physics intact. No `seo:` toggle — `visibility: unlisted` is the real privacy tool.
+- **Search surfaces share a `--sv-*` token contract.** New appearance tokens are consumed-with-fallback (never declared in visualizer CSS), which let melt + marbles-pouch drop their `!important` overrides; verified pixel-identical.
+- **melt Resources swapped** `folder-preview` → `collection` (`display: marbles`), dropping its separate search fence.
+- **Per-page visualizer loading shipped** (TECH-DEBT #4, now closed) behind `features.per_page_visualizers`. melt −610 CSS/−448 JS across 39 pages; marbles −17,640/−12,771 across 1,162. Pages: 24 assets → 11–13. Detection reads *rendered HTML* and is opt-in per shape.
+- **`scripts/audit-visualizer-detection.js`** is what makes that safe: it caught `article/styles.css` owning `.share-bar` (rendered by a *shared theme partial*), which had silently stripped styling from 33 pages. Screenshot diffing proved too noisy to be the verdict — the same build crawled twice self-differed on 12/41 pages.
+- **#41 resolved for collection**, downgraded High → Low. Only **three** rules actually diverged, not eleven — the original figure came from a faulty text-diff; a real browser disagreed.
+
+- **Two follow-up bugs found by Leon in the browser, both fixed same session.** (a) Search set `hidden` but marbles/bubbles stayed visible — `display:flex` overrides the UA `[hidden]` rule, and `.fp-card[hidden]` already existed for exactly this reason. My original check asserted `el.hidden === true`, i.e. read back the value it had just set, so it could never fail; the new test measures rendered geometry. (b) **Full-text search never worked**: `attachCombinedSearch` filtered Pagefind by `{section: <folder>}`, but melt registers no Pagefind filters (`pagefind.filters()` → `{}`), so the query matched zero on every keystroke while the metadata half kept working — pre-existing since `5615104`, but exposed when melt's site-wide `search` fence was dropped. Now searches unfiltered and intersects against the collection's own hrefs (with URL normalization — graph.json slugifies to lowercase, Pagefind preserves case). `data-fp-tags` added to marbles/bubbles/list so tag matching works there too.
+
+**Part 3 — melt onto the shared `article` shape (same session):**
+- **Root cause of the weird Resources page found:** `bloob-shape: page` resolves to *nothing* — there is no `lib/visualizers/page/`, so the layout came entirely from the step-5 fallback, which is `page.njk` for ordinary pages but **`base.njk` for index files**. `about-melt` worked by coincidence. Worse, the preprocessor strips the leading `# heading` expecting `page.njk` to re-render it, so the index page lost **both** its column and its title. One cause, both symptoms.
+- **`article` upgraded** with four generic features (all themes gain them): **`date_updated` pill** (article had only `date_created` — adopting it blind would have dropped the updated date from 10 of 23 melt pages), `banner_text`, `show_date_created`/`show_date_updated` settings, and **media embeds** — article had *no* iframe handling at all; YouTube/Vimeo now verified at 632×356, ratio 1.778, no overflow. Plus tables, em/strong, heading anchors. New pure `scripts/utils/date-field.js` supports **both** date conventions (comma form for marbles/AE, separate-key + list form for melt; latest list entry wins).
+- **melt migrated:** all 15 content pages now declare `bloob-shape: article`. `/about-melt/` measured before and after — width 680, left 300, padding `60px 24px 120px`, body 16.8px, title 57.6px: **identical**. Colours/fonts needed zero work (article already reads the standard token contract); only 6 sizing tokens. **Resources is fully fixed** — title, column, date pill, and B4's prose-clipping resolved.
+- **Nesting bug found + fixed:** marble titles came out underlined — `.article-body a` (0,1,1) beats `.fp-marble` (0,1,0). A container's prose stylesheet reaching into a nested shape. Fixed by scoping the nested shape to its own root, guarded by `tests/shape-nesting.test.js` (asserts both directions).
+- **Cleanup:** melt's `page.njk` is now a thin alias to `article.njk` (it can't be deleted — the fallback resolves to that literal path); 22 dead `.page-*` rules removed, keeping the three still rendered by `404.njk`/`embed-pages.njk`. **`settings-registry.md` brought current** — registered 10 new article tokens, the 3 per-page article settings, both date conventions, `features.per_page_visualizers`, collection's `placeholder`, and S66's `background_image` override (that last one had been unregistered since S66).
+- **melt share bar → glassmorphism** (melt-only override, tuned to Leon's dimmer reference: 0.1 fill, blur(7px)).
+
+**Docs / standards:**
+- **CLAUDE.md now requires THE SHAPE TRINITY** — `ontology.md` + `shapes.md` + `visualizers.md`, all three, always, before any shape work, with a table of what each owns and a definition of what counts as shape work. Written because the rule was violated this session: two core shapes were reworked from `visualizers.md` alone.
+- **`shapes.md`:** the unknown-shape fallback section was **wrong** (said `page.njk`; it's `base.njk` for index files) — corrected with the melt case. New section on **presentation containment**: styling follows the existing container-contents policy (preserve → child styles itself; override → container imposes), the problem being that CSS has no notion of a shape boundary. Records cascade-layers vs `@scope` as an open decision. `page` added to the shape status table as **Not a shape**.
+
+**Left incomplete:** buffbaby + alter-engineers have per-page loading **OFF** (AE can't be built on this machine — audit first, see `docs/collaborators/2026-07-27_AE-verification-seed.md`). AE's collection search bar changes square → pill and needs Leon's call. #41's reverse direction (does `folder-preview` depend on `collection.css`?) unverified. #40 retrofit of the other content-generating shapes untouched. melt vault edit unpushed (Leon's).
+
+### Session 63 — July 22, 2026
+**Worked on:** Scene-nav builder v2 hands-on fixes + next-round handoff (continues S62; branch `scene-nav-builder-rework`, **unpushed**, 608 tests).
+- **Fixed:** the edit affordance is now a clearly-visible "✎ Edit scene" pill (was a tiny corner circle); clicking an element **while editing** no longer follows its link (capture-phase click block); the pill shows a green "editing" state + the active scene gets a dashed outline; melt home logo **+30%** (240→312px, 208 mobile).
+- **Diagnosed + deferred to the next-round plan:** rotation grip doesn't persist (browser.js `mouseenter/mouseleave` clobber `el.style.transform` — same class as the click bug; fix = gate hover when `.snb-active`); marquee rubber-band select is buggy (fragile event model → overlay-based rewrite, use `frontend-design` skill). Also planned: **undo/redo** button.
+- **Notes:** builder drag interactions are **not real-browser-verified** (headless can't drag). A "duplicate scene" scare was a stale `src-melt` build (clean rebuild fixes it), not content.
+- **Handoff:** `docs/implementation-plans/2026-07-22_melt-builder-next-round.md`; TECH-DEBT #39.
+
+### Session 62 — July 21, 2026
+**Worked on:** Scene-nav builder rework — brainstorm → spec → 3 phased plans → executed all three. Spec `docs/implementation-plans/2026-07-21_scene-nav-builder-rework-and-resolution.md`, Plan 1 `…_scene-nav-grammar-v2.1-plan.md`. Branch `scene-nav-builder-rework`. Suite 570 → 597 tests; verified via melt full build + marbles core-family per-page build + headless Chrome.
+
+- **Grammar v2.1 (Plan 1, TDD):** per-element **`hoverGlow`/`hoverScale`** toggles (default on; parse → `data-hover-*` → `browser.js` `hoverStyles()` → serialize); **`label` tri-state** (`label: false`/`off` suppresses; value overrides; absent = alt); **`[[wiki]]` goto**; shared **`on/off/true/false`** vocabulary. `browser.js` DOM wiring guarded behind `typeof document` (unit-testable pure `hoverStyles`).
+- **Image resolution (Plan 3a):** scene-nav resolves its OWN image refs (it writes `[alt](x.png)` links the general resolver skips) via the attachment index — basename-first, path-aware, verbatim fallback → root-relative encoded URLs. Fixed the melt homepage **Contact us 404** (basename ref) and made scene-navs work on subpages (**also fixed marbles core-family**, whose `../media/…` refs 404'd on its subpath). Raw refs stay in the debug blob (round-trip). `preprocess` now writes `_data/attachmentIndex.json` (generic build data for ref-carrying shapes).
+- **Builder GUI rework (Plan 2):** debug-overlay side panel reworked — foldable sections (Scene/Add/Elements/Selected/Background/Export) + **hide/reopen** toggle; ported bloob-relevant controls from the deleted magic-machine GUI (glow-color **swatches** + picker, **flip H/V**, glowIntensity + x/y/scale/rotation sliders, **show-on**); new **hover-glow / hover-enlarge / show-label** toggles; **mockup image upload** (local object-URL preview + "not saved to your vault" notice; backend save deferred). Shopify UI removed (`embed-serializer.js` kept in code, silent). Export = **Copy ::: block** only.
+- **Goto raw-preservation (Plan 3b):** captures each scene-nav block's PRE-resolution raw (`_rawsource` → `data-vis-raw-source`, scene-nav only, inert elsewhere) and sources the debug blob from it, so **"Copy ::: block" reproduces the exact authored `goto: [label](note.md)`** (Obsidian-clickable) while rendering/`data-value` stay resolved (marbles `data-value` verified unchanged). `parser` retains `gotoRaw`; `inject-container-raw` parameterized `{attr, onlyShape}`.
+- **Docs:** shared "Authoring & resolution conventions" block in `shapes.md` (+ `visualizers.md` cross-link); schema.md v2.1 + builder notes; DECISIONS entry. `settings-registry` intentionally untouched (shape-block grammar lives in schema.md). Backend image-save for mockup upload remains the only deferred item.
+
+**Builder v2 (same session — spec §9b, plan `…_scene-nav-builder-v2-plan.md`):** a second UX pass on the debug builder, verified via headless-Chrome harness (single + multi-select).
+- **Icon-first entry:** `debug: on` mounts a per-scene **"✎ edit" icon** (not an auto-opened sidebar); clicking opens ONE shared panel bound to that scene + active outline — fixes the real bug that N debug blocks mounted N overlapping panels, and keeps the layout clean with several debug scenes.
+- **On-canvas transform handles:** selected element shows a resize grip (corner) + rotate grip (top); the v1 Shift+drag=scale gesture is retired (`drag.js` now reports deltas).
+- **Multi-select:** canvas **marquee**, **Cmd-click** toggle, **Shift-click** range (list + canvas), mirrored; **group move / resize / rotate** about the group center; **relative bulk-edit** for a multi-selection (proportional resize, ±rotate, nudge, bulk glow/hover/label). Pure logic (`builder/selection.js`) is unit-tested (+11 tests → 608).
+- **Editable number fields** for x/y/scale/rotation; **mobile breakpoint + aspect-ratio fields + state chip** ("same as desktop" vs "customized (N)").
+- **Mobile-inheritance standard** (cross-shape, `shapes.md` conv. 7): a mobile layout inherits desktop unless the author sets a mobile aspect-ratio or per-element overrides — surfaced so a silently-broken mobile view can't appear unnoticed. Melt's `mobile: … aspectRatio 9/16` is an explicit (untuned) divergence, correctly flagged by the chip. Conventions point 6 corrected: goto is now **preserved verbatim**, not normalized.
+
+### Session 61 — July 20, 2026
+**Worked on:** Scene-nav shape v2 + melt site work. Spec `docs/implementation-plans/2026-07-20_scene-nav-shape-v2-and-melt-background.md`, plan `…/2026-07-20_scene-nav-v2-plan.md` (executed subagent-driven Tasks 1–6, inline 7–10).
+
+- **Logo pipeline fixes:** `resolveLogoUrl` md-link bare filenames now glob src/ (melt logo 404 fixed); md-link labels flow to `site.logoAlt` → alt attributes in melt + warm-kitchen.
+- **Melt quick wins:** text h1 hidden (logo img is the accessible h1), homepage tab/og title prefers page `title:`, `subtitle:` frontmatter for the tagline.
+- **Background pipeline (universal, opt-in):** `background_image` in `_bloob-settings.md` → `scripts/generate-background.js` (1920px webp, hash-cached) → `site.backgroundImage`; melt renders fixed full-bleed layer + legibility scrim (scrim opacity = design call to revisit). Also fixed `mergeBloobSettings` dropping the key.
+- **Scene-nav v2 (breaking, migrated):** `::: scene-nav` nested-bullet grammar (md-link images = alt text; `at:`, `goto:`, `background` flag, nested `mobile:` overrides); shape owns its parsing (CRLF-safe); old YAML code fence deprecated (build warns); `serializeBlock` inverse. Both legacy users migrated: marbles core-family page, melt homepage (replaces circular-nav; playlists bubble omitted — no image asset).
+- **Builder consolidation:** `lib/magic-machines/scene-nav-builder/` **deleted**; `lib/visualizers/scene-nav/builder/` debug overlay (drag, side panel, mobile-layout mode) lazy-loaded on `debug: on`; exports `:::` block + Shopify embed HTML (embed reuses the shape's own renderer). Bundler rule: any `builder/index.js` → ESM `[name]-builder.js`.
+- Tests 570 across 32 files. Open follow-ups in `.superpowers/sdd/progress.md` (final-review items: shared `</section>` regex nesting limit, DOMContentLoaded guard, mobile position tuning via builder).
+
+### Session 60 — July 20, 2026
+**Worked on:** Designed and wrote the **onboarding documentation** so external forkers (starting with collaborator **Odalys**) can stand up their own bloob haus. Design spec: `docs/implementation-plans/2026-07-20_onboarding-docs.md`.
+
+**Structure — two audience buckets (deliberate separation):**
+- **Bucket 1 — public onboarding** (`docs/onboarding/`): `README.md` (guided-path entry), `prepare-your-vault.md` (content-first; the "`bloob-shape:` is the only load-bearing YAML" thesis; **now the canonical home for the media convention**), `fork-deploy-and-workflow.md`. Plus annotated `sites/_template.yaml`. Travels with every fork; stranger-safe; zero collaborator specifics.
+- **Bucket 2 — collaborator kit** (`docs/collaborators/`): `README.md` + three templates (`collaborating`, `field-notes`, `CLAUDE.local`). Quarantined from the public path.
+
+**Anti-sprawl rule enforced:** onboarding docs *link into* the architecture SSOTs (`ontology.md`, `shapes.md`, `themes.md`, `settings-registry.md`, `urls-and-ids.md`) and never restate them.
+
+**Field-log mechanism (solves "her AI, not mine"):** a *tracked* `<name>-field-notes.md` (reaches Leon via PR) driven by a *gitignored* `CLAUDE.local.md` (exists only on her clone — Leon's AI never sees it). `CLAUDE.local.md` added to `.gitignore`. `CLAUDE.local.md` verified as current/non-deprecated Claude Code "Local instructions" scope.
+
+**SSOT fixes:** media convention given a canonical home (was homeless); documented the *real* verified media behavior (copied from anywhere; wiki `![[x]]` embeds resolve by basename only → collision risk; single-`media/`-folder recommended). Stale test counts corrected — README "195+" and CLAUDE_CONTEXT "297/16 files" → **534 across 30 files**.
+
+**Confirmed with Leon:** melt is the starter theme handed to Odalys.
+
+**Deploy model — B1 chosen (Leon):** Odalys builds in *her* GitHub Actions, deploys to *Leon's* Cloudflare (project `odalys`). Accepted secrets tradeoff (dedicated revocable CF token in her fork). DNS near-automatic under B1 (same-account Custom Domain auto-creates the CNAME).
+- **Fork-isolation guard APPLIED** — `if: github.repository == 'LSanten/bloob-haus-webapp'` added to every job in `deploy-marbles/buffbaby/melt.yml`, `preview-buffbaby.yml`, and `rebuild-all.yml`'s deploy job. Inert in any fork (no failed-run noise); Leon's own deploys unaffected (condition true in his repo).
+- **`docs/collaborators/deploy-odalys.template.yml` written** — fork-only, guarded to `odalysbest/bloob-haus-webapp` (VERIFY fork owner), documents required secrets. Leon drops it into her fork.
+- Public deploy doc's "Model 2" updated to match B1 (build-in-fork + `repository_dispatch`, not a CF Deploy Hook).
+
+**Not yet done / next:** commit whole session together (repo also has unrelated in-flight `scripts/` changes — commit will be curated, not blanket); real-session dry-run of the `CLAUDE.local.md` logging trigger in an actual forked clone; DNS click-steps once the `odalys` Pages project exists; confirm Odalys's fork owner.
+
+### Session 59 — July 20, 2026
+**Worked on:** Finished the **bloob-shapes unification** plan (`_bloob-types.md` → `_bloob-shapes.md`), now in `_completed/`. Resolves TECH-DEBT #34.
+
+**Built / fixed (shared pipeline, TDD):**
+- Reader (`bloob-objects-reader.js`) now reads `_bloob-shapes.md` (`bloob-shape` key column) with precedence over legacy `_bloob-types.md` / `_bloob-objects.md`; `layout` column optional; per-shape `fastcomments` / `showvisitorcount` parsed (7 new tests).
+- `publish-filter.js` now skips **any** `_bloob-*` file (reserved system-file prefix) — also stops `_bloob-auto-tagging.md` leaking as a page (hit marbles too); `_index.md` guarded (2 new tests).
+- New `themes/_base/_bloob-shapes.template.md` scaffold + cross-link from `_bloob-settings.template.md`.
+- Docs reconciled — "visualizer ≡ shape", `bloob-shape` = single forward-facing identity+rendering key: `visualizers.md`, `shapes.md`, `ontology.md`, `settings-registry.md`, `themes.md`, `theme-standards.md`.
+- melt is a clean reference — deleted its `_bloob-types.md` (left uncommitted in the `melt-website` repo for Leon).
+
+**Left deferred (per original plan):** steps 3–4 — per-shape behavior *gating* (columns parsed, templates don't consume them yet). Tracked in IDEAS.md.
+
+**Follow-ups (same session, for onboarding a Windows author):**
+- **Parallelized OG image generation** — `generate-og-images.js` now processes images with bounded concurrency (new tested `scripts/utils/map-concurrent.js`) instead of one at a time; big win on cold builds. Default `min(cpus, 8)` locally, **capped at 2 in CI** (`process.env.CI`) so shared/containerized runners can't oversubscribe; override with `OG_CONCURRENCY`. Output verified byte-identical to sequential.
+- **Windows cross-platform fix (TECH-DEBT #25)** — replaced the `import.meta.url === \`file://${process.argv[1]}\`` direct-run idiom (silently broke on Windows paths, killing theme hot-reload) with a tested `isMainModule()` helper (`pathToFileURL`-based) across all 13 scripts.
+
+**Verified:** `npm test` 543 pass; marbles + buffbaby full builds render in headless Chrome; melt/marbles registry reads confirmed.
+
+### Session 58 — July 8, 2026
+**Worked on:** Wrote the Phase 3 **V1 spike implementation plan** and **started the backend build** in a new separate repo `../bloob-haus-cloud/` (kept out of this Eleventy builder — "don't mix").
+
+**Built (in bloob-haus-cloud):** Cloudflare **Worker** routing — `decideRoute` (fail-closed: unknown `/m/*` ⇒ private) + injectable `handleRequest` (public→edge asset, private→proxy w/ cookie forwarding, `no-store`), 12 offline Vitest tests. Next.js **app** — Better Auth (Google) + session-gated `/m/[slug]`; `auth.ts` env-switches SQLite (local) ↔ Postgres (`DATABASE_URL`, prod) with no code change. **Google login proven locally.** OAuth client created under `dev.bloob@gmail.com`.
+
+**Decided (docs committed here):** identity = free Gmail `dev.bloob@gmail.com` for Google+Scaleway (`admin@bloob.haus` = Cloudflare forward, not a Google account); Scaleway confirmed (only EU-sovereign provider w/ true scale-to-zero); billing country = where you are (sovereignty = *provider* choice, not billing address); subdomains + custom domains moved *early*; centralized auth on `auth.bloob.haus` (no wildcard OAuth redirect URIs).
+
+**Blocked (needs Scaleway account — billing country-change ticket pending):** container deploy, the real cross-subdomain cookie proof (spike Task 1 — the crux), Postgres migration, Worker deploy, E2E.
+
+**Verified:** builder `npm test` 514 pass; bloob-haus-cloud 12 worker tests pass + local Google login works.
+
+### Session 57 — July 6, 2026
+**Worked on:** Brainstormed + locked the Phase 3 **webapp backend & identity architecture** (design only — no code).
+
+**Decisions reached:** backend on **Scaleway EU from day one** (privacy-first; 0 infra today ⇒ no build-then-migrate risk — Leon's central worry); **one Next.js app** (dashboard UI + API + auth) in a Scaleway Serverless Container; **Better Auth** with Google + GitHub + account linking (supersedes the May vision plan's NextAuth — Lucia deprecated, Auth.js frozen); content = **markdown files in Object Storage** (vault-shaped), ledger = **Postgres**; **Cloudflare Worker + KV** public/private split (existing sites untouched); **API-first** (UI only ever calls the API ⇒ MCP is a thin Phase-4 wrapper). V1 = thin vertical spike (Google login → 1 public + 1 private marble).
+
+**Wrote:** `docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` — settled design + cost (~€15–20/mo) + 14 open questions. DECISIONS entry added. `docs/next-steps.md` created as the next-session launch point.
+
+**Left incomplete (by design):** the detailed V1 implementation plan (write when the build starts, via writing-plans); open questions incl. mount_path #16 / multi-repo rooms, note IDs, session-across-proxy, API-key auth details.
+
+**Verified:** `npm test` 514 pass (no code changed).
+
+### Session 56 — July 6, 2026
+**Worked on:** Cross-origin embed auto-height + font matching (so `bloob-haus-homepage` can embed a live marble that resizes itself).
+
+**Shared pipeline:**
+- `themes/_base/partials/iframe-resize.njk`: added a namespaced postMessage protocol on top of the existing same-origin resizer. A framed page now **broadcasts** its height (`{__bloobEmbed:'height',…}` on load / `ResizeObserver` / `fonts.ready`) and any page **receives** heights from trusted `*.bloob.haus` children (origin allowlist + height clamp + `contentWindow===e.source` match). Fixes subdomain↔subdomain embeds silently never resizing. Same `features.iframe_resize` flag.
+- `themes/_base/layouts/embed.njk`: new `font` embed URL param (mirrors `bg`/`text`) → sets `--font-body`/`--font-heading`.
+- Docs: DECISIONS entry (protocol); CLAUDE.md git-remotes section clarified per-machine (Leon's MacBook pushes `origin`→`LSanten` directly, no `upstream`).
+
+**Verified:** single-page `dev:marbles --page=…` build → sender/receiver/font code present in generated + served embed HTML (200); 12/12 receiver logic tests (trust, spoof rejection, clamp, source match); `npm test` 514 pass. Not observed in a real browser (no headless env) — confirmed via build/serve + unit tests only.
+
+**Consumer (separate repo, pushed):** `bloob-haus-homepage` index.html — embeds the live marble, listens for the height message, drops fixed `height=500`. Auto-height/font are inert until this platform change is built + deployed.
+
+### Session 55 — July 3, 2026
+**Worked on:** URL standardization + canonical page ID (foundation for domain-wide FastComments + future plugin/linking work).
+
+**Problem:** URL-affecting settings were split between `_bloob-settings.md` (`permalink_strategy`) and `sites/*.yaml` (full `url`, date flags, `mount_path`), so nothing could compute a page's URL from the vault alone — the root cause of Obsidian-plugin bug #5 *and* the blocker for a domain-unique comment ID (one FastComments account is shared across all subdomains).
+
+**Shared pipeline (upstream-eligible):**
+- New `url:` block in `_bloob-settings.md` (`base`, `case`, `date_prefix`, `mount_path`) as the single source of truth. `scripts/utils/bloob-settings-reader.js` maps it onto the existing config shape (`permalinks.strategy`, `features.date_*`, `mount_path`, `site.url`); wins over legacy flat keys, which still work (non-breaking).
+- New `scripts/utils/page-id.js` `derivePageId(siteUrl, pageUrl)` — canonical ID = lowercased `host + path`, no scheme/trailing slash (e.g. `leons.bloob.haus/marbles/my-note`). Domain-unique, human-readable, no random IDs. Lowercasing is ID-only (visible URLs unchanged; marbles stays preserve-case).
+- `eleventy.config.js`: redefined the `{{ page_id }}` token to the canonical ID (was raw `page.fileSlug`), added `{{ page_full_url }}`, and a `bloobPageId` filter. `injectPageVars` now takes `site.url` (partials updated).
+- `<meta name="bloob-page-id">` in all four theme heads so every page carries its ID for tooling.
+- Docs: new authoritative `docs/architecture/urls-and-ids.md` (URL algorithm + ID derivation — the contract the plugin must match); settings-registry `url:` block + token table; `_base` template models the `url:` block.
+- Tests: `page-id.test.js` (6) + `url:`-block mapping in `bloob-settings-reader.test.js`. 511 total pass.
+
+**Vaults migrated (separate repos, files edited not committed — user pushes):** marbles (`case: preserve`, `date_prefix: keep`), melt + buffbaby (`case: lower`, `date_prefix: none`).
+
+**Verified:** local melt build → `<meta name="bloob-page-id" content="melt.bloob.haus/about-melt">`, FastComments `urlId` resolves to the same, URLs still lowercased via `url.case`, embed versions excluded from comments.
+
+**Follow-on (same session):**
+- **`bloob-page-id:` frontmatter override** — pins a note's ID to an explicit value (computed in `lib/eleventyComputed.js`, honored by the `{{ page_id }}` token + meta tag). Primary use: move/rename a note, set its `bloob-page-id` to the *old* ID, and the FastComments thread follows — no dashboard migration. Tests in `eleventy-computed-page-id.test.js`.
+- **FastComments enabled on marbles, melt, buffbaby** — snippet added to each vault's `fast-comments-embed` fence (tenant `dI13cVRENXn`, `urlId: "{{ page_id }}"`). Verified render + urlId on melt.
+- **Docs:** FastComments setup + comment-migration + styling (iframe isolation → `customCSS`, optionally driven by theme tokens) documented in `urls-and-ids.md`; `bloob-page-id` added to settings-registry.
+- **Comments as a shape behavior** — a shape decides *whether* and *where* comments render by including `partials/comments.njk` in its `layout.njk`. Added the include to the `article` shape layout (article pages bypass `page.njk`, so they'd otherwise be skipped); `page.njk` stays commentable as the default/fallback. Commentability resolves through explicit shape → vault `default_shape` → `page.njk` fallback → per-page `comments: false`. Documented in `shapes.md` ("Comments — a shape behavior", incl. the fallback chain). Verified by temporarily shaping a melt page as `article` (comments rendered, then reverted).
+
+**Deferred:** Obsidian plugin copy-link fix (#5 — implement this contract in the plugin repo); bloob↔bloob linking; Cloudflare case-insensitive URLs; dynamic theme-token `customCSS` for FastComments (selectors need tuning against their docs).
+
+### Session 54 — July 3, 2026
+**Worked on:** Snippet-injection architecture — paste raw code snippets into `_bloob-settings.md`, inject site-wide. First use case: GoatCounter analytics.
+
+**Design:** A single primitive — "inject this raw block at location X on every page" — with named fences as friendly aliases over two buckets (`head`, `bodyEnd`). GoatCounter is a plain head snippet (no special-casing); embeds record their natural `/slug/embed/` path. Chose raw fence extraction over structured frontmatter because the user authors snippets by pasting (confirmed by their `goat-counter-tracking` fence). Per-page tokens solve FastComments' filename-as-`urlId` need (matches the old Jekyll `page.file_name` behavior + File Identity Convention). Full plan: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
+
+**Shared pipeline (upstream-eligible):**
+- `scripts/utils/bloob-settings-reader.js` — `parseEmbedFences()` extracts named fences from the settings **body** (empty fence = off); `EMBED_TARGETS` maps fence → `head`/`bodyEnd`. Every fence exposed as `site.embeds[name]`.
+- `scripts/assemble-src.js` — writes `site.embeds` + concatenated `site.snippets.{head,bodyEnd}` into `src/_data/site.js`.
+- `eleventy.config.js` — `injectPageVars` filter substitutes `{{ page_id }}` (`page.fileSlug`), `{{ page_url }}`, `{{ page_title }}`. Scoped vocabulary only — pasted HTML is never re-run through Nunjucks.
+- New shared partials `themes/_base/partials/site-snippets-{head,footer}.njk`, wired into all four theme heads + base layouts.
+- `themes/_base/_bloob-settings.template.md` — canonical author-facing scaffold.
+- Tests: `tests/utils/bloob-settings-reader.test.js` (fence parser + target map, 8 cases).
+- Docs: `settings-registry.md` (Snippets & Embeds settings + wiring guide).
+
+**Backwards-compatible:** no fences → empty snippets → no output. Verified end-to-end against the local melt vault (real GoatCounter `<script>` lands before `</head>` on every page). Marbles/buffbaby unaffected.
+
+**FastComments (Milestone B) — also done this session:** new `themes/_base/partials/comments.njk` renders the `fast-comments-embed` fence at content-bottom (after `</article>`) on all four themes' `page.njk`. Per-page opt-out via `comments: false`; excluded from embed versions, folder indexes, and home. `{{ page_id }}` resolves to the page slug for the FastComments `urlId` (thread locked to the file). Verified end-to-end against the local melt vault with a temporary filled fence (`urlId` → `About-MELT`, absent from `/embed/`), then the vault fence was restored to empty. No comment **backend** built — the snippet is BYO (bring-your-own FastComments/other embed).
+
+**Deferred:** Auto-provisioning GoatCounter sites via its API → future magic-machine (see IDEAS.md). Own-backend comment system explored but not built (frictionless no-account commenting → needs Turnstile/Akismet spam pipeline; self-hosted Isso/Remark42 noted as lower-effort alternatives).
+
+**Note:** live GoatCounter on melt requires pushing the melt vault's `_bloob-settings.md` edit (deploy build clones from GitHub).
+
 ### Session 53 — June 29, 2026
 **Worked on:** Tokenize the shared `article` shape's font sizes + adopt tuned values in alter-engineers.
 

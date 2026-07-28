@@ -1,7 +1,7 @@
 # Bloob Haus - Claude Code Context
 
 **Purpose:** Share this file at the start of each Claude Code session.
-**Last Updated:** 2026-06-05
+**Last Updated:** 2026-07-27
 **Current Phase:** melt theme under active development; alter-engineers pending deployment. Multi-site operational.
 
 **See also:** `CLAUDE.md` at repo root for development practices (auto-read by Claude Code). `docs/TECH-DEBT.md` for outstanding technical debt.
@@ -31,6 +31,13 @@
 | Configurable slug strategies (slugify, preserve-case) | ✅ COMPLETE |
 | Per-file exclude_files list | ✅ COMPLETE |
 | Reserved directory filtering in section discovery | ✅ COMPLETE |
+| Snippet injection (`goat-counter-tracking`, `fast-comments-embed`, header/footer fences in `_bloob-settings.md`) | ✅ COMPLETE |
+| Consolidated `url:` block + canonical page ID (lowercased host+path, `bloob-page-id` override, `<meta name="bloob-page-id">`) | ✅ COMPLETE |
+| Comments as a shape behavior (partial in shape `layout.njk`; article commentable; per-page `comments:false`) | ✅ COMPLETE |
+| Cross-origin embed auto-height (namespaced postMessage, `*.bloob.haus` trust) + `font` embed URL param | ✅ COMPLETE |
+| Bloob-shapes unification (`_bloob-types.md`→`_bloob-shapes.md`) | ✅ DONE 2026-07-20 (reader + `_bloob-*` publish-filter + docs + scaffold; per-shape behavior *gating* deferred → IDEAS) |
+| Phase 3: Webapp backend & identity architecture (design) | ✅ DESIGNED 2026-07-06 — see phase-3 plan |
+| Phase 3: V1 spike build (separate `bloob-haus-cloud` repo) | 🔨 IN PROGRESS 2026-07-08 — Worker routing + Google login proven locally; cloud deploy blocked on Scaleway account |
 
 **LIVE SITES:**
 - https://buffbaby.bloob.haus (Buff Baby Kitchen)
@@ -74,6 +81,11 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Custom 404 page
 - Image optimization (WebP + JPEG at 600w/1200w, lazy loading)
 - **File-scope shapes** (`bloob-shape:` frontmatter key) — a page's entire body is rendered by the named shape's `renderFilescope(settings, body)` function. Config declared in a `::: settings` block at the top of the body. Dispatch wired in `preprocess-content.js` steps 6e.3 + 6e.6. First live shape: `rss-feed` (fetches podcast RSS at build time, renders episode list). See `docs/architecture/visualizers.md` for full type documentation.
+- **`article` is the canonical page/post shape** (consolidated 2026-07-27) — a layout-only shape that ships its own `layout.njk`, so it works in every theme. Carries title/subtitle/banner/author/byline, **both date-pill conventions** (comma form *and* separate-key + list form; latest list entry wins — `scripts/utils/date-field.js`), share bar, comments, responsive media embeds (YouTube/Vimeo 16:9), tables. Tuned per theme via `--article-*` tokens. **melt runs entirely on it**; its own `page.njk` is now just an alias. `bloob-shape: page` is NOT a shape — prefer `article`.
+- **Nested shapes govern their own presentation.** A `preserve` container (like `article`) must let a nested shape style itself, but CSS has no notion of a shape boundary, so a container's prose rules leak in and win by specificity accident. Convention: a nested shape scopes its rules to its own container root. Guarded by `tests/shape-nesting.test.js`. Open decision: cascade layers vs `@scope` — see `shapes.md`.
+- **Pure-renderer standard** (adopted 2026-07-27) — every content-generating shape must produce its complete markup from a pure `renderer.js`; `browser.js` is behavior-only, and external data enters via a pure `resolve.js`. Makes indexability a property of the shape rather than of which visual was picked, and lets the future standalone playground reuse every conforming shape with no second implementation. `collection` is the reference; retrofit of `folder-preview`/`circular-nav`/`fridge-magnets`/`tags`/`graph` is TECH-DEBT #40. See `docs/architecture/visualizers.md`.
+- **`collection` shape** — all five display modes (cards/list/slider/bubbles/marbles) render crawlable HTML at build time, including file-scope use. Search filter styled from the shared `--sv-*` token contract so it matches the site-wide search bar in any theme.
+- **Per-page visualizer loading** (`features.per_page_visualizers`, 2026-07-27) — pages load only the visualizer CSS/JS they use; detection runs on rendered HTML and shapes opt in via `detect` in `manifest.json`. Live on melt + marbles (24 assets → 11–13/page); **off for buffbaby + alter-engineers**. Always run `node scripts/audit-visualizer-detection.js --src=src-<name>` before enabling on a new site.
 - Modular visualizer architecture with auto-discovery
 - `:::` container visualizers (image-grid, photo-grid live; `markdownItContainer` parses key=value settings → `data-vis-settings`)
 - `photo-grid` visualizer: `cols: N` uniform or `layout: 1,3,1` mixed-row grids; `ratio`/`gap`/`padding` params; PhotoSwipe lightbox automatic; columns preserved on mobile
@@ -92,7 +104,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Per-file `exclude_files` list in site YAML config
 - Multi-site build isolation (src/ cleaned between builds, repo-switch detection)
 - Reserved directory filtering (media, assets, etc. excluded from section nav)
-- Test suite: 297 tests across 16 files (Vitest), co-located visualizer tests
+- Test suite: 530+ tests across 30 files (Vitest), co-located visualizer tests
 - Validation report with `--strict` flag for CI (fails build on broken links)
 
 **Build pipeline:**
@@ -241,7 +253,7 @@ bloob-haus-webapp/
   - `nodes: [{ id, title, section, type, image?, bloobIcon? }]`
     - `id` — page URL path (e.g. `/projects/campbell-library/`)
     - `image` — OG image URL, only present if page body contains an image (auto-extracted from first image in markdown body, NOT from frontmatter)
-    - `bloobIcon` — 24×24 icon path for the page's bloob-object type; absent if no bloob-object
+    - `bloobIcon` — 24×24 icon path for the page's shape (`bloob-shape:`, or legacy `bloob-type:`/`bloob-object:`); absent if the shape has no registry image
     - `excerpt` / `description` — NOT in graph.json nodes; only in tag index (`_data/tagIndex.json`)
   - `links: [{ source, target }]` — bidirectional, deduplicated, anchors stripped
 - `/graph-settings.json` — vault-wide settings from `.bloob/graph.yaml`, defaults applied
@@ -395,6 +407,21 @@ See `docs/implementation-plans/DECISIONS.md` for the full decision log.
 
 ## What to Do Next
 
+**As of 2026-07-20:** Shipped the **bloob-shapes unification** (Session 59) — the reader reads `_bloob-shapes.md` (`bloob-shape` key column) ahead of legacy `_bloob-types.md`/`_bloob-objects.md`; `publish-filter.js` now excludes any `_bloob-*` system file; docs reconciled so `bloob-shape:` is the single forward-facing identity+rendering key. melt is a clean reference. Per-shape `fastcomments`/`showvisitorcount` *gating* deferred (IDEAS). Resolves TECH-DEBT #34.
+
+**As of 2026-07-06:** Brainstormed and locked the **Phase 3 webapp backend & identity architecture** (design only, no code) — Scaleway EU backend from day one, one Next.js app, Better Auth (Google + GitHub), markdown-in-object-storage + Postgres ledger, Cloudflare Worker public/private split (existing sites untouched), API-first for future MCP. See `docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` (settled design + 14 open questions) and DECISIONS 2026-07-06. **Next:** turn the V1 spike (Google login → 1 public + 1 private marble) into a detailed implementation plan via writing-plans.
+
+**As of 2026-07-03:** Comments (FastComments), GoatCounter analytics, and the URL/page-ID
+contract shipped (see CHANGELOG Sessions 54–55). **The bloob-shapes unification** (✅ shipped 2026-07-20, Session 59) —
+`_bloob-types.md` → `_bloob-shapes.md`, drop the `layout` column, make `fastcomments` /
+`showvisitorcount` declared per-shape behaviors. Context seed + plan:
+`docs/implementation-plans/phases/phase-2/2026-07-03_bloob-shapes-unification.md`. Also pending
+on the vault side: push the marbles/melt/buffbaby `_bloob-settings.md` edits, confirm the
+FastComments tenant + domain allowlist. The AE items below may be stale — verify against the
+current AE repo before acting.
+
+---
+
 **alter-engineers is the active focus.** All homepage sections now render from `index.md` via `{{ content | safe }}`. Dev command now points to the live content vault at `G:/Shared drives/.../Website/_live-website-content-obsidian-repo`. Detailed plan: `docs/implementation-plans/phases/ae-launch/2026-04-28_ae-launch-sprint.md`.
 
 **Bug fixes (priority order):**
@@ -430,12 +457,26 @@ docs/
 ├── TECH-DEBT.md                ← Technical debt inventory
 ├── CHANGELOG.md                ← Session history & milestones
 │
+├── onboarding/                 ← Fork-your-own-bloob-haus guided path (public, travels with forks)
+│   ├── README.md               ← Start here
+│   ├── prepare-your-vault.md   ← Content-first; the canonical home for the media convention
+│   └── fork-deploy-and-workflow.md
+├── collaborators/              ← Collaborator kit (field-log + CLAUDE.local + deploy-odalys templates)
+│
 ├── architecture/               ← How systems work
 │   ├── visualizers.md          ← Read/display components
 │   ├── magic-machines.md       ← Write/transform AI tools
 │   ├── search.md              ← Search, tags, and Pagefind
-│   ├── themes.md              ← Theme contract, CSS tokens, bloob-objects system
-│   └── settings-registry.md   ← ALL settings (universal + per-theme). Update when adding any new setting.
+│   ├── themes.md              ← Theme contract, CSS tokens, object identity system (`_bloob-shapes.md`)
+│   ├── theme-standards.md     ← Theme standards
+│   ├── bring-your-own-theme.md ← Custom theme onboarding
+│   ├── ontology.md            ← The why/what of shapes (design brief)
+│   ├── shapes.md              ← The how of shapes (incl. "Comments — a shape behavior")
+│   ├── shape-authoring-log.md ← Per-shape authoring notes / war stories
+│   ├── urls-and-ids.md        ← Canonical URL contract + page-ID + FastComments setup
+│   ├── security-by-obscurity.md ← Unlisted/client-facing content convention
+│   ├── settings-registry.md   ← ALL settings (universal + per-theme). Update when adding any new setting.
+│   └── melt-handoff.md        ← melt theme handoff notes (historical)
 │
 └── implementation-plans/
     ├── ROADMAP.md              ← Phase overview & priorities

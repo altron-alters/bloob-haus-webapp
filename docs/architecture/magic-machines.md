@@ -1,9 +1,22 @@
 # Magic Machines Architecture
 
-**Status:** In progress — GUI type implemented (`scene-nav-builder`); AI type planned
+**Status:** AI + script types planned; standalone-app (`gui`) type implemented (`youtube-non-addictive-interface`). **Shape builders moved out — see the correction below.**
 **Location:** `docs/architecture/`
 
-Magic Machines are modular tools that produce or transform content. They are the "write" counterpart to Visualizers (which are "read" tools). A magic machine can be AI-powered, GUI-based, or a pure script transformation — but they all live in `lib/magic-machines/`, share a manifest format, and can pair with a visualizer.
+> **2026-07-13 correction — builders are not magic machines.** A GUI that authors a *shape's own core
+> data* (e.g. `scene-nav-builder`, the `garden` builder) is a **shape builder**: a face of the shape. It
+> shares the shape's schema/parser *by construction* and lives *inside the shape folder*
+> (`lib/visualizers/<shape>/builder/`) — see `shapes.md` and `ontology.md`. Only **standalone apps** that
+> author no shape and transform no content (e.g. `youtube-non-addictive-interface`) remain here as
+> `type: "gui"`. This doc still describes the old "GUI = magic machine" model in places; those are being
+> corrected as `scene-nav-builder` migrates (garden work — `bloob-haus-cloud` plan 2026-07-13). Full
+> derivation in `shape-authoring-log.md`.
+
+Magic Machines are modular tools that **transform content** (content → content) — AI-powered or pure
+script — plus standalone apps. They are the "transform" counterpart to Visualizers (the "read" tools).
+They live in `lib/magic-machines/`, share a manifest format, and can pair with a visualizer. The
+**authoring** counterpart to a visualizer is *not* here — it is the shape's own **builder** (see the
+correction above).
 
 ---
 
@@ -31,17 +44,26 @@ Every magic machine declares a `type` in its manifest:
 
 | Type | Description | Example |
 |------|-------------|---------|
-| `"gui"` | Visual builder that produces markdown output through a UI | `scene-nav-builder` |
+| `"gui"` | **Standalone app** — a self-contained tool that authors no shape and transforms no content | `youtube-non-addictive-interface` |
 | `"ai"` | Sends content to an LLM and writes the result back | `recipe-unit-extractor` (planned) |
 | `"script"` | Pure code transformation, no AI, no UI | link-checker (planned) |
 
-GUI machines are the simplest to use (just open in a browser) but the most interactive. AI machines are automated and batch-process files. Script machines are deterministic transforms.
+Standalone `gui` apps are the simplest to use (just open in a browser). AI machines batch-process files. Script machines are deterministic transforms. **A GUI that authors a shape is not here** — it's a *shape builder* inside the shape folder (see the correction at the top).
 
 ---
 
-## GUI Magic Machines
+## GUI apps (and the builder pattern that moved to shapes)
 
-GUI machines produce markdown (or other output) through a visual interface rather than a script. They are portable standalone HTML apps.
+Two different things historically lived under "GUI magic machine":
+
+1. **Standalone `gui` apps** — self-contained HTML tools that author no shape (e.g.
+   `youtube-non-addictive-interface`). These stay magic machines.
+2. **Shape builders** — GUIs that author a shape's core data (e.g. `scene-nav-builder`). These are
+   *faces of a shape* and now live in `lib/visualizers/<shape>/builder/` — see `shapes.md`.
+
+The conventions below (standalone HTML, the required debug-log panel, the pairing convention) apply to
+**both**, which is why they're documented here for now. They describe a GUI that produces output through
+a visual interface rather than a script; portable standalone HTML apps.
 
 **Conventions:**
 - Live in `lib/magic-machines/<name>/app/`
@@ -79,27 +101,19 @@ function dbg(msg, level = 'info') {
 
 Log these events at minimum: page load, any external library detection, all network fetches (start + size + result), any heavy async operation, and the actual `err.message` + `err.stack` in every catch block.
 
-**Scene Nav Builder** is the first GUI machine and establishes the pattern:
+**Scene Nav Builder — CONSOLIDATED INTO THE SHAPE (2026-07-20).** The former
+`lib/magic-machines/scene-nav-builder/` standalone app is **deleted**. Its functionality
+lives in `lib/visualizers/scene-nav/builder/` — a debug-mode overlay lazy-loaded when a
+`::: scene-nav` block sets `debug: on`. Same two exports (the `:::` block and the Shopify
+embed HTML), but the embed now reuses the shape's own renderer — one source of truth.
+This established the precedent: **a magic machine whose output is a shape's fence is that
+shape's builder** and belongs in the shape's `builder/` folder (see DECISIONS.md 2026-07-20).
 
-```
-lib/magic-machines/scene-nav-builder/
-├── manifest.json
-└── app/
-    └── index.html       ← Standalone vanilla JS builder. Open in any browser.
-```
+### Pairing Convention (historical)
 
-**What it does:** Upload background PNGs + character PNGs → drag to position, set glow effects and click actions → copy a ` ```scene-nav``` ` code fence or standalone embed HTML.
-
-**Paired visualizer:** `lib/visualizers/scene-nav/` reads the ` ```scene-nav``` ` code fences at build time.
-
-### Pairing Convention
-
-When a machine produces output for a visualizer, they share a name prefix:
-
-```
-scene-nav-builder  →  produces  →  ```scene-nav``` fences
-scene-nav          →  renders   →  ```scene-nav``` fences
-```
+When a machine produces output for a visualizer, they share a name prefix — as
+`scene-nav-builder` did for ` ```scene-nav``` ` fences before its consolidation. New GUI
+authors for shapes should go straight into the shape's `builder/` folder instead.
 
 **Naming rule:** The builder and visualizer are distinct things. In markdown frontmatter, always reference the **visualizer** name (e.g. `scene-nav`), not the builder:
 
@@ -113,13 +127,14 @@ visualizers:
   - scene-nav-builder
 ```
 
-### Shared Logic: Builder vs. Visualizer (Future Refactor)
+### Shared Logic: Builder vs. Visualizer — DISSOLVED (2026-07-13)
 
-The builder (`scene-nav-builder/app/index.html`) and the visualizer (`scene-nav/parser.js`) both parse `scene-nav` code fences — the builder for its Import tab, the visualizer at build time. Right now this logic is duplicated, which means schema changes (new fields, renamed keys) must be applied in both places manually.
-
-**These two parsers should stay in sync.** The canonical schema reference is `lib/visualizers/scene-nav/schema.md`.
-
-A future refactor (Phase 5+) could unify them — for example as a shared isomorphic module, or by generating the builder's import parser from the visualizer's schema. Not worth the complexity now, but worth knowing about.
+This section used to warn that `scene-nav-builder` and the `scene-nav` visualizer duplicate a fence
+parser that "must stay in sync." **The shape model dissolves the problem rather than deferring it.** A
+builder is a *face of the shape*; it shares the shape's one schema and one parser *by construction*.
+When `scene-nav-builder` migrates into `lib/visualizers/scene-nav/builder/`, the duplication disappears
+— there is nothing left to keep in sync. Kept as a tombstone so anyone who remembers the old warning
+sees why it's gone. See `shape-authoring-log.md`.
 
 ---
 

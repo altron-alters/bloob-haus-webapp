@@ -55,6 +55,58 @@ The heuristic that emerges: shapes that are *transformation lenses* tend to over
 
 This policy is part of the shape's contract and must be declared in `schema.md`. It's also the source of the placement system choice: override shapes usually use a single placement system (everything goes in the same pool); preserve shapes often need richer placement (each item may need its own position).
 
+### Presentation follows the policy — and CSS does not enforce it for you
+
+Styling is part of rendering, so the container-contents policy already answers the question:
+
+> **A `preserve` container must let a nested shape style itself. An `override` container imposes its
+> own styling on what it holds. The policy the shape already declares is the answer — there is no
+> separate styling policy to invent.**
+
+`article` is a preserve container: a collection nested in an article body renders the way the
+*collection* wants, not the way the article's prose does.
+
+**The problem is purely mechanical: CSS has no notion of this policy.** The cascade does not know a
+shape boundary exists, so a preserve container leaks its prose styles into children by default and
+"who wins" is decided by specificity accident rather than by the declared policy.
+
+A container shape legitimately styles its prose (`.article-body a { text-decoration: underline }`).
+But a nested shape's markup lives *inside* that body, so the container's rule applies to it too —
+and usually wins, because a descendant selector like `.article-body a` (0,1,1) outranks a bare
+`.fp-marble` (0,1,0). Nothing in override/preserve prevents this: a **preserve** container that
+faithfully lets a child render as itself will still restyle it.
+
+Both sides of the fix matter:
+- **Do not weaken the container.** Prose links *should* be underlined. Removing the container's rule
+  to fix a child is the wrong direction.
+- **The nested shape raises its own specificity** — scope to its container root
+  (`.collection-visualizer .fp-marble { … }`), which beats the container's descendant rule.
+
+Real case (2026-07-27): melt's pages moved onto the `article` shape, and every marble title in the
+nested collection came out underlined. Guarded by `tests/shape-nesting.test.js`, which asserts both
+directions — the nested item is not underlined **and** the container's prose links still are, so the
+fix cannot regress into "stop underlining links".
+
+This matters most for the composition the folder index is built on: **an `article` shape with a
+`collection` nested inside it.** Any new shape intended to be nested should scope its visual rules to
+its own container root from the start.
+
+**Current enforcement is convention only, and that does not scale** — every container × child pair is
+a fresh chance for a collision, found by eye. Two mechanisms could make the cascade express the
+policy instead. Not yet decided:
+
+| Option | How it maps to the policy | Cost / risk |
+|---|---|---|
+| **Cascade layers** (`@layer bloob.container, bloob.shape, bloob.lens`) | A shape's own styles sit in a layer that always beats a container's prose layer → **preserve is automatic**. An override/lens container puts its transformation styles in the winning layer → **override is automatic**. Specificity stops mattering. | Every shape stylesheet must be wrapped. **Unlayered CSS beats all layered CSS**, so theme `main.css` would outrank every shape unless themes are layered too — needs deciding, since themes overriding shapes is often desirable. |
+| **`@scope` donut** (`@scope (.article-body) to (.collection-visualizer)`) | Expresses "style my body, but stop at a nested shape" literally. | Per-pair rather than global; each container must know its children. Requires reasonably modern browsers. |
+
+Until one is adopted, the convention above (nested shape scopes to its own container root) is the
+rule, and `tests/shape-nesting.test.js` is the guard.
+
+**Full explainer + recommendation** (what a cascade layer actually is, the unlayered-wins trap, and
+the `@scope` donut, written for someone who has not used either): see
+`docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision".
+
 ## Placement systems
 
 Content placement is a property of the shape. Different shapes use different placement systems; a shape declares which one(s) it supports. Authors and AI use whatever the shape provides.
@@ -88,15 +140,25 @@ The future Obsidian plugin may provide an "extract" gesture — possibly "give i
 
 ## What a complete shape carries
 
+A shape has **one core** (the saved data) and up to two faces over it: a **renderer** (read) and an
+optional **builder** (write — a GUI that authors the core; see `ontology.md`).
+
 ```
 lib/visualizers/[name]/
-  manifest.json       required — identity, type, defaultLayout (file-scope only)
-  schema.md           required — human + AI readable contract (settings, examples)
+  manifest.json       required — identity, type, defaultLayout (file-scope only), authors[]
+  schema.md           required — human + AI readable contract (settings, examples, builder, authors)
   index.js            renderFilescope shapes only — build-time transform() and/or renderFilescope()
   browser.js          when needed — runtime rendering from graph.json or DOM
   styles.css          when needed — scoped CSS using theme CSS tokens (see "Token-based styles.css" below)
   layout.njk          file-scope shapes only — default page layout template
+  assets/             when the shape ships its own static files (icons, sprites) — copied into build
+                      output like JS/CSS; NOT served from a central CDN (keeps sites self-contained)
+  builder/            when the shape has a GUI author (a "shape builder") — a single self-contained,
+                      file://-openable index.html that reads AND writes this shape's core format
 ```
+
+First shapes to exercise the new folders: `garden` (both `assets/` and `builder/`), `scene-nav`
+(`builder/`, once migrated out of `lib/magic-machines/`).
 
 ## Conversion checklist per shape type
 
@@ -176,7 +238,7 @@ default_shape: marble
 The preprocessor resolves the layout in this priority order (highest wins):
 
 1. Explicit `layout: layouts/…` in the file's frontmatter
-2. Layout from the `bloob-type` registry (`_bloob-objects.md`)
+2. Layout from the shape registry's optional `layout` column (`_bloob-shapes.md`, or legacy `_bloob-types.md` / `_bloob-objects.md`). The forward-facing `_bloob-shapes.md` omits this column — layout is the shape's job (step 3/4 below)
 3. `bloobShapeLayout` — set when shape has no `renderFilescope` (layout-only shapes: `bloob-shape: article` → `layouts/article.njk`)
 4. `shapeManifestLayout` — read from `manifest.json.defaultLayout` when the shape has `renderFilescope` (e.g. `folder-preview` → `layouts/folder-index.njk`)
 5. Default: `layouts/page.njk` (or `layouts/base.njk` for `index.md` files)
@@ -184,6 +246,16 @@ The preprocessor resolves the layout in this priority order (highest wins):
 Steps 3 and 4 use `effectiveShape` — so both an explicitly declared shape and the site's `default_shape` can supply a layout through these steps.
 
 **A user only needs `bloob-shape: folder-preview`** — no `layout:` required. The preprocessor reads the manifest and injects the correct layout automatically. For index.md files the preprocessor also auto-injects `folder`, `folder_display`, and `title` from the directory name when the user hasn't provided them.
+
+## How the preprocessor resolves identity
+
+Layout is one face of a shape; **identity** (banner image, banner text, icon, display name) is the other. Both now resolve from the same forward-facing key, `bloob-shape:`. The preprocessor calls `resolveIdentityKey(frontmatter)` (`scripts/utils/bloob-objects-reader.js`), which picks the identity key in precedence order:
+
+1. `bloob-type:` — legacy explicit identity key (wins when set)
+2. `bloob-object:` — oldest legacy alias
+3. `bloob-shape:` — the single forward-facing key; used as the identity fallback so a note that declares **only** `bloob-shape:` still resolves its identity from the registry (`_bloob-shapes.md`, keyed by the shape name)
+
+The resolved name is looked up in the shape registry for banner/icon metadata. The legacy keys win when present, so a note can still render as one shape but identify as another. See `ontology.md` → "What a shape is" for why identity and rendering are two faces of one shape.
 
 ## The `shape_settings` mechanism
 
@@ -214,6 +286,122 @@ The default is "on" (include renders unless explicitly opted out). Users opt out
 - The `:::settings` block is strip-parsed at build time — it never appears in rendered output
 - Layout templates read from a single `shape_settings` object, making it obvious which keys come from shape config vs page metadata
 - See DECISIONS.md 2026-06-05 for the full rationale
+
+## Shape-named blocks — a shape may own its parsing
+
+The `:::settings` path above assumes per-instance configuration is YAML key/values. That is the
+**default, not a law.** A shape whose body syntax is not valid YAML declares a **shape-named block**
+(`::: garden`) and parses it itself:
+
+- The block is the shape's **single source of truth** — configuration *and* content in one surface.
+  For full-page `chrome: none` shapes this includes identity metadata (`title`/`author`), with
+  frontmatter carrying only `bloob-shape:` (see `ontology.md` → "Configuration and content are one
+  surface" for the reconciliation).
+- The parser lives in the shape's own `index.js`. **Only fence-boundary discovery is shared** — find
+  the opener (`:::` + name), find the matching closer, depth-aware, tolerant of trailing whitespace.
+  Everything inside is the shape's grammar, documented in its `schema.md` (fence-format +
+  parsing-rules sections).
+- **Why not force YAML:** garden's element list (`- mature-tree "Title" @240,225` + nested page
+  bullets) parses as a YAML *sequence*, not the mapping consumers expect — and tab-indented children
+  are illegal YAML and throw. Real shapes have real grammars.
+- Parsing rule worth copying: **never hardcode a tab width.** Treat any deeper indentation (tabs or
+  spaces) as nesting, so the format survives Obsidian's tab/space setting.
+
+`garden` is the precedent (see its `schema.md`). Shapes with plain key/value knobs should keep using
+`:::settings` — don't invent a grammar you don't need.
+
+## Authoring & resolution conventions
+
+These apply to **every shape that carries links or images** (scene-nav, garden, …), so they live
+here once. Full rationale: `docs/implementation-plans/2026-07-21_scene-nav-builder-rework-and-resolution.md`.
+
+1. **Dual link syntax, always.** A shape accepts **both** wiki `[[name]]` and markdown `[label](target)`
+   for images *and* note-links. Wiki is auto-enabled and handled gracefully (many authors use only
+   wiki); it carries no inline label, so the label comes from a nested `label:` attribute (or defaults).
+2. **Basename-first resolution (the Obsidian model).** Refs resolve by **bare name, no folder**; a
+   folder is added only to disambiguate when two files share a name. Full/relative paths stay valid.
+3. **A shape resolves its own refs when the general pass can't.** If a shape's grammar uses link forms
+   the general preprocessor skips (e.g. `[alt](x.png)` without the `!`, chosen so Obsidian doesn't embed
+   and clutter the source), the shape resolves them itself. Raw refs are the source-of-truth; resolution
+   is a **render-time projection**, never written back — so a builder can round-trip the exact grammar.
+4. **Literal spaces are authored; encoding is a render concern.** Authors and builders write literal
+   spaces (`Contact us.png`); parsers accept both literal spaces and `%20`. URL-encoding happens only in
+   the resolved output URL.
+5. **Tri-state + boolean vocabulary (all shapes).** Optional attribute: **absent → default**,
+   **`false`/`off` → disable**, **`true`/`on` → enable**, **other value → override**; `false`/`off` and
+   `true`/`on` accepted case-insensitively so authors don't hit syntax errors. Distinct from **bare
+   flags** (`- background`, `- flipH` → true) and **keyed values** (`- at: x, y`).
+6. **A write-face (builder) emits authorable output that round-trips.** Whatever a builder produces
+   must be something a human could have typed and that re-parses + re-renders identically. It preserves
+   the authored **target** granularity (full path stays full path; basename stays basename, literal
+   spaces). **Note-links (`goto`) are preserved verbatim** — the exact `[label](note.md)` or `[[wiki]]`
+   the author wrote, so they stay clickable in Obsidian (scene-nav does this via a pre-resolution
+   `data-vis-raw-source` capture; see its schema.md). **Image refs**, which carry no separate label,
+   are emitted in markdown `[alt](target)` form.
+
+7. **A mobile layout inherits desktop by default.** A shape with a responsive/mobile variant treats
+   mobile as identical to desktop **unless the author establishes a divergence** — an explicit mobile
+   aspect-ratio, or per-element mobile position overrides. No divergence → mobile == desktop (same
+   ratio, same positions). A builder should surface this state plainly ("same as desktop" vs
+   "customized") so an author never sees a silently-broken mobile view they didn't create.
+
+## Comments — a shape behavior
+
+Whether a page shows comments, and *where* the comment thread sits, is a **shape decision** —
+not a global one. This realizes the `commentable?` behavior named in [`ontology.md`](ontology.md)
+(Q1, "What is a marble?").
+
+**Mechanism.** The reusable partial `themes/_base/partials/comments.njk` renders the site's
+`fast-comments-embed` snippet (authored in `_bloob-settings.md`). A shape:
+
+- **opts in** by including the partial in its `layout.njk`, at whatever position it wants;
+- **opts out** by simply not including it.
+
+```njk
+{# article shape places the thread right after the body #}
+</article>
+{% include "partials/comments.njk" %}
+```
+
+Key properties:
+
+- **Placement is the shape's choice.** The partial is position-agnostic — a shape can put
+  comments at content-bottom, in a sidebar slot, above a footer, etc. A container shape could
+  even place them per-region.
+- **Commentable = include the partial; not commentable = omit it.** Reading shapes (`article`,
+  and the default `page.njk`) include it; index/utility shapes (`folder-preview`, `rss-feed`)
+  omit it. The default `page.njk` is commentable so the "undefined pile" (see ontology) gets
+  comments before any shape is declared.
+- **The partial self-guards** — it renders nothing unless the site has a `fast-comments-embed`
+  snippet *and* the page hasn't set `comments: false`. Including it is always safe (no-op when
+  the site has no comments configured).
+- **Per-page override:** `comments: false` in frontmatter suppresses comments on any one page.
+- **Never on embed fragments:** the embed layout does not include the partial, so `/slug/embed/`
+  versions never carry comments.
+- The `{{ page_id }}` token inside the snippet resolves to the canonical page ID (and honors the
+  `bloob-page-id:` override) — see [`urls-and-ids.md`](urls-and-ids.md).
+
+**How commentability resolves (the fallback chain).** A page's commentability follows the
+**effective shape**, resolved in this order:
+
+1. **Explicit `bloob-shape:`** whose layout includes (or omits) the comments partial.
+2. **The vault's `default_shape`** (declared in `_bloob-settings.md`) — the fallback shape for
+   any page that doesn't declare one. Its layout's choice applies.
+3. **`page.njk`** — the ultimate fallback when the effective shape has no built layout (as with
+   the not-yet-built `marble` / `note` / `page` / `video` shapes). It is commentable by default,
+   so the "undefined pile" gets comments before any shape is built.
+4. **Per-page `comments: false`** always wins — it suppresses comments on that page regardless
+   of shape.
+
+So a vault steers undefined pages by its `default_shape`, and once that shape is built its layout
+(or, later, its manifest flag) decides commentability. Until then the `page.njk` fallback is
+commentable, which is the desired default for the current vaults.
+
+**Future formalization (deferred).** Per the three-tier declaration model, a shape could declare
+`commentable: true/false` (and a default placement) in its `manifest.json`, read by the layout —
+the natural home for this behavior, and the clean way for a vault's `default_shape` to turn
+undefined-page comments on or off without touching `page.njk`. Not needed yet: every current
+vault wants its default (`page.njk`) pages commentable.
 
 ## Shapes vs. callouts — the boundary
 
@@ -299,8 +487,23 @@ This works because `assemble-src.js` copies `themes/_base/partials/` into `src-*
 ## Unknown shape names — fallback behaviour
 
 When `effectiveShape` names a shape with no `lib/visualizers/[name]/` folder:
-- If the shape was **explicitly declared** in frontmatter → logs a warning, falls back to `page.njk`
-- If the shape came from **`default_shape`** → silent, falls back to `page.njk`
+- If the shape was **explicitly declared** in frontmatter → logs a warning, falls back to the default layout
+- If the shape came from **`default_shape`** → silent, falls back to the default layout
+
+> ⚠️ **"the default layout" is NOT always `page.njk`.** It is `page.njk` for ordinary pages but
+> **`layouts/base.njk` for `index.md` / `_index.md`** — see step 5 of "How the preprocessor selects
+> the layout" above. `base.njk` is bare chrome: **no content column and no `<h1>` render.**
+>
+> This bites hard, because the preprocessor strips a leading `# Heading` from the body on the
+> assumption that `page.njk` will re-render it as the title. On an index file that fell through to
+> `base.njk`, the title is consumed into frontmatter and then **never displayed** — the page silently
+> loses both its column and its heading.
+>
+> Real case (2026-07-27): melt's `Resources/_index.md` declared `bloob-shape: page`. There is no
+> `lib/visualizers/page/`, so it fell through to `base.njk` and rendered untitled and full-bleed,
+> while `about-melt.md` — the same declared shape, an ordinary page — rendered correctly via
+> `page.njk`. The console warning even said *"falling back to page.njk"*, which was wrong for that
+> file. **If a page's title vanishes and its column is gone, check the resolved `layout:` first.**
 
 This means content files can use `bloob-shape: note` today even though `lib/visualizers/note/` doesn't exist yet — the build won't crash. When the `note` shape is eventually built and its folder appears, those files will automatically pick up its layout.
 
@@ -310,35 +513,37 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 
 ## Current shape status
 
-| Shape | Type | Complete? | Gaps |
-|-------|------|-----------|------|
-| `article` | layout-only | ✓ | First layout-only shape; reference implementation |
-| `collection` | hybrid | Partial | Phase 1 (metadata mode) shipped: cards, list, slider, bubbles, marbles display modes. Phase 2 (Pagefind full-text) deferred — needs browser testing. No `layout.njk` yet (file-scope use emits runtime placeholder only). |
-| `folder-preview` | hybrid + file-scope | ✓ | — |
-| `foldable` | inline (build-time + runtime) | Not yet built | Plan written: `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` |
-| `rss-feed` | file-scope | Partial | Missing `layout.njk`, `schema.md`, `styles.css` |
-| `card-preview` | build-time | Partial | Missing `schema.md` |
-| `checkbox-tracker` | runtime | Partial | — |
-| `citations` | runtime (CSS-only) | ✓ | — |
-| `circular-nav` | hybrid | Partial | Missing `schema.md` |
-| `fridge-magnets` | hybrid | Partial | Missing `schema.md` |
-| `graph` | hybrid | Partial | Missing `schema.md` |
-| `heading-and-paragraph` | build-time | Partial | Missing `schema.md` |
-| `image-grid` | build-time | Partial | Missing `schema.md` |
-| `image-text` | build-time | ✓ | — |
-| `ken-burns-zoom` | unknown | Incomplete | Missing `manifest.json` entirely |
-| `latex` | runtime | Partial | Missing `schema.md` |
-| `marble` | — | Not yet built | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
-| `note` | — | Not yet built | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
-| `page-preview` | runtime | Partial | — |
-| `photo-grid` | build-time | Partial | — |
-| `quotes-stack` | hybrid | Partial | Missing `schema.md` |
-| `scene-nav` | hybrid | Partial | — |
-| `search` | hybrid | Partial | Missing `schema.md` |
-| `services` | build-time | Partial | Missing `schema.md` |
-| `slideshow` | build-time | ✓ | — |
-| `tags` | hybrid | Partial | Missing `schema.md` |
-| `testimonials` | hybrid | Partial | — |
+| Shape | Type | Complete? | Builder | Gaps |
+|-------|------|-----------|---------|------|
+| `article` | layout-only | ✓ | — | First layout-only shape; reference implementation |
+| `collection` | hybrid | Partial | — | Phase 1 (metadata mode) shipped: cards, list, slider, bubbles, marbles display modes. Phase 2 (Pagefind full-text) deferred — needs browser testing. No `layout.njk` yet (file-scope use emits runtime placeholder only). |
+| `folder-preview` | hybrid + file-scope | ✓ | — | — |
+| `foldable` | inline (build-time + runtime) | Not yet built | — | Plan written: `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` |
+| `garden` | hybrid + file-scope | In progress | ✓ `builder/` | External creator's shape (Odalys Benitez), converted in its own repo — `schema.md` done; renderer + builder in progress. Plan: `bloob-haus-cloud/docs/implementation-plans/2026-07-13_garden-shape-and-builder.md` |
+| `rss-feed` | file-scope | Partial | — | Missing `layout.njk`, `schema.md`, `styles.css` |
+| `card-preview` | build-time | Partial | — | Missing `schema.md` |
+| `checkbox-tracker` | runtime | Partial | — | — |
+| `citations` | runtime (CSS-only) | ✓ | — | — |
+| `circular-nav` | hybrid | Partial | (in-page `debug: on` mode) | Missing `schema.md` |
+| `fridge-magnets` | hybrid | Partial | — | Missing `schema.md` |
+| `graph` | hybrid | Partial | — | Missing `schema.md` |
+| `heading-and-paragraph` | build-time | Partial | — | Missing `schema.md` |
+| `image-grid` | build-time | Partial | — | Missing `schema.md` |
+| `image-text` | build-time | ✓ | — | — |
+| `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
+| `latex` | runtime | Partial | — | Missing `schema.md` |
+| `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
+| `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
+| `page-preview` | runtime | Partial | — | — |
+| `page` | — | **Not a shape** | — | A bare NAME with no `lib/visualizers/page/` package, so `bloob-shape: page` resolves to nothing and the layout comes entirely from the step-5 fallback. It works on ordinary pages only by coincidence (that fallback *is* `page.njk`); on an `index.md` the same declaration lands on `base.njk` and the page loses its column and title. Four divergent theme-local `page.njk` files back it. **Prefer `bloob-shape: article`** — a real layout-only shape. If `page` should become real, add `lib/visualizers/page/manifest.json` with `defaultLayout: layouts/page.njk` and NO `layout.njk`, so each theme keeps its own. |
+| `photo-grid` | build-time | Partial | — | — |
+| `quotes-stack` | hybrid | Partial | — | Missing `schema.md` |
+| `scene-nav` | hybrid | ✓ | ✓ `builder/` (debug-mode overlay; `:::` block + Shopify embed exports; magic machine deleted 2026-07-20) | v2 nested-bullet grammar; code fence deprecated |
+| `search` | hybrid | Partial | — | Missing `schema.md` |
+| `services` | build-time | Partial | — | Missing `schema.md` |
+| `slideshow` | build-time | ✓ | — | — |
+| `tags` | hybrid | Partial | — | Missing `schema.md` |
+| `testimonials` | hybrid | Partial | — | — |
 
 ## The next file-scope shape to convert: rss-feed
 
@@ -353,6 +558,81 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 ## Rule: do not convert visualizers wholesale
 
 Convert one shape at a time, starting with shapes that are actively being used as file-scope pages. Inline-only shapes need no conversion beyond documentation gaps. Attempting to convert all shapes at once risks breaking existing content.
+
+---
+
+## User-authored shapes & the marketplace (2026-07-07 — direction settled, mostly not built)
+
+The long-term goal: **anyone (human or AI) can create a shape, test it, publish it, and any other
+user can reuse a shape already published on the internet.** This aligns with the core "reuse what
+already exists" value and turns a top-down taxonomy into a bottom-up ecology (see the conceptual doc
+`bloobhaus-notes/.../2026-05-31-BLOOB-HAUS-SHAPES-ARCHITECTURE.md` → "The vault-local shapes folder
+(decided)" and "autopoiesis"). Direction is settled; almost none of it is built. This section records
+what to hold true *now* so the future stays cheap. Backend implications live in the Phase-3 doc
+(`docs/implementation-plans/phases/phase-3/2026-07-06_webapp-backend-identity-architecture.md` →
+"The extensibility & user-authored-code model").
+
+### Naming — settled
+
+Two distinct things, deliberately given coexisting names (a file and a folder can share a stem):
+
+| Name | Kind | Holds |
+|------|------|-------|
+| `_bloob-shapes.md` | file (registry) | Table mapping `bloob-shape` → metadata (display_name, image, banner_text, description, `fastcomments`, `showvisitorcount`). The `_bloob-types.md` successor — see the bloob-shapes-unification plan. |
+| `_bloob-shapes/` | folder (definitions) | One subfolder per shape: `manifest.json`, `schema.md`, renderer JS (`browser.js` / `index.js`), optional `styles.css`, optional `assets/` (shape-shipped static files), optional `builder/` (a self-contained GUI author), optional examples. The vault-local shapes folder. |
+
+*(The conceptual doc calls the folder `/bloob-haus-shapes/`; we standardize on `_bloob-shapes/` to
+match the `_bloob-*` system-file convention.)*
+
+### Two authoring paths, one identical structure
+
+A user can create/edit a shape **either** by editing the vault repo on-machine (Claude Code, or hand)
+**or** by declaring/uploading it through the webapp UI. Both paths produce the **identical**
+`_bloob-shapes/<name>/` layout, and the backend stores it the same way in Object Storage. This
+sameness is what lets a shape port cleanly between Repo Mode and the webapp, and lets a shape be a
+"folder you can zip, share, fork." **The build pipeline must scan both built-in shapes
+(`lib/visualizers/`) and the vault's `_bloob-shapes/` folder** (local shapes win on name collision).
+That pipeline scanning is not yet implemented — see open question #7 below and TECH-DEBT.
+
+### The safety model — one hard line
+
+> **User-authored shape code runs client-side only. Build-time renderers (Node, run in *our* build
+> job) are reserved for shapes we authored or explicitly approved. Third-party & reused shapes are
+> runtime-only (`browser.js`).**
+
+- **Why the split:** `index.js` `transform()` / `renderFilescope()` run in the build job (your
+  server). Untrusted build-time code there is the dangerous "run a stranger's server code" class.
+  `browser.js` runs in the *visitor's* browser — same trust model as any website's own JS.
+- **The one residual risk of reuse:** a shape authored by user A running on user B's site is
+  XSS-as-a-service. Mitigate with the approval gate + CSP on hosted pages, and keep reuse
+  provenance-visible.
+- **Approval gate (V1):** shapes/magic-machines are published via **public GitHub pull request** —
+  all code is public and auditable, Leon reviews & merges. A miner or exfil attempt is obvious in a
+  diff. No open self-service upload of build-time/server code.
+- **Provenance:** the webapp ledger records `author` + `approver` + `visibility` per shape so reuse
+  is attributable and revocable.
+
+Full untrusted-**build-time**-code sandboxing (isolated per-tenant jobs, zero ambient credentials) is
+a **future TODO**, not needed while the client-side-only line holds.
+
+**Builders sit on the safe side of this line.** A shape builder is client-side — it runs in the
+author's browser, same trust model as `browser.js`. The one new surface: a builder that **saves to a
+vault** makes authenticated network calls (the draft-to-vault promotion flow). That auth is the
+platform's, invoked by the user's *own* session — not third-party code gaining credentials — but it is
+why a reused/third-party builder must call only the platform's own save API, never arbitrary endpoints
+(enforce with CSP on the builder page).
+
+### `schema.md` is the contract — write the canonical template EARLY
+
+This is the highest-leverage cheap task for the whole ecosystem (it's a template, not code) and it
+resolves open question #3 below. It makes shapes human-consistent, AI-authorable, and MCP-wrappable.
+
+- Every shape's `schema.md` follows one template (candidate sections in open question #3).
+- **Serve schemas at stable URLs** (e.g. `shapes.bloob.haus/<shape>/schema.md`) so AIs can crawl
+  them; expose "how to create a shape" via the **future MCP** — but the truth lives in `schema.md`,
+  MCP is a thin wrapper.
+- Do this in Phase 2 alongside the bloob-shapes-unification plan, before 20 shapes accrete
+  inconsistent schemas.
 
 ---
 
@@ -377,6 +657,9 @@ A shape is the painting. The site chrome (nav, footer, site header) is the frame
 - Is `chrome:` a frontmatter key (page-level decision) or a settings-block key (shape-behavior decision)? Argument for frontmatter: it affects page structure, not just shape rendering. Argument for settings: it's shape-internal configuration.
 - When the shape requests `chrome: none` but the theme doesn't support it, what's the fallback? Silent fall-through to full chrome?
 - Is "chrome" even the right word user-facing, or is it too jargony?
+
+**First real exercise:** `garden` declares `chrome: none` (a full-bleed, self-contained canvas).
+Expect this shape to settle the mechanism.
 
 ---
 
@@ -405,15 +688,24 @@ Every shape's `schema.md` is the human- and AI-readable contract. For AI to reli
 ## What this shape is
 ## What goes inside (allowable native contents)
 ## Settings (table: key / type / default / description)
+## Fence format / grammar (shapes with non-trivial body syntax: what each line means)
+## Parsing rules (how the shape parses its block — see "Shape-named blocks" above)
 ## Chrome preference (and override behavior)
 ## Content policy (override identity vs. preserve identity for contained shapes)
 ## Placement system (which system, vocabulary, defaults)
 ## Examples (complete .md file mockups)
 ## Translation behavior (what happens to non-native content)
 ## Closed-state visual (how this shape looks as an icon when referenced from elsewhere)
+## Builder (does this shape have a GUI author? where it lives, what core it reads/writes)
+## Authors (creator name(s) + URL — an array; renders in the shape catalog)
+## Assets (static files the shape ships, if any)
 ```
 
 **Open question:** write the canonical template before building the next shape, or extract it from the first three complete shapes retroactively? Argument for writing it now: prevents inconsistency across 20 shapes. Argument for retroactively: real usage reveals what the template actually needs.
+
+The **fence-grammar** and **parsing-rules** sections were proven necessary by `garden` — the first
+shape whose block is not YAML. They were the two things that shape spent the most design effort on,
+and the template had no home for either. Garden's `schema.md` is the reference implementation of both.
 
 ---
 

@@ -8,7 +8,7 @@
 
 **User-facing settings** live in `_bloob-settings.md` in each content repo. This file is the *developer* reference: what exists, what scope it has, which themes implement it, and HOW to wire it into a new theme.
 
-**Last Updated:** 2026-06-03
+**Last Updated:** 2026-07-20
 
 ---
 
@@ -23,9 +23,11 @@ These settings work identically across every theme. They are part of the Bloob H
 | `hide_nav` | bool | `false` | Hide the site navigation bar on this page |
 | `hide_footer` | bool | `false` | Hide the site footer on this page |
 | `body_class` | string | — | Extra CSS class(es) added to `<body>` |
-| `layout` | string | layout from `bloob-type` or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-type`) |
-| `bloob-type` | string | — | Content type for this page (e.g. `note`, `guide`). Controls layout, graph icon, and banner display. Defined in `_bloob-types.md`. Alias: `bloob-object` (legacy). |
-| `bloob-shape` | string | — | Rendering shape for this page. Routes the entire page body through the named shape's `renderFilescope()` renderer in `lib/visualizers/[name]/index.js`. Separate from `bloob-type:` — a file can have both. Shape config goes in a `::: settings` block in the body (not in frontmatter). See `docs/architecture/visualizers.md` — File-scope Shapes section. |
+| `background_image` | wikilink | site-wide `background_image` | Per-page override of the site background photo, e.g. `background_image: "[[photo.jpg]]"`. Resolved by `scripts/generate-background.js` → `site.backgroundImages`; the theme's `base.njk` picks the page value and falls back to the sitewide one. Requires a theme with a background-image system (melt today). |
+| `layout` | string | shape layout, or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-shape`) |
+| `bloob-shape` | string | — | **Primary identity + rendering key.** Names the page's shape and drives (a) layout selection, (b) `renderFilescope()` body rendering (`lib/visualizers/[name]/index.js`), and (c) identity — banner image/text, graph icon, display name — looked up in `_bloob-shapes.md`. Identity resolves via `resolveIdentityKey` (precedence below). Shape config goes in a `::: settings` block in the body, not frontmatter. See `docs/architecture/shapes.md` + `visualizers.md`. |
+| `bloob-type` | string | — | **Legacy identity alias** for `bloob-shape` (older vaults; registry `_bloob-types.md`). Still accepted, and **wins for identity when explicitly set** — precedence `bloob-type` > `bloob-object` > `bloob-shape` — so a page may render as one shape while identifying as another. New content should use `bloob-shape:`. |
+| `bloob-object` | string | — | Oldest legacy identity alias (registry `_bloob-objects.md`). Same precedence rules as `bloob-type`. New content should use `bloob-shape:`. |
 | `description` | string | — | Page-level SEO description for `<meta name="description">` and OG tags. Falls back to `site.description` when absent. Only set when the page deserves a distinct description. |
 | `author` | string | — | Attribution name rendered as "By [author]" below the page title. |
 | `date_created` | string | — | Creation date (`YYYY-MM-DD`). Available to every theme via the data cascade; rendered as a pill only where a theme wires it up. Written by the bloob-haus Obsidian plugin. |
@@ -33,6 +35,8 @@ These settings work identically across every theme. They are part of the Bloob H
 | `visibility` | string | — | Per-page visibility shorthand. `private` = excluded from build entirely. `unlisted` = built but hidden from all indexes (RSS, search, sitemap, noindex). Works in any `publish_mode`. Sets `_bloob_unlisted: true` internally. |
 | `website_status` | string | depends on `publish_by_default` | Used when `publish_mode: status_field`. `draft` = excluded from build. `unlisted` = built, hidden from all indexes. `archived` = built, Google-indexable, hidden from listings. `public` = fully published. Absent field = excluded if `publish_by_default: false`, treated as public if `true` (default). |
 | `transclusion_indicators` | bool | `true` (or site-wide default) | When `false`, `![[embeds]]` are inlined seamlessly with no wrapper div. When `true`, embeds are wrapped in `<div class="transclusion-embed">` so themes can add a visual indicator. Overrides `features.transclusion_indicators` from `_bloob-settings.md`. |
+| `comments` | bool | `true` | When `false`, suppresses the comment embed (`fast-comments-embed` fence) on this page. No effect unless the site has a `fast-comments-embed` snippet. |
+| `bloob-page-id` | string | derived from URL | Override the canonical page ID (lowercased). Primary use: after moving/renaming a note, set this to its **old** ID so the FastComments thread stays attached. See `docs/architecture/urls-and-ids.md`. |
 
 #### Optional display fields (not in standard YAML, no UI prompt)
 
@@ -95,12 +99,37 @@ Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`
 
 ### Site-Wide (top-level keys in `_bloob-settings.md`)
 
+#### URL Contract (`url:` block)
+
+The single source of truth for how URLs are built. Consolidates settings that were previously
+split between `_bloob-settings.md` and `sites/*.yaml`. Full spec: **`docs/architecture/urls-and-ids.md`**.
+
+```yaml
+url:
+  base: https://leons.bloob.haus   # subdomain or custom domain
+  case: preserve                   # preserve | lower
+  date_prefix: keep                # keep | strip | none
+  mount_path: ""                   # optional subpath, e.g. "marbles"
+```
+
+| Key | Values | Maps to | Description |
+|-----|--------|---------|-------------|
+| `url.base` | full URL | `site.url` | Site origin. |
+| `url.case` | `preserve` / `lower` | `permalinks.strategy` | `lower`→slugify (lowercase), `preserve`→preserve-case. |
+| `url.date_prefix` | `keep` / `strip` / `none` | `features.date_from_filename` + `date_prefix_slugs` | Leading `YYYY-MM-DD-` handling: keep in URL / strip from URL / ignore. |
+| `url.mount_path` | string | `mount_path` | Mount site under a subpath. Empty = root. |
+
+Legacy flat keys (`permalink_strategy`, and `sites/*.yaml` values) still work; the `url:` block
+wins when present. The derived **canonical page ID** = lowercased `host + path` — used as the
+FastComments `urlId` and exposed as `<meta name="bloob-page-id">`. See the contract doc.
+
 #### Logo & Favicon
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `logo` | string | Site logo — used in nav and as favicon source if `favicon` is not set |
+| `logo` | string | Site logo — used in nav and as favicon source if `favicon` is not set. A markdown-link label (`[alt text](file.png)`) becomes `site.logoAlt` — themes render it as the logo's alt attribute |
 | `favicon` | string | Favicon source image — takes priority over `logo` for favicon generation. Generates `favicon.png` (64×64) and `apple-touch-icon.png` (310×310) |
+| `background_image` | string | Optional site background image. Resolved like `logo` (wiki-link/md-link/path), resized to 1920px webp (`scripts/generate-background.js`, hash-cached) → `site.backgroundImage`. Themes decide whether/how to render it — `melt` shows it as a fixed full-bleed layer |
 
 Both fields accept the same value formats:
 - `"[[filename.png]]"` — wiki-link (resolves to `/media/filename.png`)
@@ -111,9 +140,24 @@ Both fields accept the same value formats:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `default_shape` | string | — | Shape name applied to pages with no `bloob-shape:` in frontmatter. Only influences layout selection — body rendering (`renderFilescope`) never fires from the default. If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk`. This lets you declare a future shape name without breaking the build. Example: `default_shape: marble`. |
+| `default_shape` | string | — | Fallback shape for pages with no `bloob-shape:` in frontmatter. Governs their **layout** and, through it, their **commentability** (see `docs/architecture/shapes.md` → "Comments — a shape behavior"). Only influences layout selection — body rendering (`renderFilescope`) never fires from the default. If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk` (which is commentable). This lets you declare a future shape name without breaking the build. Optional — an undeclared page is a valid "undefined pile" state. Example: `default_shape: marble`. |
 
 **How to wire in a new theme:** No theme-level changes needed. Layout selection is handled entirely by the preprocessor — it reads the shape's `manifest.json.defaultLayout`, copies the shape's `layout.njk` into `src/_includes/layouts/`, and injects the `layout:` key into each page's frontmatter automatically.
+
+#### Shape identity registry (`_bloob-shapes.md`)
+
+`bloob-shape:` drives both a page's **rendering** and its **identity** (banner image/text, graph icon, display name), resolved by `resolveIdentityKey` (`scripts/utils/bloob-objects-reader.js`) with precedence `bloob-type` > `bloob-object` > `bloob-shape`. Per-shape identity metadata lives in a **`_bloob-shapes.md`** table at the vault root — the forward-facing successor to `_bloob-types.md` (`object_type` column) and `_bloob-objects.md`, all still read (first found wins, in that order). **The registry is OPTIONAL**: with no row, banner/icon fall back to the theme's `assets/objects/<shape>.png`; the registry only adds banner prose, a custom icon, and a display name. Scaffold: `themes/_base/_bloob-shapes.template.md`. Canonical detail: `docs/architecture/themes.md` → "Object Identity System".
+
+| Column | Description |
+|--------|-------------|
+| `bloob-shape` | Shape/identity key (legacy header: `object_type`). |
+| `display_name` | Human label (defaults to the key). |
+| `image` | `none` \| `default` (site favicon) \| `[[file.png]]` \| `/assets/objects/x.png`. |
+| `banner_text` | Prose shown in the page banner. |
+| `description` | Longer text (shape catalog / banner modal). |
+| `fastcomments` | Per-shape comment behavior (`true`/`false`, default `true`). **Parsed into the registry today; per-shape gating is not yet wired** — comments are currently controlled by whether a shape's `layout.njk` includes `partials/comments.njk` and by per-page `comments:`. |
+| `showvisitorcount` | Per-shape visitor-count behavior (`true`/`false`, default `true`). Parsed today; **gating deferred** — GoatCounter is currently site-wide. |
+| `layout` *(legacy)* | Optional per-shape layout override — only `_bloob-types.md` vaults use it. Omit in `_bloob-shapes.md`; layout is the shape's job (`lib/visualizers/<shape>/layout.njk`, else `page.njk`). |
 
 #### Publish Mode
 
@@ -131,6 +175,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.backlinks` | `true` | Backlinks section on each page |
 | `features.search` | `true` | Pagefind search |
 | `features.rss` | `true` | RSS feed |
+| `features.per_page_visualizers` | `false` | Load only the visualizer CSS/JS a page uses (TECH-DEBT #4). Set in `sites/<name>.yaml`, not `_bloob-settings.md`. Shapes opt in via `detect` in their `manifest.json`; unannotated shapes always load. **Run `node scripts/audit-visualizer-detection.js --src=src-<name>` against a real build before enabling on a new site.** On: melt, marbles. Off: buffbaby, alter-engineers. |
 | `features.sitemap` | `true` | sitemap.xml |
 | `features.og_images` | `true` | OG preview image generation |
 | `features.tags` | `true` | Tag system |
@@ -153,6 +198,30 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | Key | Default | Description |
 |-----|---------|-------------|
 | `media.convert_gif_to_mp4` | `true` | Auto-convert GIF files to MP4 at build time. GIFs are removed from the deployed output; photo-grid renders them as `<video autoplay loop muted playsinline>`. Videos play in the PhotoSwipe lightbox when clicked. On iOS Low Power Mode where autoplay is blocked, a ▶ play overlay appears; a "Play all animations" button is injected if any videos are paused. Set to `false` to keep GIFs rendered as `<img>` tags. |
+
+#### Snippets & Embeds (raw code fences in the `_bloob-settings.md` **body**)
+
+Raw HTML/JS snippets are pasted as **named fenced code blocks in the body** of `_bloob-settings.md` (never in frontmatter — a raw `<script>` would break the YAML). Parsed by `parseEmbedFences()` in `scripts/utils/bloob-settings-reader.js`. **An empty fence is ignored** — that is how a user turns a snippet off ("present means on"). Every fence is exposed to templates as `site.embeds['<name>']`; fences in `EMBED_TARGETS` are additionally concatenated into `site.snippets.{head,bodyEnd}` and auto-injected.
+
+| Fence name | Injected at | Notes |
+|-----------|-------------|-------|
+| `header-snippet` | `<head>` | Generic head injection (meta tags, `<link>`, verification tags) |
+| `goat-counter-tracking` | `<head>` | GoatCounter analytics — user pastes their own `<script data-goatcounter=…>`. Fires on every page including `/slug/embed/` versions (recorded under their natural `/…/embed/` path). |
+| `footer-snippet` | before `</body>` | Generic end-of-body injection |
+| `embed-endofbody` | before `</body>` | Generic end-of-body injection |
+| `fast-comments-embed` | content-bottom of `page.njk` (via `partials/comments.njk`) | Comment embed (e.g. FastComments). Rendered after `</article>` on content pages only — not on embed versions, folder indexes, or home. Opt out per-page with `comments: false`. Use `{{ page_id }}` for the comment thread key (FastComments `urlId`). |
+| `embed-*` (any name) | *(not auto-injected)* | Available as `{{ site.embeds['embed-x'] \| safe }}` for manual placement anywhere in a theme. |
+
+**Per-page tokens** (substituted inside any snippet by the `injectPageVars` filter — a fixed vocabulary, *not* full template eval):
+
+| Token | Resolves to | Source |
+|-------|-------------|--------|
+| `{{ page_id }}` | canonical page ID — lowercased `host + path` (domain-unique; see `docs/architecture/urls-and-ids.md`) | `derivePageId(site.url, page.url)` |
+| `{{ page_url }}` | page URL path | `page.url` |
+| `{{ page_full_url }}` | absolute page URL (preserve-case) | `site.url + page.url` |
+| `{{ page_title }}` | page title | `title` |
+
+Canonical author-facing scaffold: `themes/_base/_bloob-settings.template.md`. Design: `docs/implementation-plans/phases/phase-2/2026-07-03_snippet-injection-analytics.md`.
 
 ---
 
@@ -208,6 +277,35 @@ The image optimizer (`eleventy.config.js`) automatically wraps `/media/` images 
 | `marbles-pouch` | ✓ | ✓ |
 | `alter-engineers` | ✓ | ✓ |
 | `warm-kitchen` | ✗ missing | ✗ missing |
+
+### Snippet injection — `site.snippets` / `site.embeds`
+
+Raw snippets pasted into `_bloob-settings.md` fences (see "Snippets & Embeds" above) are injected via two shared `_base` partials. A theme wires them by including each partial once.
+
+**Every theme's `partials/head.njk` must include (just before `</head>`):**
+```njk
+{% include "partials/site-snippets-head.njk" %}
+```
+
+**Every theme's `layouts/base.njk` must include (just before `</body>`):**
+```njk
+{% include "partials/site-snippets-footer.njk" %}
+```
+
+**Every theme's `layouts/page.njk` must include (just after `</article>`, for the `fast-comments-embed` fence):**
+```njk
+{% include "partials/comments.njk" %}
+```
+
+All three partials no-op when no fences are present, so wiring them is always safe. The embed layout (`themes/_base/layouts/embed.njk`) includes the shared `head.njk` (so embed versions inherit head snippets) but not `comments.njk` (so embed versions never show comments).
+
+**Theme implementation status:**
+| Theme | head include | footer include | comments include |
+|-------|--------------|----------------|------------------|
+| `warm-kitchen` (`_base` head) | ✓ | ✓ | ✓ |
+| `marbles-pouch` | ✓ | ✓ | ✓ |
+| `melt` | ✓ | ✓ | ✓ |
+| `alter-engineers` | ✓ | ✓ | ✓ |
 
 ### `bg=` / `color=` — Section Color Pairs
 
@@ -283,9 +381,40 @@ its body typeface (faces with a tall x-height read larger than their nominal siz
 | `--article-h4-size` | `1rem` | In-body `#### h4` |
 | `--article-h5-size` | `0.9rem` | In-body `##### h5` |
 | `--article-h6-size` | `0.82rem` | In-body `###### h6` |
+| `--article-width` | `820px` | Reading-column max-width |
+| `--article-padding-top` | `var(--spacing-lg, 2.5rem)` | Space above the header |
+| `--article-padding-bottom` | `var(--spacing-lg, 2.5rem)` | Space below the body (added 2026-07-27) |
+| `--article-media-radius` | `8px` | Corner radius on embedded iframe/embed |
+| `--article-media-margin` | `1.5rem` | Space below an embed |
+| `--article-video-ratio` | `16 / 9` | Aspect ratio for YouTube / Vimeo embeds |
+| `--article-table-size` | `0.9rem` | In-body table font size |
+| `--article-table-cell-padding` | `10px 14px` | Table cell padding |
+| `--article-strong-weight` | `600` | `**strong**` weight in body copy |
+| `--article-banner-size` | `0.9rem` | Shape `banner_text` size |
 
 **Theme contract:** optional. Set in the theme's `main.css` `:root`. Full guidance and a worked
 example (alter-engineers) are in `themes.md` → "Article-shape sizing tokens".
+
+---
+
+### Article-shape per-page settings (`::: settings` block)
+
+Authored in a `::: settings` block in the page body, not in frontmatter — see
+`shapes.md` → "The `shape_settings` mechanism".
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `share_bar` | bool | `true` | `false` hides the Copy link / Embed bar |
+| `show_date_created` | bool | `true` | `false` hides the "Written on" pill (added 2026-07-27) |
+| `show_date_updated` | bool | `true` | `false` hides the "Updated on" pill (added 2026-07-27) |
+
+**Date authoring — two conventions, both supported** (`scripts/utils/date-field.js`):
+
+| Form | Example | Used by |
+|------|---------|---------|
+| Comma | `date_created: 2024-11-07, Published on` | marbles, alter-engineers |
+| Separate key | `date_created: 2024-11-07` + `date_created_text: Published on` | melt |
+| List | `date_updated:` with a `- YYYY-MM-DD` list | melt — **latest entry wins**, not first |
 
 ---
 
@@ -303,6 +432,17 @@ Settings that apply to specific visualizers regardless of theme.
 | `quotes[].name` | string | — | Speaker name |
 | `quotes[].date` | string | — | Display date |
 | `quotes[].color` | string | — | Card color variant (`red`, `white`, `green`) |
+
+### `collection` code fence
+
+Full reference: `lib/visualizers/collection/schema.md`. Settings added since:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `placeholder` | string | `Search...` | Placeholder text for the collection's own filter input (added 2026-07-27) |
+
+The filter input reads the shared `--sv-*` search-surface tokens, so it matches the
+site-wide Pagefind bar in whatever theme is active.
 
 ### `folder-preview` code fence
 
@@ -342,7 +482,7 @@ Settings that only exist in the `alter-engineers` theme. They have no effect on 
 #### Notes
 
 - `hide_nav` and `hide_footer` are universal (defined above) and fully implemented in `themes/alter-engineers/layouts/base.njk`
-- Bloob-object `project-profile` maps to `layouts/project.njk` via `_bloob-objects.md` in the content repo
+- Shape `project-profile` maps to `layouts/project.njk` via the `layout` column in `_bloob-objects.md` (legacy registry; `_bloob-shapes.md` is the current name) in the content repo
 
 ---
 
@@ -382,6 +522,7 @@ No theme-specific page-level settings beyond the universal contract.
 | `date_created_text` | string | `Written on` | `layouts/page.njk` | Custom label for the creation-date pill. |
 | `date_updated` | list of strings | — | `layouts/page.njk` | Renders an "updated" pill from the most recent entry. Hidden when the latest update matches `date_created`. See universal `date_updated`. |
 | `date_updated_text` | string | `Updated on` | `layouts/page.njk` | Custom label for the updated-date pill. |
+| `subtitle` | string | — | `layouts/home.njk` | Homepage tagline under the logo. Falls back to `site.description` from `_bloob-settings.md`. The homepage `title:` also feeds the tab/og title (preferred over `site.title` on `/`). |
 
 ---
 

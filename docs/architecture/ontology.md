@@ -34,7 +34,7 @@ A pond is a pond. It behaves like a pond. It does what ponds do to the things th
 
 A `bloob-type` (old terminology for `bloob-shape`), a `visualizer`, and an inline `:::` block are the same thing at different scopes: declarations of a **shape**. A shape is a kind of _bloob_ with its own visual identity, internal rules, and policy on what enters it. A pond, a garden, a marble, a book, a card, a map, a house, a room.
 
-"Shape" is the right word because it carries no implementation baggage. The renderer that produces a shape's visual is the *visualizer* — that is code. The user encounters a shape.
+"Shape" is the right word because it carries no implementation baggage. A shape has **one core** (the saved data — the thing that *is* the marble or garden) and up to **two faces** over it: a **renderer** that turns core → visual (read mode; the *visualizer* — that is code) and an optional **builder** that turns GUI → core (write mode). Because both faces read and write the *same* core through the *same* schema, they cannot drift — the builder is a face of the shape, not a separate app. The user encounters a shape; they never see which face they are touching.
 
 **There are two kinds of shape, and conflating them is the trap.** The one-concept story is true for *authoring* (one syntax, one mental model, one word) but the *contract* differs:
 
@@ -152,6 +152,11 @@ Two halves of one idea:
 
 Frontmatter stays for stable identity metadata (title, date, tags, author, `bloob-shape:`). Configuration lives in the body where the writing happens.
 
+Two refinements, learned from `garden` (the first shape-named block — see `shapes.md` → "Shape-named blocks"):
+
+- **The block need not be YAML.** `:::settings` is the default path for key/value knobs; a shape with a real grammar declares a shape-named block (`::: garden`) and parses it itself.
+- **A full-page shape may keep identity in its body.** When a shape owns the entire page (`chrome: none`), its block *is* the whole surface — so `title`/`author` live inside the block as the single source of truth, and frontmatter carries only `bloob-shape:`. One place to hand-edit, byte-identical to what the builder writes. The frontmatter rule above holds for every shape that shares the page with prose.
+
 ---
 
 ## The six questions, answered
@@ -159,10 +164,10 @@ Frontmatter stays for stable identity metadata (title, date, tags, author, `bloo
 These are the Engineering Review's Section F questions. The answers below are the current position — written down so the visual design can express them.
 
 **1. What is a marble?**
-An object, not a page. States: closed (calling card), open (full content), hovered (preview), shared (with sender's note), embedded (chrome stripped). Data: title, body, `bloob_object` type, banner image, author, dates, tags, links, visibility. Behavior: embeddable?, commentable?, linkable-to-heading? A marble has its own nature — it exists in relation to other things, not just in relation to a viewer.
+An object, not a page. States: closed (calling card), open (full content), hovered (preview), shared (with sender's note), embedded (chrome stripped). Data: title, body, shape/identity (`bloob-shape:`), banner image, author, dates, tags, links, visibility. Behavior: embeddable?, commentable?, linkable-to-heading? A marble has its own nature — it exists in relation to other things, not just in relation to a viewer.
 
 **2. What is a bloob object?**
-The taxonomy that distinguishes a marble from a recipe from a project from a machine. Each type has an icon, a banner image, banner text, a default visualizer, a description. **Decision: the taxonomy is open.** Each user's `_bloob-objects.md` is their personal taxonomy. This is part of the differentiation — users name their own kinds of things.
+The taxonomy that distinguishes a marble from a recipe from a project from a machine — in current terms, the **identity facet of a shape** (its icon, banner image, banner text, description, display name; the other facet is rendering). "Bloob object" / "bloob type" are older names for this facet; the forward-facing key is `bloob-shape:`. **Decision: the taxonomy is open.** Each user names their own kinds of things in `_bloob-shapes.md` — their personal taxonomy, keyed by `bloob-shape:` (legacy `_bloob-types.md` / `_bloob-objects.md`, keyed by `bloob-type:` / `bloob-object:`, are still read). This is part of the differentiation. See "What a shape is" above — identity and rendering are two faces of one shape, resolved from one key.
 
 **3. What is a connection?**
 Historically: backlink, tag, mention, embed, transclusion — five reference relationships, each with a visual form (pill, tag chip, inline link, embedded card, inlined fragment). **The reframe:** the primary connection in Bloob Haus is *containment / placement*, not reference. Placement is the new backlink. Reference relationships still exist and still render (backlinks ✓, tags ✓, embeds = portability work), but the structural spine is *where things are placed*, not *what points at what*.

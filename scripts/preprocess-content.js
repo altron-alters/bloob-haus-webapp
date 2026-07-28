@@ -3,6 +3,7 @@
  * Orchestrates all preprocessing steps: filter, index, resolve links, copy attachments.
  */
 
+import { isMainModule } from "./utils/is-main.js";
 import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
@@ -42,6 +43,7 @@ import { resolveRedirect } from "./utils/redirect-resolver.js";
 import {
   readBloobObjects,
   normalizeBloobObject,
+  resolveIdentityKey,
   parseObjectImageField,
 } from "./utils/bloob-objects-reader.js";
 
@@ -274,6 +276,12 @@ export async function preprocessContent({
     processedContent = transclusionResult.content;
     stats.transclusions += transclusionResult.transclusions.length;
 
+    // 6b.5: Capture the PRE-resolution raw of scene-nav blocks (before link resolution
+    // rewrites note.md → /url/). Emitted as data-vis-raw-source so the scene-nav builder
+    // can round-trip the authored, un-resolved refs. scene-nav only — inert for all other
+    // shapes/sites (opener never gets _rawsource, container renderer emits nothing).
+    processedContent = injectContainerRaw(processedContent, { attr: "_rawsource", onlyShape: "scene-nav" });
+
     // 6c: Resolve attachments (images, embeds, HTML files)
     const attachmentResult = resolveAttachments(
       processedContent,
@@ -420,8 +428,9 @@ export async function preprocessContent({
       };
     }
 
-    // 6h: Normalize bloob-object/bloob-type (both accepted; bloob-type takes priority)
-    const bloobObject = normalizeBloobObject(frontmatter["bloob-type"] || frontmatter["bloob-object"]);
+    // 6h: Resolve the page's bloob identity. `bloob-shape` is the forward-facing key;
+    // `bloob-type` / `bloob-object` remain accepted as legacy identity keys (they win when set).
+    const bloobObject = normalizeBloobObject(resolveIdentityKey(frontmatter));
 
     // Resolve redirect frontmatter (supports bare URLs, [[wiki-links]], [text](url)).
     // Accept both `redirect:` and `Redirect:` (YAML is case-sensitive; vault authors may use either).
@@ -698,6 +707,20 @@ export async function preprocessContent({
     `[tags] Wrote ${Object.keys(tagIndex).length} tags to tagIndex.json (${stats.tagsExtracted} total tag references)`,
   );
 
+  // Persist the attachment index (basename/vault-path → resolved URL) as build data.
+  // Shapes that carry their own image refs (e.g. scene-nav, whose markdown-link images
+  // the general resolver skips) read this at render to resolve refs themselves. Written
+  // to _data so it is build data, not a served file.
+  const attachmentIndexPath = path.join(tagIndexDir, "attachmentIndex.json");
+  await fs.writeJson(
+    attachmentIndexPath,
+    { byBasename: attachmentIndex.byBasename || {}, byVaultPath: attachmentIndex.byVaultPath || {} },
+    { spaces: 0 },
+  );
+  console.log(
+    `[attachments] Wrote attachmentIndex.json (${Object.keys(attachmentIndex.byBasename || {}).length} basenames)`,
+  );
+
   // Step 8: Build and write graph.json + run visualizer preprocess hooks
   console.log("\n--- Step 8: Building graph data + visualizer hooks ---");
   const graphData = buildGraph(perPageLinks, tagIndex);
@@ -881,7 +904,7 @@ export async function preprocessContent({
 }
 
 // Run directly if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMainModule(import.meta.url)) {
   // Load environment variables from .env.local
   const envPath = path.join(ROOT_DIR, ".env.local");
   if (fs.existsSync(envPath)) {
