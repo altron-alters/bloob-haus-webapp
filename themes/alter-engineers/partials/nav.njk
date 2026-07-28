@@ -1,9 +1,13 @@
 {#
   nav.njk — Site navigation.
 
-  All nav links are homepage section anchors (#projects, #about-us, …).
+  Most nav links are homepage section anchors (#about-us, #services, …).
   On the homepage they scroll in place. On any other page they navigate
   to the homepage first, then the browser jumps to the section.
+
+  EXCEPTION: PROJECTS links to the real /projects/ index page (a `collection`
+  shape listing every project), not the homepage's #projects teaser section.
+  It therefore does not use homePrefix.
 
   homePrefix: "" on "/" → pure anchor scroll (no navigation)
               "/" on all other pages → /#section navigates home then scrolls
@@ -24,7 +28,7 @@
         </div>
         <div class="header-navigation-bar__mobile-nav-items">
             <ul class="menu">
-                <li class="menu-item"><a href="{{ homePrefix }}#projects">PROJECTS</a></li>
+                <li class="menu-item"><a href="{{ "/projects/" | url }}">PROJECTS</a></li>
                 <li class="menu-item"><a href="{{ homePrefix }}#about-us">WHAT DRIVES US</a></li>
                 <li class="menu-item"><a href="{{ homePrefix }}#services">OUR SERVICES</a></li>
                 <li class="menu-item"><a href="{{ homePrefix }}#team">OUR TEAM</a></li>
@@ -43,7 +47,7 @@
             </div>
             <div class="header-navigation-bar__desktop-nav-items">
                 <ul class="menu">
-                    <li class="menu-item"><a href="{{ homePrefix }}#projects">PROJECTS</a></li>
+                    <li class="menu-item"><a href="{{ "/projects/" | url }}">PROJECTS</a></li>
                     <li class="menu-item"><a href="{{ homePrefix }}#about-us">WHAT DRIVES US</a></li>
                     <li class="menu-item"><a href="{{ homePrefix }}#services">OUR SERVICES</a></li>
                     <li class="menu-item"><a href="{{ homePrefix }}#team">OUR TEAM</a></li>
