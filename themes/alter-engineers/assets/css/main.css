@@ -33,6 +33,12 @@
   --nav-height:          3rem;   /* fixed header-navigation-bar height */
   --article-width:       820px;  /* max reading width for bloob-shape: article */
   --article-padding-top: calc(var(--nav-height) + var(--spacing-lg));
+  /* Opt in to the shape width contract: a nested shape that declares
+     `width: wide` (collection does, by default) breaks out of the 820px
+     reading column to this width. Prose stays at --article-width.
+     Unset it and every shape renders at prose measure again.
+     See docs/architecture/shapes.md -> Width preference. */
+  --shape-width-wide:    1200px;
 
   /* Article shape — AE brand colors */
   --article-title-color:    var(--accent-color);
