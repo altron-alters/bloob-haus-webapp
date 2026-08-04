@@ -25,6 +25,7 @@
 
 import fs from "fs-extra";
 import path from "path";
+import { smartTitleCase } from "./smart-title-case.js";
 
 export const TEMPLATE_NAME = "folder-index.md";
 
@@ -68,11 +69,13 @@ export function renderFolderIndexTemplate(template, vars = {}) {
 
 /**
  * Derive the human-readable folder name from a slug: `case-studies` → `Case Studies`.
+ *
+ * Delegates to the shared smartTitleCase so this doesn't become yet another
+ * divergent copy — it is the same derivation the file index, the preprocessor
+ * and the `titleCase` Nunjucks filter use. The shared version additionally
+ * keeps joining words lowercase ("come-to-MELT" → "Come to MELT", not
+ * "Come To MELT") and preserves acronyms.
  */
 export function folderDisplayName(slug) {
-  return String(slug)
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+  return smartTitleCase(slug);
 }

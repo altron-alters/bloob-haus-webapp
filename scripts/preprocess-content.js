@@ -42,6 +42,8 @@ import { injectContainerRaw } from "./utils/inject-container-raw.js";
 import { extractSettingsBlock } from "./utils/extract-settings-block.js";
 import { getLastModifiedDate } from "./utils/git-date-extractor.js";
 import { stripDatePrefix } from "./utils/date-prefix.js";
+import { smartTitleCase } from "./utils/smart-title-case.js";
+import { slugifyPath } from "./utils/slug-strategy.js";
 import { extractTags, buildTagIndex } from "./utils/tag-extractor.js";
 import { buildGraph } from "./utils/graph-builder.js";
 import { resolveRedirect } from "./utils/redirect-resolver.js";
@@ -579,8 +581,16 @@ export async function preprocessContent({
       ["index", "_index"].includes(path.basename(file.relativePath, ".md"));
     if (isIndexFile && BUILD_TARGET === "eleventy") {
       const dir = path.dirname(file.relativePath);
-      const permalink =
-        dir === "." ? "/" : "/" + dir.replace(/\\/g, "/") + "/";
+      // The file index is the single source of truth for URLs, so prefer the URL
+      // it already computed for this page. The slugifyPath fallback covers pages
+      // missing from the index (e.g. drafts) and derives the same value anyway.
+      //
+      // This used to be `"/" + dir + "/"` — the raw directory name, bypassing the
+      // slug strategy. On a `case: lower` site that pinned the folder index at
+      // "/Resources/" while its children lived under "/resources/", which macOS's
+      // case-insensitive filesystem silently merged and Linux CI would not.
+      const permalink = pageInfo?.url
+        ?? (dir === "." ? "/" : "/" + slugifyPath(dir, slugStrategy) + "/");
       outputFrontmatter.permalink = permalink;
       if (!hasEleventyLayout) {
         outputFrontmatter.layout = bloobObjectLayout ?? bloobShapeLayout ?? shapeManifestLayout ?? "layouts/base.njk";
@@ -597,10 +607,7 @@ export async function preprocessContent({
         // "My Title" (set via file-index-builder) and we must not overwrite it.
         const filenameStem = path.basename(file.relativePath, ".md");
         if (pageTitle === filenameStem) {
-          const folderDisplay = folderSlug
-            .split(/[-_\s]+/)
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(" ");
+          const folderDisplay = smartTitleCase(folderSlug);
           outputFrontmatter.title = folderDisplay;
           outputFrontmatter.folder_display = folderDisplay;
         }
@@ -841,7 +848,20 @@ export async function preprocessContent({
         continue;
       }
 
+      // Display name comes from the ORIGINAL folder name, never the slug, so
+      // acronyms survive on `case: lower` sites ("come-to-MELT" → "Come to MELT").
       const folderDisplay = folderDisplayName(folderSlug);
+
+      // `folderSlug` is the on-disk directory name and stays that way for
+      // filesystem paths — but EVERY value the template interpolates is either a
+      // URL or a graph lookup key, so `slug` must go through the site's slug
+      // strategy first. This is exactly the trap folder-index-template.js's
+      // header warns about, from both ends:
+      //   - `source: folder=Resources` matches nothing, silently, because
+      //     graph.json's `section` is slugified
+      //   - `permalink: /Resources/` puts a folder index at a different path
+      //     from its own children on a case-sensitive filesystem
+      const folderUrlPath = slugifyPath(folderSlug, slugStrategy);
 
       // The stub body comes from a markdown TEMPLATE that composes a shape —
       // themes/<theme>/templates/folder-index.md, else themes/_base/. It used
@@ -860,7 +880,7 @@ export async function preprocessContent({
       }
 
       const stub = renderFolderIndexTemplate(folderIndexTemplate, {
-        slug: folderSlug,
+        slug: folderUrlPath,
         folder_display: folderDisplay,
       });
 

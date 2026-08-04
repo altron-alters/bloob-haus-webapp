@@ -104,15 +104,70 @@
   margin: 0.2rem 0 0;
 }
 
+/* Frosted-glass pill, on by default for every theme (2026-07-28).
+
+   The color is deliberately unchanged: the fill is still a wash of the theme's OWN
+   --accent-color, so each site keeps its palette and only the *material* changes.
+   The one substantive edit is what the accent is mixed WITH — it used to be mixed
+   into an opaque --bg-color, which is why the pill read as a flat chip; mixing into
+   `transparent` is what makes it translucent, so whatever is behind (melt's
+   watercolor photo, a card, plain paper) shows through.
+
+   Light edges are inset box-shadows rather than a ::before, so the rule works
+   whatever element the layout wraps the date in.
+
+   A theme that wants the old flat chip back sets --article-date-tint: 100% and
+   --article-date-blur: 0. */
 .article-date {
   display: inline-block;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--accent-color, #555);
-  background: color-mix(in srgb, var(--accent-color, #888) 12%, var(--bg-color, #fff) 88%);
-  border-radius: 20px;
-  padding: 0.22em 0.7em;
+  background: color-mix(in srgb, var(--accent-color, #888) var(--article-date-tint, 14%), transparent);
+  -webkit-backdrop-filter: blur(var(--article-date-blur, 7px));
+  backdrop-filter: blur(var(--article-date-blur, 7px));
+  border: 1px solid color-mix(in srgb, var(--accent-color, #888) 22%, transparent);
+  box-shadow:
+    0 4px 14px color-mix(in srgb, var(--text-color, #000) 8%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding-top: 0.22em;
+  padding-bottom: 0.22em;
+  padding-left: 0.7em;
+  padding-right: 0.7em;
   margin-top: 0.75rem;
+}
+
+/* ── Visitor count ────────────────────────────────────────────────────────────
+   Same glass pill as .article-date, one notch quieter — it is ambient information,
+   not page metadata the reader came for. Starts `hidden`; the partial's script only
+   unhides it once a count actually arrives. */
+.visitor-count {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-light, var(--text-color, #666));
+  background: color-mix(in srgb, var(--text-color, #888) var(--visitor-count-tint, 8%), transparent);
+  -webkit-backdrop-filter: blur(var(--article-date-blur, 7px));
+  backdrop-filter: blur(var(--article-date-blur, 7px));
+  border: 1px solid color-mix(in srgb, var(--text-color, #888) 14%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  padding-left: 0.65em;
+  padding-right: 0.65em;
+  margin-top: 0.75rem;
+}
+
+.visitor-count[hidden] { display: none; }
+
+.visitor-count__number { font-variant-numeric: tabular-nums; }
+
+.visitor-count__label {
+  opacity: 0.7;
+  font-weight: 500;
 }
 
 /* ── Body typography ────────────────────────────────────────────────────── */
@@ -205,40 +260,15 @@
   margin: 2rem 0;
 }
 
-/* ── Share bar ──────────────────────────────────────────────────────────── */
-.share-bar {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 1.25rem;
-}
+/* ── Share bar ────────────────────────────────────────────────────────────────
+   NOT HERE ANY MORE. Moved to themes/_base/assets/css/base.css on 2026-07-28.
 
-.share-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4em 0.9em;
-  border-radius: 20px;
-  border: 1px solid var(--border-color, rgba(0,0,0,0.15));
-  background: transparent;
-  color: var(--text-color, #333);
-  font-family: var(--font-body, sans-serif);
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.share-btn:hover {
-  background: color-mix(in srgb, var(--accent-color, #555) 8%, transparent);
-  border-color: var(--accent-color, #555);
-  color: var(--accent-color, #555);
-}
-
-.share-btn--confirmed {
-  border-color: var(--accent-color, #555);
-  color: var(--accent-color, #555);
-}
+   The markup is themes/_base/partials/share-bar.njk, which marbles-pouch's page.njk
+   and _base/pages/embed-pages.njk include too — so a page can carry a share bar
+   without being an article. Owning its CSS here meant the styling was gated on this
+   shape's `detect` selectors, and `.share-bar` had to be listed among them purely to
+   paper over that. base.css is unconditional, so the mismatch is now impossible
+   rather than patched. See that file for the mechanics/skin split. ── */
 
 /* ────────────────────────────────────────────────────────────────────────────
    Added 2026-07-27 while consolidating melt's bespoke `page.njk` onto this

@@ -15,6 +15,7 @@ import {
 import { formatDate } from "./scripts/utils/format-date.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
+import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
 import {
   detectVisualizers,
   renderAssetTags,
@@ -272,36 +273,25 @@ export default async function (eleventyConfig) {
   });
 
   // Title case filter — matches Hugo's .Title behavior (lowercase small words)
-  // Also converts hyphens to spaces for slugified strings
-  eleventyConfig.addFilter("titleCase", function (str) {
-    if (!str) return "";
-    const small = new Set([
-      "a",
-      "an",
-      "and",
-      "as",
-      "at",
-      "but",
-      "by",
-      "for",
-      "in",
-      "nor",
-      "of",
-      "on",
-      "or",
-      "so",
-      "the",
-      "to",
-      "up",
-    ]);
-    return str
-      .replace(/-/g, " ")
-      .split(" ")
-      .map((word, i) => {
-        if (i > 0 && small.has(word.toLowerCase())) return word.toLowerCase();
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(" ");
+  // Also converts hyphens/underscores to spaces for slugified strings.
+  // Delegates to the shared util so templates and the preprocessor agree.
+  eleventyConfig.addFilter("titleCase", smartTitleCase);
+
+  // Look up a page in a collection by URL, case-insensitively.
+  //
+  // Used by breadcrumbs to resolve an ancestor folder's real title instead of
+  // prettifying its URL slug — a slug can't recover an acronym on a site with
+  // `case: lower`.
+  //
+  // The match ignores case deliberately. Folder-index permalinks and leaf-page
+  // URLs now agree (both go through slugifyPath), but a preserve-case site can
+  // still be reached at a different casing than it was generated with, and a
+  // silently-null lookup would drop the crumb rather than fail loudly.
+  // Returns null when nothing matches; callers fall back to the slug.
+  eleventyConfig.addFilter("lookupPage", function (collection, url) {
+    if (!collection || !url) return null;
+    const target = String(url).toLowerCase();
+    return collection.find((p) => String(p.url || "").toLowerCase() === target) || null;
   });
 
   // Filter out system/reserved tags from display

@@ -1,31 +1,49 @@
 # Next Steps
 
-Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
+**This is the one file to read at the start of a session.** It is a set of *pointers* into the
+implementation plans, not a task tracker — **there is nothing here to check off.** The plans hold
+the actual work; this holds the links and says which ones currently matter. If an item is done, it
+gets deleted from here, not ticked.
 
-**Last updated:** 2026-07-27 (S67, late)
+Everything else is reference you consult on demand: `docs/CHANGELOG.md` for history,
+`docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
+long arc.
+
+**Last updated:** 2026-07-28 (S70)
 
 ---
 
 ## Immediate Next Steps
 
-**AE verification — ✅ DONE 2026-07-28 on the work machine.** Seed doc walked and deleted. Outcomes: golden master passes (needed a `.gitattributes` LF fix first — it was silently CRLF-failing on Windows); scoping `.collection-visualizer .fp-card__title` upstream *did* break AE's orange label (theme override outranked — fixed by matching the scope); search bar **stays a pill** (Option A); per-page loading **enabled** for AE after fixing `folder-preview` detection, which had dropped the card grid on every tag page. New debt: TECH-DEBT #42 (the detection audit's page sampling is unsound). Decisions recorded in `DECISIONS.md` 2026-07-28.
+**`.md` page templates — pattern established 2026-07-28, tags + folder-index migrated.** Builder-owned page templates are `.md` files that compose shapes, overridden per theme by basename (`pages/`) or filename (`templates/`). See DECISIONS 2026-07-28. Remaining:
 
-**`.md` page templates — pattern established 2026-07-28, tags migrated.** Builder-owned page templates are now `.md` files in `themes/_base/pages/` that compose shapes, overridden per theme by basename. See DECISIONS 2026-07-28. Two follow-ons, in order:
-
-1a. ✅ **DONE 2026-07-28 — folder-index stub now comes from a template.** `themes/_base/templates/folder-index.md`, theme-overridable via `themes/<theme>/templates/`. Composes `bloob-shape: article` + a nested `collection`, matching what authors already write.
-
-1b. ⚠️ **VERIFY ON MELT + MARBLES after the upstream cherry-pick.** The generated folder-index listing renderer changed `folder-preview` → `collection`, and those vaults are not on the AE machine so it could not be checked there. Also confirm the Pagefind change is acceptable: `article.njk` sets `data-pagefind-body` where `folder-index.njk` set `data-pagefind-ignore`, so generated folder indexes are now search-indexed. If melt wants its "A MELT ROOM" chrome back on generated indexes, ship `themes/melt/templates/folder-index.md` pointing at `layout: layouts/folder-index.njk` — see `themes/_base/templates/README.md`.
-
-1c. **Not done — folder indexes for folders that DO have an author `_index.md`** are untouched by all of this, by design. Only the fallback was templated.
+1. **Folder indexes for folders that DO have an author `_index.md`** are untouched by all of this, by design. Only the fallback was templated. No action unless that changes.
 
 **Shape architecture — decisions/work queued (see CHANGELOG S67):**
-2. **Auto-generated folder index** — when a folder has no `_index.md`, synthesize one: an `article` shape with a `collection` nested inside, scoped to that folder. Template must use `{{ slug }}` (lowercase), **not** `{{ folder }}` — `graph.json`'s `section` is slugified and `folder=Resources` renders empty *silently*. Also make collection's `folder=` matching case-insensitive (this trap has bitten twice). **Supersedes/merges with 1a+1b above.**
+2. **Make `collection`'s `folder=` matching case-insensitive** — `graph.json`'s `section` is slugified, so `folder=Resources` renders empty *silently*. The generated template now passes `slugifyPath()` output so it can't hit this, but a hand-authored fence still can. **This trap has bitten three times.**
 3. **Same layout fallback everywhere except the theme-owned root homepage** (`dir === "."`). Root must stay `base.njk` or marbles' homepage gets a narrow column and an `<h1>index</h1>`.
 4. **DECIDE: CSS containment mechanism** — cascade layers vs `@scope` donut, **explainer + recommendation written up** in `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision" (covers what a cascade layer is, the unlayered-wins trap, and the `@scope` donut). Recommendation is `@scope` + a shared `.bloob-shape-root` marker. Currently convention + `tests/shape-nesting.test.js`.
 5. **Retrofit shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview` first; it's collection's twin and the source of the `fp-*` collisions.
 
-**Local thread — melt scene-nav builder (merged to `main` as `a5529af`; bugs outstanding):**
-6. **Fix the remaining builder bugs.** Per `docs/implementation-plans/2026-07-22_melt-builder-next-round.md`: B2 marquee overlay rewrite, F1 undo/redo, B4 nested-shape column width, and the **real-browser drag pass** that plan keeps deferring — `@playwright/test` is now installed and *can* drive drags, so that blocker is gone.
+**Local thread — melt.** S70 cleared Leon's whole 2026-07-28 dev-notes batch (see "What's Done").
+Two things it left open:
+
+6. **One push outstanding — `melt-website` is 1 commit ahead of origin** (`show_visitor_count: true`).
+   `git push` hung on the macOS keychain during S70 and needs running by hand. **Until it lands the
+   visitor counter shows nothing on the live site**, even though the GoatCounter switch is now on
+   (the endpoint returns real numbers: site total 87, `/about-melt/` 8). If it still doesn't appear
+   after that deploy, the counter is fine — check `analytics` in the deployed `src-melt/_data/site.js`.
+7. **DECIDE: is the date pill a theme standard or a shape concern?** (TECH-DEBT #45) marbles-pouch's
+   `.marble-date` is a second implementation and did not get S70's glass treatment. Cheap either way;
+   the cost of leaving it is that the next "make the date pill X" request silently hits one theme.
+8. **Composite shapes — the real gap Leon named in S70.** Declaring `bloob-shape: article` already
+   pulls in child shapes (share bar, comments, visitor count, and the folder-index template's nested
+   `collection`), so "shapes inside shapes" *works* — but composition is hand-written Nunjucks inside
+   `layout.njk`, so **a shape cannot declare what it contains**. Consequences: the future standalone
+   playground can't render a composite (composition lives in a template only Eleventy understands),
+   per-page detection has to inspect rendered output to discover what's on a page, and a theme can't
+   swap one child without forking the layout. This is the documented-but-unbuilt **container shape**
+   (`ontology.md` → leaf vs container). Start from a brainstorm, not a refactor.
 
 **Cloud backend thread (Phase 3):**
 7. **Unblock Scaleway** — the billing **country-change (→ US)** ticket is pending with Scaleway support. Once cleared, provision Managed Postgres (DEV-S, `fr-par`), Container Registry, and a KV namespace. Everything below waits on this.
@@ -35,6 +53,8 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
 ## What's Done
 
+- **melt dev-notes batch cleared; share bar reworked and re-homed** (2026-07-28, S70). scene-nav stopped opening a new tab for links to its own site — the tab is decided by **origin**, with a tri-state `newTab: on/off` override and a pure `link-target.js` (origin injected) shared by runtime, builder and tests. Share bar went **icon-first** across every theme (overlapping circles, hover to reveal, first-tap-expands on touch, copy link always first), and its CSS **moved out of the `article` shape into `themes/_base/assets/css/base.css`** — the markup is a `_base` partial three unrelated hosts include, so `.share-bar` came *out* of article's `detect` and themes now override on source order instead of a specificity ladder. Date pill is frosted glass for all articles (colors untouched; the fix was mixing into `transparent`, not into an opaque bg). melt's `{.button}` contrast bug traced to `a.button` and `.article-body a` having **identical specificity** with the shape stylesheet loading later. New **opt-in visitor count** from GoatCounter's JSON endpoint — no badge, no branding, and it fails invisibly because the deciding switch ("Allow using the visitor counter") lives in GoatCounter's own settings and defaults off. Per-page `visitor_count:` mirrors `comments:`; the comments half was already working and got tests rather than a rewrite. Verified in headless Chromium on clean per-site builds; audits re-run (marbles 11/11 across 1159 pages, melt 8/8). Suite 808 → **851**. New debt #45. See CHANGELOG S70 + DECISIONS 2026-07-28.
+- **melt breadcrumbs + one canonical URL/title derivation; S68 merged from the AE fork** (2026-07-28, S69). Breadcrumb rule: **every crumb shows that page's own title** — the folder crumb resolves the folder-index page (new `lookupPage` filter) instead of prettifying a URL slug, which cannot work on a `case: lower` site. `smart-title-case.js` replaced **five** divergent prettify-a-name copies and now runs on the *original* filename, so acronyms survive (`come-to-MELT.md` → "Come to MELT"). `slugifyPath()` became THE folder-path → URL-path derivation, fixing folder-index permalinks that bypassed the slug strategy entirely (`/Resources/` vs `/resources/` — invisible on macOS, broken on Linux CI); verified against a clean HEAD worktree that **no live URL moved**. Merged PR #3 (9 AE commits) and closed its "verify on melt + marbles" item by restoring both themes' folder chrome via `templates/folder-index.md` — measured against production first: 8 live pages would otherwise have lost their chrome and entered search. Obsidian plugin **1.2.0** released: copy-link reads the vault's `_bloob-settings.md` `url:` block (556 pages, 0 mismatches vs the builder). New debt **#44**. Suite 751 → **808**. See CHANGELOG S69 + DECISIONS 2026-07-28.
 - **melt consolidated onto the shared `article` shape** (2026-07-27, S67). Root cause of the odd Resources page: `bloob-shape: page` resolves to nothing (no `lib/visualizers/page/`), so layout fell to the step-5 default — `page.njk` for pages but **`base.njk` for index files**, which has no column and renders no title, while the preprocessor had already stripped the H1 expecting it to be re-rendered. Fixed by upgrading `article` with four generic features (**`date_updated`**, `banner_text`, show/hide date settings, **media embeds incl. responsive YouTube**) + a pure `date-field.js` supporting both date conventions, then migrating all 15 melt pages. `/about-melt/` measured **identical** before/after. Also: nested-shape styling collision fixed (`.article-body a` was underlining marbles), melt `page.njk` reduced to an alias, 22 dead `.page-*` rules removed, `settings-registry.md` brought fully current, share bar → glassmorphism. **CLAUDE.md now mandates the SHAPE TRINITY** (ontology + shapes + visualizers, always) and `shapes.md` gained presentation-containment + a corrected fallback section. Suite 723.
 - **SEO decoupled from the visualization + per-page visualizer loading** (2026-07-27, S67). Adopted the **pure-renderer standard** (`parser`/`resolve`/`renderer` pure; `browser.js` behavior-only) and refactored `collection` onto it — all five display modes now ship crawlable build-time HTML (melt Resources went 0 → 3 crawlable links), file-scope included. Search surfaces share a `--sv-*` token contract (melt + marbles-pouch `!important` overrides removed, pixel-identical). Shipped **per-page visualizer loading** behind `features.per_page_visualizers` (TECH-DEBT #4 closed): melt −610 CSS/−448 JS, marbles −17,640/−12,771; 24 assets/page → 11–13. `scripts/audit-visualizer-detection.js` is the mandatory gate before enabling on a new site. Resolved #41 for the collection side. Suite 637 → 692. See CHANGELOG S67 + `docs/architecture/visualizers.md`.
 - **Scene-nav shape + builder v2 — built, on unmerged branch** (2026-07-21/22, S62–S63). Grammar v2.1 (`hoverGlow`/`hoverScale`/`label:false`, `[[wiki]]` goto, `on/off/true/false` vocab); scene-nav resolves its own image refs (fixed melt Contact-us 404 + marbles subpath images); goto raw-preservation (round-trips `[label](note.md)`); reworked debug builder (icon-first entry, foldable panel, on-canvas resize/rotate handles, marquee + Cmd/Shift multi-select, group transform + relative bulk-edit, editable numbers, mobile fields + inheritance standard). Shared "Authoring & resolution conventions" in `shapes.md`. **Branch `scene-nav-builder-rework` — unpushed; 2 drag bugs + real-browser test outstanding (TECH-DEBT #39, next-round plan).**
@@ -48,7 +68,7 @@ Quick launch point for the next session. Full history in `docs/CHANGELOG.md`.
 
 - **Retrofit remaining content-generating shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview`, `circular-nav`, `fridge-magnets`, `tags`, `graph` build markup in `browser.js`, so crawlers see nothing and the future playground can't render them. Convert each when next touched; don't retrofit speculatively.
 - **#41 reverse direction unverified** — whether `folder-preview` depends on anything in `collection.css`. AE is the likeliest site to expose it (uses both shapes); extend `tests/css-independence.test.js` when folder-preview is retrofitted.
-- **Per-page visualizer loading is OFF for buffbaby + alter-engineers** — audit each (`node scripts/audit-visualizer-detection.js --src=src-<name>`) before enabling.
+- **Per-page visualizer loading is OFF for alter-engineers only.** buffbaby was enabled 2026-07-28 (S68) — audit clean (7/7 signatures safe across 193 pages), pages went to 9–12 assets, `checkbox-tracker` verified present on every page that renders a checkbox via its `detect.always`. AE still needs `node scripts/audit-visualizer-detection.js --src=src-alter-engineers` on the work machine before flipping.
 - Canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36) — Phase 2, high-leverage.
 - Vault-local `_bloob-shapes/` folder pipeline scanning (TECH-DEBT #37).
 - Marketplace safety hardening / build-time-code sandboxing (TECH-DEBT #35) + pre-launch ToS/DSA (TECH-DEBT #38) — future.
