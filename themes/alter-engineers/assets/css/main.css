@@ -921,3 +921,9 @@ html { margin-top: 0 !important; }
   line-height: 1.65;
   margin-bottom: 1rem;
 }
+
+/* The testimonials ("musings") cursor carried an "or scroll!" caption from the old WordPress
+   theme (theme.min.css: .musings #mycursor::after). Leon asked for it to go, 2026-10-28. */
+.musings #mycursor::after {
+  content: none;
+}
