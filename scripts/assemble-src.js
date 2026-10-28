@@ -22,6 +22,7 @@ import { generateFavicons } from "./generate-favicons.js";
 import { generateBloobIcons } from "./generate-bloob-icons.js";
 import { generateBackground, generatePageBackgrounds } from "./generate-background.js";
 import { EMBED_TARGETS } from "./utils/bloob-settings-reader.js";
+import { safeDecode } from "./utils/safe-decode.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,6 +37,26 @@ const THEMES_DIR = path.join(ROOT_DIR, "themes");
  *   is skipped so there is no permalink collision at "/".
  */
 /**
+ * How a site shows up in search engines (`features.show_in_search`):
+ *   yes   — sitemap.xml + robots.txt hand them every listed page
+ *   quiet — no sitemap; a page is found only if something links to it (the default)
+ *   no    — every page carries `noindex` (partials/robots-meta.njk)
+ * Unlisted pages are never listed, whatever the site says.
+ *
+ * gray-matter (YAML 1.1) reads a bare `yes`/`no` as true/false, so those count too.
+ * Anything else is quiet: an unclear value never opens a site to search.
+ *
+ * @param {object} [features]
+ * @returns {"yes"|"quiet"|"no"}
+ */
+export function showInSearch(features) {
+  const value = features?.show_in_search;
+  if (value === "yes" || value === true) return "yes";
+  if (value === "no" || value === false) return "no";
+  return "quiet";
+}
+
+/**
  * Decide which `themes/_base/pages/` files to copy into src/.
  *
  * A theme overrides a base page by BASENAME, not by filename, so `tags.njk` in
@@ -49,10 +70,13 @@ const THEMES_DIR = path.join(ROOT_DIR, "themes");
  *
  * @param {string[]} baseEntries  filenames in themes/_base/pages/
  * @param {string[]} themeFiles   filenames in themes/<theme>/pages/ (files only)
- * @param {{rssEnabled?: boolean}} opts
+ * sitemap.njk and robots.njk are opt-in: a sitemap hands search engines every listed
+ * page, so it is only built when the site says `features.show_in_search: yes`.
+ *
+ * @param {{rssEnabled?: boolean, showInSearch?: "yes"|"quiet"|"no"}} opts
  * @returns {{copy: string[], skipped: {entry: string, reason: string}[]}}
  */
-export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true } = {}) {
+export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true, showInSearch = "quiet" } = {}) {
   const themeBasenames = new Set(themeFiles.map((f) => path.parse(f).name));
   const copy = [];
   const skipped = [];
@@ -60,6 +84,10 @@ export function selectBasePages(baseEntries, themeFiles, { rssEnabled = true } =
   for (const entry of baseEntries) {
     if (entry === "feed.njk" && !rssEnabled) {
       skipped.push({ entry, reason: "features.rss: false" });
+      continue;
+    }
+    if ((entry === "sitemap.njk" || entry === "robots.njk") && showInSearch !== "yes") {
+      skipped.push({ entry, reason: "features.show_in_search is not yes" });
       continue;
     }
     if (themeBasenames.has(path.parse(entry).name)) {
@@ -153,6 +181,7 @@ export async function assembleSrc(config, contentDir = null) {
     const basePageEntries = await fs.readdir(path.join(baseDir, "pages"));
     const { copy, skipped } = selectBasePages(basePageEntries, themePageFiles, {
       rssEnabled: config.features?.rss !== false,
+      showInSearch: showInSearch(config.features),
     });
 
     for (const { entry, reason } of skipped) {
@@ -430,7 +459,7 @@ export async function resolveLogoUrl(value, srcDir) {
     // Decode for disk lookups; a literal % that isn't an escape falls back to the raw string
     let decoded;
     try {
-      decoded = decodeURIComponent(p);
+      decoded = safeDecode(p);
     } catch {
       decoded = p;
     }
@@ -509,7 +538,7 @@ export default {
   permalinks: {
     strategy: ${JSON.stringify(config.permalinks?.strategy || "preserve-case")},
   },
-  features: ${JSON.stringify(config.features || {})},
+  features: ${JSON.stringify({ ...config.features, show_in_search: showInSearch(config.features) })},
   theme_settings: ${JSON.stringify(config.theme_settings || {})},
   embeds: ${JSON.stringify(embeds)},
   snippets: ${JSON.stringify(snippets)},

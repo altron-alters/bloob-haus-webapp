@@ -53,6 +53,8 @@ import {
   resolveIdentityKey,
   parseObjectImageField,
 } from "./utils/bloob-objects-reader.js";
+import { safeDecode } from "./utils/safe-decode.js";
+import { extractExcerpt } from "./utils/page-excerpt.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -136,6 +138,11 @@ export async function preprocessContent({
 
   // Collect per-page outgoing links for graph.json (built after file loop)
   const perPageLinks = {};
+
+  // Per-page card text (excerpt, date, tags) for collection post cards.
+  // Build data only (_data/pagePreviews.json): kept out of graph.json, which is
+  // public and fetched by every graph view.
+  const pagePreviews = {};
 
   // Step 1: Read Obsidian config
   console.log("--- Step 1: Reading Obsidian config ---");
@@ -261,16 +268,10 @@ export async function preprocessContent({
     // 6a: Strip comments (Obsidian %% ... %% and HTML <!-- ... -->)
     processedContent = stripComments(processedContent);
 
-    // 6b.pre: Normalize markdown-link-style transclusions → wiki-link style.
-    // Obsidian's "Use markdown links" mode writes ![alt](page.md) for page embeds.
-    // .md is unambiguous — no image has that extension — so rewrite before the
-    // transclusion handler runs. Strip the extension; the handler does its own lookup.
-    processedContent = processedContent.replace(
-      /!\[([^\]]*)\]\(([^)]+\.md)\)/g,
-      (_, _alt, src) => `![[${path.basename(src, ".md")}]]`
-    );
-
-    // 6b: Handle transclusions first (before other ![[]] patterns)
+    // 6b: Handle transclusions first (before other ![[]] patterns).
+    // Markdown-link-style embeds — ![alt](page.md), written by Obsidian's
+    // "Use [[Wikilinks]]: off" mode — are normalized inside the handler, so they
+    // expand identically to ![[page]], nested embeds included.
     const currentFilename = path.basename(file.relativePath, ".md");
     const currentSlug = fileIndex.filenameLookup[currentFilename.toLowerCase()] || null;
     // Site-wide default from features.transclusion_indicators; per-page frontmatter overrides.
@@ -522,7 +523,7 @@ export async function preprocessContent({
     // Extract first image for OG preview
     const firstImage = extractFirstImage(processedContent);
     if (firstImage) {
-      const imgFilename = path.basename(decodeURIComponent(firstImage));
+      const imgFilename = path.basename(safeDecode(firstImage));
       const imgExt = path.extname(imgFilename).toLowerCase();
       const imgBase = imgFilename.replace(/\.[^.]+$/, "");
       // GIFs → first frame extracted as JPEG by generate-og-images.js
@@ -693,6 +694,22 @@ export async function preprocessContent({
       outputFrontmatter.date_updated = toDateOnly(outputFrontmatter.date_updated);
     }
 
+    // Card text for collection post cards. Same visibility rule as graph.json:
+    // unlisted pages are never listed, so they get no card text either.
+    if (pageInfo && frontmatter.website_status !== "unlisted" && !isUnlisted) {
+      const authored = frontmatter.excerpt || frontmatter.description;
+      const excerpt = authored ? String(authored).trim() : extractExcerpt(processedContent);
+      const dateMatch = /\d{4}-\d{2}-\d{2}/.exec(String(outputFrontmatter.date_created ?? ""));
+      const cardTags = pageTags.filter(
+        (t) => !["all", "nav", "posts", "not-for-public"].includes(String(t).toLowerCase()),
+      );
+      pagePreviews[pageInfo.url] = {
+        ...(excerpt && { excerpt }),
+        ...(dateMatch && { date: dateMatch[0] }),
+        ...(cardTags.length && { tags: cardTags }),
+      };
+    }
+
     // Reconstruct the file with frontmatter
     const outputContent = matter.stringify(processedContent, outputFrontmatter);
 
@@ -732,6 +749,11 @@ export async function preprocessContent({
   console.log(
     `[attachments] Wrote attachmentIndex.json (${Object.keys(attachmentIndex.byBasename || {}).length} basenames)`,
   );
+
+  // Card text for collection post cards (see pagePreviews above).
+  const pagePreviewsPath = path.join(tagIndexDir, "pagePreviews.json");
+  await fs.writeJson(pagePreviewsPath, pagePreviews, { spaces: 0 });
+  console.log(`[previews] Wrote pagePreviews.json (${Object.keys(pagePreviews).length} pages)`);
 
   // Step 8: Build and write graph.json + run visualizer preprocess hooks
   console.log("\n--- Step 8: Building graph data + visualizer hooks ---");

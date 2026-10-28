@@ -11,6 +11,7 @@ import matter from "gray-matter";
 import { getSlugFunction, slugifyPath } from "./slug-strategy.js";
 import { stripDatePrefix } from "./date-prefix.js";
 import { smartTitleCase } from "./smart-title-case.js";
+import { safeDecode } from "./safe-decode.js";
 
 /**
  * Strips inline markdown from a heading string.
@@ -24,6 +25,14 @@ function stripInlineMarkdown(text) {
     .replace(/_(.+?)_/g, "$1")
     .replace(/`(.+?)`/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+}
+
+/**
+ * A heading's fold marker (`## > Title`, `## ^ Title`, see the foldable shape)
+ * is syntax, not part of the title. Only the heading fallback can carry one.
+ */
+function stripFoldMarker(text) {
+  return text.replace(/^[>^][ \t]*(?=\S)/, "");
 }
 
 /**
@@ -42,7 +51,7 @@ function extractTitle(frontmatter, content, filename) {
   // 2. First heading (# or ##) in content
   const headingMatch = content.match(/^#{1,2}\s+(.+)$/m);
   if (headingMatch) {
-    const raw = headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "");
+    const raw = stripFoldMarker(headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, ""));
     return stripInlineMarkdown(raw).trim();
   }
 
@@ -61,7 +70,7 @@ function extractTitleMd(frontmatter, content, filename) {
   } else {
     const headingMatch = content.match(/^#{1,2}\s+(.+)$/m);
     if (headingMatch) {
-      raw = headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "").trim();
+      raw = stripFoldMarker(headingMatch[1].replace(/\s*\{#[^}]+\}\s*$/, "").trim());
     } else {
       return null;
     }
@@ -288,7 +297,7 @@ export async function buildAttachmentIndex(contentDir, attachmentFolder) {
     const file = rawFile.replace(/\\/g, "/");
     // e.g. "media/logo.png" or "projects/My Diagram.html"
     const filename = path.basename(file);
-    const decodedFilename = decodeURIComponent(filename);
+    const decodedFilename = safeDecode(filename);
 
     // Preserve vault structure in URL: encode each segment individually
     const url = "/" + file.split("/").map(encodeURIComponent).join("/");

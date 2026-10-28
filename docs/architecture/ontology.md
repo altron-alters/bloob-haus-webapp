@@ -8,6 +8,19 @@ It exists to answer the six ontological questions raised in the 2026-05-01 Engin
 
 Roots: this whole project traces to Leon's 2024 Master's thesis, including an interviews with Chris rose. The conversation with Chris seeded the lanuage without my awareness until reading our interview notes again. 
 
+> **These three documents are a living triad, still growing.** `ontology.md` (what a shape *is*),
+> `shapes.md` (the contract), `visualizers.md` (the renderer standard) — read together, never one
+> alone. Most of what is written here has serious empirical roots, but **they can and do diverge
+> from each other and from the code**, and not every line should be trusted as settled. They are
+> ground for philosophical *and* practical conversation.
+>
+> **Standing invitation, to a person or an AI reading this:** if you notice a contradiction, or a
+> larger pattern nobody has named yet, **say so and propose a change to these docs in the same
+> session** — do not quietly route around it. Precedent, 2026-09-20: this document specified
+> `renderClosed(envelope, state)` while its own sealing rule said a closed state must be drawn
+> "from the envelope alone". The code had followed the rule; the signature was the slip; the doc
+> was corrected. That is the expected motion, in either direction.
+
 ---
 
 ## The founding question
@@ -39,7 +52,7 @@ A `bloob-type` (old terminology for `bloob-shape`), a `visualizer`, and an inlin
 **There are two kinds of shape, and conflating them is the trap.** The one-concept story is true for *authoring* (one syntax, one mental model, one word) but the *contract* differs:
 
 - **Leaf shapes** (renderers): transform a span of content into a visual. No contents, no placement, no metabolism, no meaningful closed state. This is almost everything built so far — `latex`, `citations`, `image-grid`, `article`, `folder-preview`.
-- **Container shapes** (places): hold other shapes, have placement, metabolism, recursion, and a distinct closed state. Pond, garden, book, research-collection. **None of these exist yet.** They are the unbuilt heart of the system.
+- **Container shapes** (places): hold other shapes, have placement, metabolism, recursion, and a distinct closed state. Pond, garden, book, research-collection. **The first one exists: the locker**, live in `bloob-haus-cloud` since 2026-09-20 and, since M4b (2026-09-23), the only thing a letter ever lands in. It is a folder with an `_index.md` — a *room* by this document's own test — and it proves the cheap half of the contract: a distinct closed state (its spine, drawn from the plaintext index alone), *preserve* content policy, and **sorted** placement (order comes from a field the locker's own `_index.md` names, `sort: postmark` by default; it never came from position in the markdown, and on 2026-09-24 Leon chose that on purpose). It deliberately has **no metabolism**, per "Metabolism — the last layer" below. The rest of the family — pond, garden, book — is still unbuilt, and so is every container in *this* repo.
 
 The practical consequence: don't write one 20-field contract that every shape must satisfy. Tier it — a minimal core every shape declares (identity, type, open-state renderer) plus an optional **container extension** (placement, metabolism, content policy, distinct closed state) that only container shapes fill in. See `shapes.md` for the field-level detail.
 
@@ -79,6 +92,8 @@ Bloob Haus makes **placement** the unit of meaning. Meaning lives in *where a th
 The same marble means something different in a pond than in a garden — not because of its backlinks, but because of the container's nature acting on it. Ambient environment influences communication, at the information level.
 
 **The honest cost.** The graph falls out of links for free; the space does not fall out of placement for free. A link is cheap to author (`[[x]]`) and the graph self-assembles. Placement requires someone to *put things somewhere* and something to *render the arrangement*. This is why Obsidian ships a graph view and not a room view — the graph is automatic, the room is labor. "Placement is the new backlink" is true and beautiful, and it is also the reason the spatial story is hard and still unbuilt. Price the bill; don't let the beauty hide it.
+
+**Revisit (2026-10-23): this undercounts Obsidian.** It does ship a room view: **Canvas**, whose `.canvas` files are an open format (JSON Canvas) with x/y placement, groups and edges. People already do the labor of placing things, in a standard file, with a free editor — which may make the spatial story much cheaper than the paragraph above prices it. How Bloob Haus integrates canvas is **undecided**; see `shapes.md` → open question 10.
 
 ---
 
@@ -141,6 +156,70 @@ Nothing is ever wrong; things are only more or less defined. This is what "lay t
 
 ---
 
+## Flows and stocks — the delivery layer (2026-09-20)
+
+The post office work (`bloob-haus-cloud`, sealed letters) surfaced the piece this ontology never
+had: **how things arrive.** Leon's framing, arrived at after returning to a "chat interface" idea for
+the tenth time: *a shape is a unit of communication, delivered differently depending on who receives
+it — one person, a few, a room, or the whole internet.*
+
+That reframe is true and it does not replace the ontology; it supplies its transport. Two kinds of
+thing, and conflating them is the trap (the same trap as leaf vs. container):
+
+- **Flows** — a letter, a forward, a song dropped into a room. Immutable, from someone, to someone or
+  somewhere, delivered once, in a sealed envelope. The unit of communication.
+- **Stocks** — a room, a garden, the haus. Mutable, inhabited, tended for years. Where flows land.
+
+A room *receives* a flow and does something with it — that is the membrane / metabolism, seen from
+the outside. "When is a communication accepted or rejected?" is answered here as before: shapes do
+not reject, they translate.
+
+**Bloob Haus is a postal system for places, not a chat.** Chat is placeless (Signal stores no
+history, hides the envelope, renders previews on the sender's phone); Bloob Haus is place-based —
+"placement is the new backlink" — so it keeps history, shows the envelope, and lets the destination
+have a nature. The chat insight gave the delivery layer, not a new identity. Mechanism (envelopes,
+doors, rings, keys) lives in `bloob-haus-cloud/docs/architecture/letters-and-envelopes.md`.
+
+Two vocabulary consequences worth keeping:
+- **Room vs. shelf.** A folder with an `_index.md` is a room: it *holds*, and its index page is where
+  you write between the objects. A file of `[[links]]` is a shelf (the `collection` shape): it
+  *points*. Ask "if I delete this, do the things inside disappear?" — room yes, shelf no.
+- **Three separate permissions** on a place: *enter* a room, *see* an object (its closed state, placed
+  where you can enter), *open* an object. A locked chest in a room you can enter is a valid, useful
+  state — the closed state doing its job. **Expanded below.**
+
+---
+
+
+## Enter, see, open — three permissions, not one (2026-09-23)
+
+The line above earned a section once the post office had to enforce it.
+
+**They are genuinely three, and they come apart.** You may be able to *enter* a room and not *open*
+a chest inside it. You may be able to *see* a thing's calling card and have no way in. The closed
+state is what makes the middle one possible at all: an object can announce what it is without
+surrendering what it holds, which is the whole reason closed state is "the soul of the system"
+rather than a thumbnail.
+
+**Seeing is conditioned on entering.** You may see an object's closed state *placed where you can
+enter*. That qualifier is load-bearing, and the post office got it wrong first: a visitor holding a
+bare locker link, with no key, was shown every letter's closed envelope inside — the contents of a
+room nobody had admitted them to. The fix was not to abolish the closed state but to ask which one
+is being drawn: **the locker's own spine is visible to anyone with the link; the letters inside are
+not.** A generic locker is drawn instead, identical to the one drawn for a locker that never
+existed. Hiding, here, is this rule being applied — not overridden.
+
+**What is not yet built, and should not be yet.** Per-object permission *inside* a room — a room you
+may enter, holding some things you may see but not open, and some you cannot see at all — is the
+natural next layer and the interesting one for a personal haus someone else is exploring. Leon
+re-derived it independently while specifying lockers and correctly called it overkill for now. It is
+recorded so the shape of it stays available: nothing in the current model forecloses it, because
+*see* and *open* were kept separate from the start.
+
+Mechanism (doors, keys, rings, revocation, and the rule that two equally-unentitled requests must be
+indistinguishable): `bloob-haus-cloud/docs/architecture/permissions-and-doors.md`.
+
+
 ## Configuration and content are one surface
 
 Most systems draw a hard line: you are either writing content or configuring a component. The `:::settings` block dissolves that line. You author in one continuous surface, and some of what you write is configuration — *how a thing is represented and how it relates*, the knobs on representation and relation. (Your own gloss — "administration of the relational actions of a digital object" — is correct; trust it.)
@@ -180,6 +259,56 @@ The container for all of a user's marbles, organized into rooms (folders). **Dec
 
 **6. What is a handle / subdomain?**
 `bloob.haus/leon/` is Leon's haus. The haus contains rooms. URLs are `bloob.haus/leon/recipes/challah/`. Path-based for V1; subdomains (`leon.bloob.haus`) are a later routing rule, not a launch requirement.
+
+---
+
+## What a file can prove — trust, provenance, and the open surface (2026-09-20)
+
+Leon's rule, arrived at while building the sealed letter: *"the markdown file content is the THING
+that is ONLY needed to visualize the object to the user — the way a real object is its own truth. I
+don't need to ask someone else if the letter is open, I can see it."*
+
+This is the ontology's answer to **where an object's truth lives**. A bloob is not a database row
+that a template dresses up; it is a file, and the file carries its own state. The database remains
+the *authority* that produces those values — but it must never be a second thing a renderer has to
+consult. Wherever both could speak, one builder produces both, or they drift: a letter that reads
+"opened" on the page and "sealed" in the file has two truths, which is one too many.
+
+Taking that seriously forces a distinction the system had not needed until now: **not everything
+written on an object is true in the same way.**
+
+**Two grades of trust, in the same YAML.**
+
+- **Mathematics.** A letter's `to`, `from`, `date_created` — anything its author sealed — are bound
+  into its encryption. The recipient's own browser re-checks them every single time it opens the
+  letter, and a tampered field makes it refuse to open. Nobody, the haus included, can alter them.
+  **This survives leaving the haus.**
+- **Provenance.** The postmark, and the record of whether a letter was fetched and opened, are true
+  because the haus watched it happen and keeps the record. **This does not survive leaving the
+  haus.**
+
+Both are honest; they promise different things. Eventually this should be visible to people —
+*"we can prove this"* versus *"we are telling you this."*
+
+**Host-attested state is a real category.** `opened` is the first of a family: visitor counts,
+last-touched, how many people have entered a room. They are facts about an object's *life in the
+haus*, not properties of the file. The consequence is sharp — on a file that has left, they are
+claims, not facts, and must be re-derived rather than believed. (The post office already refuses a
+letter that arrives carrying someone else's postmark.)
+
+**So: three zones of writing.** What the author sealed (immutable, mathematically held), what the
+haus stamps (its own marks), and an **open surface** reserved for whatever we invent later —
+stickers, transit marks, a friend's scrawl on the envelope. Reserving that surface *before the first
+real object exists* is the difference between a system that can grow and one that has locked itself
+in: a name an author has already used can never later become a name the haus writes.
+
+**Portability follows leaf and container.** A leaf shape is one file and can be carried as one —
+that is what makes "the file is the object" literal. A container is a folder; carrying it means a
+zip. Not a failure of the rule but the leaf/container split seen from the outside: you put a letter
+in your pocket, and you carry a locker by carrying the box.
+
+Mechanism lives in `bloob-haus-cloud`: `docs/architecture/letters-and-envelopes.md` and that repo's
+`docs/DECISIONS.md` (2026-09-20, "The file is the object").
 
 ---
 

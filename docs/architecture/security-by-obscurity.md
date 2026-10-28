@@ -116,13 +116,14 @@ When `_bloob_unlisted` is set, the pipeline does this **universally, for every t
 
 | Concern | Wiring | Automatic? |
 |---------|--------|:----------:|
-| `noindex,nofollow` meta tag | `themes/_base/partials/head.njk` checks `_bloob_unlisted` | ✅ Universal |
+| `noindex,nofollow` meta tag | `themes/_base/partials/robots-meta.njk` checks `_bloob_unlisted` (and `features.show_in_search: no` for a whole site); included by every theme head except alter-engineers | ✅ Universal |
 | Excluded from RSS / all collections | `eleventyExcludeFromCollections: true` via `eleventyComputed.js` | ✅ Universal |
 | Excluded from internal search (Pagefind) | layout swaps `data-pagefind-body` → `data-pagefind-ignore` | ⚠️ Per-theme obligation |
-| Excluded from `sitemap.xml` | theme `sitemap.njk` filters `_bloob_unlisted` (and excluded collections) | ⚠️ Per-theme obligation |
+| Excluded from `sitemap.xml` | `themes/_base/pages/sitemap.njk` filters `_bloob_unlisted` (and excluded collections); one sitemap for every theme except alter-engineers, built only when the site sets `features.show_in_search: yes` | ✅ Universal |
 
 > Check the **theme implementation status** table in [settings-registry.md](settings-registry.md)
-> before relying on a theme's sitemap/pagefind filtering — some themes have no sitemap at all, and
+> before relying on a theme's pagefind filtering (the sitemap comes from `_base` for every theme
+> except alter-engineers, which keeps its own) — and
 > a theme that filters only `website_status` may miss a `visibility: unlisted` page. (The collection
 > exclusion via `eleventyExcludeFromCollections` covers the common case regardless, because
 > sitemaps iterate `collections.all`.)

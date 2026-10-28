@@ -53,6 +53,14 @@
   --sv-input-bg: rgba(255, 255, 255, 0.85);
   --sv-input-bg-focus: rgba(255, 255, 255, 0.85);
   --sv-input-focus-ring: 0 0 0 3px rgba(145, 76, 154, 0.12);
+
+  /* Folds (`## > Heading`, the foldable shape): the blue-to-purple card of
+     the collapsible sections on Leon's Jekyll site, with white text. */
+  --fold-closed-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --fold-closed-text: #ffffff;
+  --fold-closed-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --fold-open-text: #764ba2;
+  --fold-peek-ring: #ffffff;
 }
 
 *,
@@ -636,35 +644,17 @@ article.marble-page {
   opacity: 0.85;
 }
 
-/* THEME STANDARD: internal link pills */
+/* THEME STANDARD: internal links. Plain inline links; base.css draws the
+   hover pill from these colours without moving the text. */
 a.internal-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  padding: 0.05em 0.55em 0.05em 0.35em;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  --internal-link-hover-bg: rgba(145, 76, 154, 0.14);
+  --internal-link-hover-ring: rgba(145, 76, 154, 0.45);
   color: var(--link-color);
-  text-decoration: none;
-  vertical-align: baseline;
-  line-height: inherit;
-  transition: background 0.15s, border-color 0.15s;
 }
 
 a.internal-link:hover {
-  background: rgba(145, 76, 154, 0.14);
-  border-color: var(--accent-color);
   color: var(--accent-dark);
-  text-decoration: none;
-}
-
-.internal-link__icon {
-  width: 1em;
-  height: 1em;
-  object-fit: contain;
-  border-radius: 0;
-  flex-shrink: 0;
+  text-decoration: none; /* the pill replaces the theme's hover underline */
 }
 
 /* Hero image — rendered above the page title when image precedes # heading in markdown */

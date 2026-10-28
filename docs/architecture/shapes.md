@@ -2,6 +2,19 @@
 
 Shapes are the unified concept for everything that renders content visually: `bloob-type`, `visualizer`, and `:::` block are all the same thing at different scopes. See `bloobhaus-notes/.../2026-05-31-BLOOB-HAUS-SHAPES-ARCHITECTURE.md` for the full conceptual model.
 
+> **These three documents are a living triad, still growing.** `ontology.md` (what a shape *is*),
+> `shapes.md` (the contract), `visualizers.md` (the renderer standard) — read together, never one
+> alone. Most of what is written here has serious empirical roots, but **they can and do diverge
+> from each other and from the code**, and not every line should be trusted as settled. They are
+> ground for philosophical *and* practical conversation.
+>
+> **Standing invitation, to a person or an AI reading this:** if you notice a contradiction, or a
+> larger pattern nobody has named yet, **say so and propose a change to these docs in the same
+> session** — do not quietly route around it. Precedent, 2026-09-20: this document specified
+> `renderClosed(envelope, state)` while its own sealing rule said a closed state must be drawn
+> "from the envelope alone". The code had followed the rule; the signature was the slip; the doc
+> was corrected. That is the expected motion, in either direction.
+
 ## Two scopes
 
 - **Inline scope** — authored as a `:::` block inside a page body. Rendered by the visualizer's `transform()` + optional `browser.js`. No layout needed.
@@ -25,7 +38,7 @@ The `:::` opener line can carry settings inline, without a `:::settings` block:
 
 This is sugar for `state=open` / `state=closed`. The build pipeline normalizes to the verbose form before the renderer runs. Only shapes that declare a state model support this; for shapes without one, `+`/`-` is ignored (or warned on, when settings validation is implemented — see open question 4).
 
-**Sugar-to-primitive preprocessor pattern** — some authoring shortcuts require a dedicated preprocessing step that rewrites content into standard `:::` blocks before markdown-it runs. The foldable heading shortcut (`## > Heading`) is the first example: a utility (`scripts/utils/foldable-heading-sugar.js`) scans for the pattern and rewrites matched sections as `:::foldable` blocks. This must run before `inject-container-raw.js` so the rewritten blocks get picked up by the standard data-vis-raw injection pipeline. See `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md` for the full foldable spec.
+**Sugar without a primitive: the foldable heading (corrected 2026-10-26).** The plan was a "sugar-to-primitive" preprocessor that rewrites `## > Heading` sections into `:::foldable` blocks before markdown-it runs. It was not built that way, because the rewrite collides with the container machinery: markdown-it-container closes a block at the first bare `:::`, so a fold holding a `:::collection` (Leon's homepage does exactly this) or another fold would be cut short, and `inject-container-raw.js` counts a longer `::::` closer as an opener. The shipped `foldable` shape instead works on markdown-it's **token stream** (`lib/visualizers/foldable/fold-headings.js`, registered through the new `markdownItPlugin` export, see `visualizers.md`), where code blocks, blockquotes and `:::` blocks are already tokens, so a fold can never cross their edges. Output is `<details>`/`<summary>`. `^` marks a fold that starts open (the `+`/`-` state suffix below stays a `:::` idea). There is no verbose `:::foldable` primitive yet; when one is wanted it should emit the same markup. The original spec is `docs/implementation-plans/2026-05-31 Foldable Shape Implementation Plan.md`.
 
 ## The metabolism principle
 
@@ -107,6 +120,20 @@ rule, and `tests/shape-nesting.test.js` is the guard.
 the `@scope` donut, written for someone who has not used either): see
 `docs/superpowers/specs/2026-07-27-collection-pure-renderer-design.md` → "OPEN follow-on decision".
 
+## What a room allows
+
+A container declares which ACTIONS it permits on what it holds, the way it already declares
+whether it preserves or overrides their look. This was missing until the locker needed it
+(2026-09-24): a person's editor is the same everywhere in the haus, but the room decides what
+that editor may do inside it.
+
+- **Locker:** *add, open, fold*. **Never edit, never delete**: a letter is a flow, sealed once,
+  and a response is always a new file (which is also what makes future margin notes reliable:
+  they can anchor to text that never changes).
+- **Open question:** the same shape in a different host may allow more. A locker at home might
+  allow reordering or private annotations; the post office's does not. Decide when a home
+  locker exists.
+
 ## Width preference
 
 **A shape declares how wide it wants to be; the container and theme decide whether it gets it.**
@@ -162,6 +189,7 @@ The five systems identified so far (more may emerge as shapes are built):
 | **Regions** | Semantic zones: `region="sunny"`, `region="deep-water"`. | Human-friendly; maps to shape's character. |
 | **Coordinates** | Explicit `x/y` or `x/y/z`: `pos="120, 340"`. | Spatial canvases; precise layout; AI-friendly. |
 | **Relational** | `near="the cactus"`, `between="A and B"`. | Natural-language authoring; loosely positioned. |
+| **Sorted** | Order derived from a field, named by the container (`sort: postmark` / `date_created` / `date_updated`). No position is authored. | Containers whose contents arrive over time: the locker (its first user, 2026-09-24). |
 
 **Multiple authoring paths:** a shape can accept more than one placement system for the same authoring goal. A garden's primary system might be regions (human-friendly); it could also accept coordinates (AI-friendly) for precise override. Same shape, two valid paths.
 
@@ -180,6 +208,45 @@ Open authoring patterns:
 
 The future Obsidian plugin may provide an "extract" gesture — possibly "give it a life of its own" — that promotes a `:::` block to its own `.md` file and replaces the original with a wikilink. The shape is the same thing at both scopes; scope is just where it lives.
 
+## Sealing — the outside and the inside (decided 2026-09-18)
+
+A file has an **outside** (its frontmatter — the *envelope*) and an **inside** (its body). Private
+things in the cloud are stored **sealed**: the body is encrypted, the envelope stays plaintext. A
+sealed file is still a markdown file — same frontmatter, ciphertext where the prose was. The full
+mechanism (doors, keys, escrow) is a cloud concern and lives in
+`bloob-haus-cloud/docs/architecture/letters-and-envelopes.md`. What belongs to the *shape* contract
+is one rule and one function:
+
+- **Sealable is a capability, not a permission.** A shape can be sealed only if it can draw its
+  closed state from the envelope alone. The server draws closed states (previews, `og:image`, inbox
+  rows, a locker's spine) with no key and no body. A shape whose closed state needs the body
+  (garden's canvas flatten) is not sealable until it attaches an envelope-only closed state at seal
+  time. Sealing is decided per **file** (a public page is never sealed; a letter always is); the
+  shape only says whether it *can* be.
+- **`renderClosed(envelope) → HTML string`** — pure, the closed-state face. **One input: the
+  envelope.** (Corrected 2026-09-20; it previously read `renderClosed(envelope, state)` with a second
+  argument carrying door facts, which contradicted this section's own rule that a sealed shape draws
+  its closed state *from the envelope alone*.) Door facts reach it **as envelope keys** — the post
+  office stamps `date_postmarked`, `fetched` and `opened` onto the served copy before anything
+  renders, so an opened envelope looks opened without a second channel of truth. One input means the
+  page and the downloaded `.md` cannot disagree, and it is the stricter reading of
+  `visualizers.md`'s pure-renderer standard ("three hosts... differ only in where the data comes
+  from"). The `letter` shape is the first to fill this.
+- **Transitions are renderer output too** (2026-10-02, cloud backlog U17). The letter also exports
+  `renderTearing(envelope, tears)`: the frames between closed and open, pure, same single input plus
+  how far along the movement is. The **host counts the gesture** (three taps); **the renderer draws
+  every frame**, so a third host gets the same tear for free. A transition is not a state: it never
+  writes to the envelope and never says "opened". Only the host's finished gesture opens the letter,
+  and only then does the office stamp it.
+- **What goes on the envelope is authored as outside.** A sender chooses what the world may see
+  (`to`, `from`, `date`, a subject). Nothing is derived from the inside for display — filenames,
+  previews, and search over sealed files use the envelope only.
+
+Consequence for the two rendering hosts: the site builder renders public files, open state, at
+build time. The cloud app renders sealed files' *closed* state on the server and their *open* state
+in the browser after unsealing — through the same pure renderer (see `visualizers.md` → "three hosts,
+one renderer").
+
 ## What a complete shape carries
 
 A shape has **one core** (the saved data) and up to two faces over it: a **renderer** (read) and an
@@ -195,12 +262,53 @@ lib/visualizers/[name]/
   layout.njk          file-scope shapes only — default page layout template
   assets/             when the shape ships its own static files (icons, sprites) — copied into build
                       output like JS/CSS; NOT served from a central CDN (keeps sites self-contained)
-  builder/            when the shape has a GUI author (a "shape builder") — a single self-contained,
-                      file://-openable index.html that reads AND writes this shape's core format
+  builder/            when the shape has a GUI author (a "shape builder") — reads AND writes this
+                      shape's core format. Preferably a single self-contained, file://-openable
+                      index.html, because that is the easiest thing for someone else to fork. But
+                      see "where portability actually matters" below: a framework build (the cloud
+                      app's letter builder is React) is acceptable where the host already has one.
+                      What must stay portable is the RENDERER, not the GUI.
 ```
 
 First shapes to exercise the new folders: `garden` (both `assets/` and `builder/`), `scene-nav`
 (`builder/`, once migrated out of `lib/magic-machines/`).
+
+### Where portability actually matters (2026-09-20)
+
+The "someone builds an HTML/JS/CSS visualization and it becomes a bloob shape fast" story depends on
+the **renderer** being portable — pure, framework-free, data in and an HTML string out, runnable in
+Node, in a browser, or in a standalone playground. That is what `visualizers.md`'s three-hosts
+standard buys, and it is where the requirement belongs.
+
+A shape's **builder** (its authoring GUI) is a different job with different pressures: it must be
+genuinely good to use, on a phone and on a computer. A self-contained `index.html` remains the ideal
+because it forks easily, but a framework is acceptable where the host already carries one — the
+cloud app's letter builder (`app/src/shapes/letter/EnvelopeFields.tsx`) is React, sitting beside a
+renderer (`closed.ts`) that is pure and has no framework at all. Leon, 2026-09-20: *"react is JS so
+it's part of html/JS — we just need to have a good interface, and it needs to work on phone and on
+computer."*
+
+The test to apply: **could a third party render this shape without our stack?** If yes, the contract
+is satisfied, whatever the editor is written in.
+
+### Open question — sealing and the two site-builder flows (raised 2026-09-20, undecided)
+
+Content reaches a haus two ways, and they do not have the same provenance:
+
+1. **Pushed from the author's own GitHub/Obsidian** — the author holds the source and may overwrite
+   it with the next push.
+2. **Authored in bloob haus cloud** — the cloud holds it.
+
+Sealing flow 1 is unresolved: a seal freezes a specific set of bytes, and a repo push can replace the
+very file a sealed link points at. Leon: *"I could always package it as a full letter and encrypt the
+body, but then that's like sending an actual file rather than linking to content from my github."*
+
+**The pattern the ontology already suggests** (`ontology.md` → "Flows and stocks"): **you seal flows,
+not stocks.** A letter is a flow — immutable, from someone, delivered once — and sealing freezes a
+moment, which is exactly its nature. A repo-backed page is a stock — mutable, tended for years — and
+freezing it fights what it is. So a stock can be *private* (access-controlled) but is not a candidate
+for *sealing*; sealing something from a repo means packaging a copy as a flow, which is Leon's own
+instinct above. Not a decision yet — recorded so the next person does not re-derive it.
 
 ## Conversion checklist per shape type
 
@@ -366,20 +474,29 @@ here once. Full rationale: `docs/implementation-plans/2026-07-21_scene-nav-build
    the general preprocessor skips (e.g. `[alt](x.png)` without the `!`, chosen so Obsidian doesn't embed
    and clutter the source), the shape resolves them itself. Raw refs are the source-of-truth; resolution
    is a **render-time projection**, never written back — so a builder can round-trip the exact grammar.
-4. **Literal spaces are authored; encoding is a render concern.** Authors and builders write literal
-   spaces (`Contact us.png`); parsers accept both literal spaces and `%20`. URL-encoding happens only in
-   the resolved output URL.
+4. **Refs are stored decoded and emitted encoded.** Parsers accept **both** literal spaces
+   (`Contact us.png`) and `%20`, and hold the **decoded** form in the model, so basename resolution
+   never has to think about encoding. Anything that *writes markdown back out* — a builder's export,
+   a serializer — emits the **percent-encoded** form, because a raw space terminates a CommonMark link
+   destination and the link does not resolve in Obsidian's editor. One emitted string then works in
+   both hosts. *(Amended 2026-08-15; previously builders emitted literal spaces, which produced refs
+   that built correctly but appeared broken in the vault. The original rule reasoned only about
+   storage and carried the same form over to emission without arguing for it.)*
 5. **Tri-state + boolean vocabulary (all shapes).** Optional attribute: **absent → default**,
    **`false`/`off` → disable**, **`true`/`on` → enable**, **other value → override**; `false`/`off` and
    `true`/`on` accepted case-insensitively so authors don't hit syntax errors. Distinct from **bare
    flags** (`- background`, `- flipH` → true) and **keyed values** (`- at: x, y`).
 6. **A write-face (builder) emits authorable output that round-trips.** Whatever a builder produces
    must be something a human could have typed and that re-parses + re-renders identically. It preserves
-   the authored **target** granularity (full path stays full path; basename stays basename, literal
-   spaces). **Note-links (`goto`) are preserved verbatim** — the exact `[label](note.md)` or `[[wiki]]`
-   the author wrote, so they stay clickable in Obsidian (scene-nav does this via a pre-resolution
-   `data-vis-raw-source` capture; see its schema.md). **Image refs**, which carry no separate label,
-   are emitted in markdown `[alt](target)` form.
+   the authored **target** granularity (full path stays full path; basename stays basename; spaces are
+   percent-encoded per #4). **Note-links (`goto`) are preserved verbatim, with one exception** — the
+   exact `[label](note.md)` or `[[wiki]]` the author wrote is kept, but **a space inside a
+   markdown-link target is percent-encoded**, because a raw space terminates a CommonMark link
+   destination and the link would not resolve in Obsidian. **Wiki-links are never re-encoded** —
+   `[[an evening with melt]]` is Obsidian's own syntax, where spaces are legal and `%20` would make it
+   hunt for a file literally named `an%20evening...`. (scene-nav does the verbatim capture via a
+   pre-resolution `data-vis-raw-source`; see its schema.md.) **Image refs**, which carry no separate
+   label, are emitted in markdown `[alt](target)` form.
 
 7. **A link's tab is decided by origin, not by the shape.** A shape that navigates on click
    opens **the same tab for a target on this site** and **a new tab for one off it**. Staying
@@ -588,6 +705,8 @@ Authoring goal: a `folder-preview` code fence in the body (no `bloob-shape:` in 
 | `image-text` | build-time | ✓ | — | — |
 | `ken-burns-zoom` | unknown | Incomplete | planned (its builder is still filed in `lib/magic-machines/` — reclassified in docs, not moved) | Missing `manifest.json` entirely |
 | `latex` | runtime | Partial | — | Missing `schema.md` |
+| `letter` | leaf, sealable | **Built — in `bloob-haus-cloud`** (2026-09-20) | ✓ `EnvelopeFields.tsx` (React) | The first shape with a real closed state (the envelope) and the first sealable one. Its pure renderer is `app/src/shapes/letter/closed.ts` — `renderClosed(envelope)`, one input, no framework, plus `renderTearing(envelope, tears)` for the three-tap tear (2026-10-02) — with a React builder beside it, exactly the split "Where portability actually matters" describes. **It lives in the cloud repo, not here**, because the cloud was its first host; porting it into `lib/visualizers/letter/` so the site builder draws it too is the open work. The earlier note that the cloud rendered it "via a provisional `note` component" is stale. |
+| `locker` | container, sealable closed state | **Built — in `bloob-haus-cloud`** (M4b, M5a 2026-09-24) | the room itself (React) | First container shape. Settings in `_index.md` (`contents`, `sort`); pure helpers in `app/src/shapes/locker/`; closed state = character art, one drawing for everyone on the page (D1); its link preview (2026-10-02) is the same lines with the locker's NAME painted on the door, still D1-safe because the name comes from the address, never a lookup. The lines come from one pure function, `lockerArtLines(name?)`: the page wraps them in a `<pre>`, the preview engine (`printTextArt`, Satori) prints them to a PNG. That is the preview engine's contract: a shape's closed state as lines (or SVG) in, picture out. Contents from `[[links]]` (M5b) not built. |
 | `marble` | — | Not yet built | — | Declared as `default_shape` in marbles vault — will auto-apply layout once shape folder exists |
 | `note` | — | Not yet built | — | Used as `bloob-shape: note` in content files — safely falls back to `page.njk` until built |
 | `page-preview` | runtime | Partial | — | — |
@@ -694,7 +813,7 @@ resolves open question #3 below. It makes shapes human-consistent, AI-authorable
 
 ## Open architectural questions (living section — refine as we learn)
 
-These are unresolved by design. Work through them one at a time as shapes are built and real usage makes the right answers clearer. Last touched: 2026-06-05.
+These are unresolved by design. Work through them one at a time as shapes are built and real usage makes the right answers clearer. Last touched: 2026-09-18.
 
 ### 1. Chrome — what can a shape declare about its frame?
 
@@ -753,7 +872,8 @@ Every shape's `schema.md` is the human- and AI-readable contract. For AI to reli
 ## Examples (complete .md file mockups)
 ## Translation behavior (what happens to non-native content)
 ## Closed-state visual (how this shape looks as an icon when referenced from elsewhere)
-## Builder (does this shape have a GUI author? where it lives, what core it reads/writes)
+## Builder (does this shape have a GUI author? where it lives, what core it reads/writes,
+##   and — if it exports markdown — confirmation that its output re-opens in Obsidian)
 ## Authors (creator name(s) + URL — an array; renders in the shape catalog)
 ## Assets (static files the shape ships, if any)
 ```
@@ -786,7 +906,47 @@ The conceptual architecture says every shape has two states: open (the full page
 
 **Tentative position:** add a `closed-state visual` section to `schema.md` template now (even if it just says "TBD — uses default wikilink pill"), so the question doesn't get forgotten. Don't implement any renderer yet.
 
+**Update 2026-09-18:** the letter forces this. Sealed files (see "Sealing" above) can only show their
+closed state, and the server must draw it with no body — so `renderClosed(envelope, state)` becomes a
+contract function, pure like `renderer.js`, and the first implementation is the letter's envelope.
+The `schema.md` section is now "closed state: what the envelope carries and how it is drawn", not
+TBD. The wikilink-pill default stays for shapes that haven't filled it.
+
 ---
+
+### 8. What markdown a shape lets through — and refuses
+
+The site pipeline runs one markdown-it configuration (task lists, footnotes, attrs, containers) on
+every page; a shape's `parser.js` only parses the shape's *own* block syntax. Nothing declares what
+general markdown a shape supports, and nothing declares what it **refuses**.
+
+**The gap (surfaced by the letter, 2026-09-18):** the letter accepts all general markdown, but for
+privacy it must *refuse* raw HTML and remote images (a remote image is a read receipt). Those
+refusals are the letter's real settings and have no machine-readable home. Today they live in code
+in the cloud app (`note/render.ts`), and the post office's markdown-it lacks the site's plugins — a
+letter with `- [ ]` or a footnote renders differently in the two hosts.
+
+**Tentative position:** one shared markdown-it configuration is the baseline every shape gets; a
+shape declares deviations in `manifest.json` (a `markdown:` block — `html: false`,
+`images: alt-only`, …) and explains them in `schema.md`. Write it when the letter shape is built;
+record the derivation in `shape-authoring-log.md`.
+
+---
+
+### 9. Gestures: some actions ask for a deliberate movement (raised 2026-10-02)
+
+The first one: a letter nobody has opened is **torn open in three taps**, each tap ripping the flap
+further, instead of opened with one click. Why: the first opening stamps `opened` for everyone holding
+the link, and Leon unsealed a letter he had written for someone else by accident. The movement is the
+confirmation, and a nicer one than a yes/no dialog (inspired by Duolingo's tap-tap-tap).
+
+Leon's question: is this "action step" part of the shape contract (declared, e.g. a manifest
+`gestures: { open: tear-3 }`, maybe tuned per room), or does it live in the shape's own code?
+
+**Current position: the shape's own code.** One shape has one gesture. Don't design the contract until
+a second shape needs one; the reusable part already exists, because the frames come from the pure
+renderer (see Sealing → "Transitions are renderer output too"). Candidates that would make it two:
+breaking a wax seal, opening a locker's door, signing something.
 
 ### 6. Lineage / shape inheritance — deferred
 
@@ -808,3 +968,52 @@ The longer-term goal is that anyone (human or AI) can create a shape by followin
 - [ ] Documented: how a vault-local shape in `/bloob-haus-shapes/` gets picked up by the build pipeline (not yet implemented — see conceptual doc)
 
 The vault-local shapes folder (defined in the conceptual doc) is the gateway to shapes becoming a community thing. Nothing in the current build pipeline supports scanning a vault's shape folder yet. That's the missing technical piece between "creator" shapes and "user" shapes.
+
+---
+
+### 10. Canvas: placement in a file Obsidian already edits (raised 2026-10-23, undecided)
+
+Leon, 2026-10-23: many of his visualizers "are actually a canvas", and working with Obsidian's
+Canvas can be very important and useful. **He is not yet sure how to integrate it.** Recorded so the
+next session starts here instead of re-deriving it. Consider canvas whenever placement, rooms,
+the haus, or a coordinate-based shape is on the table.
+
+**What a canvas is.** Obsidian's `.canvas` file is **JSON Canvas**, an open spec (jsoncanvas.org,
+MIT): `nodes` — each `text`, `file`, `link` or `group`, with `id`, `x`, `y`, `width`, `height` and an
+optional `color` — and `edges` (`fromNode` / `toNode`, optional sides, ends, `label`, `color`).
+
+**The pattern nobody had named.** Three shapes each invented their own coordinate grammar: garden
+(`- mature-tree "Title" @240,225`), fridge-magnets (`[word](x,y)`), scene-nav (per-element positions
+with mobile overrides). JSON Canvas is the standard form of the **Coordinates** row in "Placement
+systems" above, and it ships with an editor people already use.
+
+**Working position, not a decision:** a canvas is **not a shape**. It is a placement file — *where
+things sit* — and shapes are *what sits*. Keep the two apart; merging them is the same trap as
+leaf vs. container.
+
+| JSON Canvas | Bloob Haus reading |
+|---|---|
+| `file` node | a note placed in a room, drawn as its **closed state** (the keystone in `ontology.md`) |
+| `group` node | a room inside a room (recursive placement) |
+| `edge` | a relation / wire between objects; also a comment pinned to its target (text node + edge) |
+| `text` node | a leaf whose outside is its inside (a sticky note) |
+| `link` node | an outside thing, drawn as a link card |
+
+**Open, in rough order of how much they would change the build:**
+- **How a canvas says what kind of room it is** (garden vs. plain room). Unverified: whether
+  Obsidian keeps unknown fields in a `.canvas` file when it saves. If it does, a `bloob-shape` field
+  in the JSON; if not, a sidecar `_index.md` that names the canvas.
+- **Pixels vs. phones.** A canvas is an infinite plane in absolute pixels; a room on a phone needs a
+  fit/scale rule (relates to authoring convention #8, mobile inherits desktop).
+- **Do garden / scene-nav / fridge-magnets move to canvas?** Not wholesale (see "Rule: do not convert
+  visualizers wholesale"), and only if a shape gains from Obsidian editing. Their own grammars hold
+  things canvas does not (mobile overrides, garden's nested page bullets).
+- **Rendering stays pure:** `.canvas` JSON in, HTML out, so it runs in all three hosts
+  (`visualizers.md` → "three hosts, one renderer"). Look for prior art drawing JSON Canvas on the web
+  before writing one.
+- **Sealing:** a canvas is a stock (a room), not a flow, so it can be private but is not sealed (see
+  "Sealing and the two site-builder flows" above).
+
+Context: raised in the workbench session (2026-10-23), where a rung-0 shape became a folder of plain
+HTML templates (`open.html`, optional `closed.html`, `style.css`) filled from `{{yaml.x}}` and
+`{{body}}`. The canvas is the natural room those shapes get placed in.

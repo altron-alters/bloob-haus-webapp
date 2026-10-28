@@ -9,15 +9,27 @@ Everything else is reference you consult on demand: `docs/CHANGELOG.md` for hist
 `docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
 long arc.
 
-**Last updated:** 2026-07-28 (S70)
+**Last updated:** 2026-08-22 (S71)
 
 ---
 
 ## Immediate Next Steps
 
+**A visualizer inventory table (ontology / shapes).** 25 visualizers exist in `lib/visualizers/` and
+nothing lists them with their *type*. Leon, 2026-09-20: the docs "should probably start to make a
+list of all visualizers and their types some time soon (I guess a table)." One table, in
+`shapes.md` (mechanism) and referenced from `ontology.md` (concept), with at minimum: name, **leaf
+or container**, scope it works at (inline `:::` / file / both), and whether it has a builder face.
+The value is not the list — it is that filling in the "container" column will show, concretely, how
+much of the unbuilt heart is still unbuilt. Current best guess: `garden`, `collection`,
+`folder-preview` and `fridge-magnets` are the only ones near container behaviour.
+
+
 **`.md` page templates — pattern established 2026-07-28, tags + folder-index migrated.** Builder-owned page templates are `.md` files that compose shapes, overridden per theme by basename (`pages/`) or filename (`templates/`). See DECISIONS 2026-07-28. Remaining:
 
 1. **Folder indexes for folders that DO have an author `_index.md`** are untouched by all of this, by design. Only the fallback was templated. No action unless that changes.
+
+**`_utils/` becomes a platform API when user-authored shapes ship.** A shape importing `_utils/` is no longer "a folder you can zip, share, fork" (`shapes.md`), which the marketplace direction depends on. Decide before the folder grows past a handful of modules: either the runtime provides it under a stable import specifier, or third-party shapes may not use it. Cheap now at 2 modules. See DECISIONS 2026-08-16.
 
 **Shape architecture — decisions/work queued (see CHANGELOG S67):**
 2. **Make `collection`'s `folder=` matching case-insensitive** — `graph.json`'s `section` is slugified, so `folder=Resources` renders empty *silently*. The generated template now passes `slugifyPath()` output so it can't hit this, but a hand-authored fence still can. **This trap has bitten three times.**
@@ -28,11 +40,6 @@ long arc.
 **Local thread — melt.** S70 cleared Leon's whole 2026-07-28 dev-notes batch (see "What's Done").
 Two things it left open:
 
-6. **One push outstanding — `melt-website` is 1 commit ahead of origin** (`show_visitor_count: true`).
-   `git push` hung on the macOS keychain during S70 and needs running by hand. **Until it lands the
-   visitor counter shows nothing on the live site**, even though the GoatCounter switch is now on
-   (the endpoint returns real numbers: site total 87, `/about-melt/` 8). If it still doesn't appear
-   after that deploy, the counter is fine — check `analytics` in the deployed `src-melt/_data/site.js`.
 7. **DECIDE: is the date pill a theme standard or a shape concern?** (TECH-DEBT #45) marbles-pouch's
    `.marble-date` is a second implementation and did not get S70's glass treatment. Cheap either way;
    the cost of leaving it is that the next "make the date pill X" request silently hits one theme.
@@ -53,6 +60,8 @@ Two things it left open:
 
 ## What's Done
 
+- **Percent-encoding fixed end to end: transclusions, the scene-nav builder round-trip, and a build-killing crash** (2026-08-15, S71). Markdown-style embeds with a space in the filename (`![x](A%20B.md)`) silently produced a "Could not embed" placeholder — the target was never decoded before the file-index lookup — while the wiki form worked; fixing it *inside* the transclusion handler also made **nested** markdown-style embeds work for the first time and taught it `#heading` specifiers. The scene-nav builder's "Copy ::: block" emitted literal spaces, so a pasted block showed broken links in Obsidian; refs are now emitted percent-encoded, and `goto:` keeps its verbatim guarantee **except** for spaces in a markdown-link target — **wiki-links are never re-encoded**, since spaces are legal in Obsidian's own syntax. That contradicted `shapes.md` convention #4, which conflated a decoded *model* (correct) with literal-space *emission* (never argued for); amended, with the requirement baked into the canonical `schema.md` Builder template. Separately, a literal `%` in **any** filename (`50% off flyer.png`) threw `URIError` and killed the whole build from 13 unguarded `decodeURIComponent` sites across 10 files — all now route through `scripts/utils/safe-decode.js`. Suite 851 → **909**; melt's rendered output byte-identical throughout. Garden's attribute tokenizer gained quote awareness in the same session, which also fixed a **lossy round-trip in garden's own serializer** (`bg:"my backdrop.png"` read back as `"my`); `safeDecode`/`encodeRef` now live in `lib/visualizers/_utils/ref-encoding.js`, shared by scene-nav and garden — and `_utils/` is now a **documented pattern** (`visualizers.md` → "Shared helpers"), with the underscore convention actually enforced by the bundler. New debt #48 (`ken-burns-zoom` has no manifest, so it always loads). See CHANGELOG S71 + DECISIONS 2026-08-15.
+
 - **melt dev-notes batch cleared; share bar reworked and re-homed** (2026-07-28, S70). scene-nav stopped opening a new tab for links to its own site — the tab is decided by **origin**, with a tri-state `newTab: on/off` override and a pure `link-target.js` (origin injected) shared by runtime, builder and tests. Share bar went **icon-first** across every theme (overlapping circles, hover to reveal, first-tap-expands on touch, copy link always first), and its CSS **moved out of the `article` shape into `themes/_base/assets/css/base.css`** — the markup is a `_base` partial three unrelated hosts include, so `.share-bar` came *out* of article's `detect` and themes now override on source order instead of a specificity ladder. Date pill is frosted glass for all articles (colors untouched; the fix was mixing into `transparent`, not into an opaque bg). melt's `{.button}` contrast bug traced to `a.button` and `.article-body a` having **identical specificity** with the shape stylesheet loading later. New **opt-in visitor count** from GoatCounter's JSON endpoint — no badge, no branding, and it fails invisibly because the deciding switch ("Allow using the visitor counter") lives in GoatCounter's own settings and defaults off. Per-page `visitor_count:` mirrors `comments:`; the comments half was already working and got tests rather than a rewrite. Verified in headless Chromium on clean per-site builds; audits re-run (marbles 11/11 across 1159 pages, melt 8/8). Suite 808 → **851**. New debt #45. See CHANGELOG S70 + DECISIONS 2026-07-28.
 - **melt breadcrumbs + one canonical URL/title derivation; S68 merged from the AE fork** (2026-07-28, S69). Breadcrumb rule: **every crumb shows that page's own title** — the folder crumb resolves the folder-index page (new `lookupPage` filter) instead of prettifying a URL slug, which cannot work on a `case: lower` site. `smart-title-case.js` replaced **five** divergent prettify-a-name copies and now runs on the *original* filename, so acronyms survive (`come-to-MELT.md` → "Come to MELT"). `slugifyPath()` became THE folder-path → URL-path derivation, fixing folder-index permalinks that bypassed the slug strategy entirely (`/Resources/` vs `/resources/` — invisible on macOS, broken on Linux CI); verified against a clean HEAD worktree that **no live URL moved**. Merged PR #3 (9 AE commits) and closed its "verify on melt + marbles" item by restoring both themes' folder chrome via `templates/folder-index.md` — measured against production first: 8 live pages would otherwise have lost their chrome and entered search. Obsidian plugin **1.2.0** released: copy-link reads the vault's `_bloob-settings.md` `url:` block (556 pages, 0 mismatches vs the builder). New debt **#44**. Suite 751 → **808**. See CHANGELOG S69 + DECISIONS 2026-07-28.
 - **melt consolidated onto the shared `article` shape** (2026-07-27, S67). Root cause of the odd Resources page: `bloob-shape: page` resolves to nothing (no `lib/visualizers/page/`), so layout fell to the step-5 default — `page.njk` for pages but **`base.njk` for index files**, which has no column and renders no title, while the preprocessor had already stripped the H1 expecting it to be re-rendered. Fixed by upgrading `article` with four generic features (**`date_updated`**, `banner_text`, show/hide date settings, **media embeds incl. responsive YouTube**) + a pure `date-field.js` supporting both date conventions, then migrating all 15 melt pages. `/about-melt/` measured **identical** before/after. Also: nested-shape styling collision fixed (`.article-body a` was underlining marbles), melt `page.njk` reduced to an alias, 22 dead `.page-*` rules removed, `settings-registry.md` brought fully current, share bar → glassmorphism. **CLAUDE.md now mandates the SHAPE TRINITY** (ontology + shapes + visualizers, always) and `shapes.md` gained presentation-containment + a corrected fallback section. Suite 723.
@@ -65,6 +74,18 @@ Two things it left open:
 - (Session 56) Cross-origin embed auto-height + `font` param.
 
 ## Not started / still open
+
+- 🚧 **The Letter — decision inventory, NOTHING DECIDED YET.**
+  [`docs/superpowers/specs/2026-08-16-letter-decisions-WIP-nothing-decided.md`](superpowers/specs/2026-08-16-letter-decisions-WIP-nothing-decided.md)
+  A thinking document, not a spec: **56 items · 24 carry a suggested direction · 0 actually decided.**
+  Four groups — the world Whitney draws (`W`), the flows a person moves through (`F`), the technical
+  spine (`S`), and what stays open on purpose (`Q`). Nothing is built: no `letter` shape exists, and
+  none of it is on the roadmap. **Listed here so it's findable, not because it's active.**
+  Two items connect to work already in this file: `S-07` (engine extraction / container shapes) is the
+  same thing as the composite-shapes item above, and `S-04` (does the recipient need an account?) is the
+  fork that decides how much of the Phase-3 backend the letter actually needs.
+  *Suggested entry point:* pick `Q-01` (who gets the first letter), lock `W-03` + `W-10`, and tear a grey
+  rectangle on a phone before anyone draws anything.
 
 - **Retrofit remaining content-generating shapes to the pure-renderer standard** (TECH-DEBT #40) — `folder-preview`, `circular-nav`, `fridge-magnets`, `tags`, `graph` build markup in `browser.js`, so crawlers see nothing and the future playground can't render them. Convert each when next touched; don't retrofit speculatively.
 - **#41 reverse direction unverified** — whether `folder-preview` depends on anything in `collection.css`. AE is the likeliest site to expose it (uses both shapes); extend `tests/css-independence.test.js` when folder-preview is retrofitted.

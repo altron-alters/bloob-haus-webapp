@@ -8,6 +8,8 @@
 
 **User-facing settings** live in `_bloob-settings.md` in each content repo. This file is the *developer* reference: what exists, what scope it has, which themes implement it, and HOW to wire it into a new theme.
 
+**Not built yet:** `docs/settings-backlog.md` (shared with `../bloob-haus-cloud`).
+
 **Last Updated:** 2026-07-20
 
 ---
@@ -81,17 +83,17 @@ Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`
 | Concern | Mechanism | Automatic? |
 |---------|-----------|------------|
 | Excluded from RSS | `eleventyExcludeFromCollections: true` via `eleventyComputed.js` | ✓ Universal |
-| `noindex` meta | `_base/partials/head.njk` checks `_bloob_unlisted` | ✓ Universal |
+| `noindex` meta | `_base/partials/robots-meta.njk` checks `_bloob_unlisted`; every theme head includes it (tested) | ✓ Universal |
 | Excluded from pagefind | Layout must check `_bloob_unlisted` and swap `data-pagefind-body` → `data-pagefind-ignore` | Per-theme obligation |
-| Excluded from sitemap | `pages/sitemap.njk` must filter `_bloob_unlisted` entries | Per-theme obligation |
+| Excluded from sitemap | `_base/pages/sitemap.njk` filters `_bloob_unlisted` entries; themes may not ship their own (tested) | ✓ Universal |
 
 **Theme implementation status:**
 | Theme | noindex | pagefind-ignore | sitemap filter |
 |-------|---------|-----------------|----------------|
 | `alter-engineers` | ✓ | ✓ | ✓ |
-| `marbles-pouch` | ✓ | ✓ | — (no sitemap) |
-| `warm-kitchen` | ✓ | ✓ | — |
-| `melt` | ✓ | ✓ | — |
+| `marbles-pouch` | ✓ | ✓ | ✓ (base) |
+| `warm-kitchen` | ✓ | ✓ | ✓ (base) |
+| `melt` | ✓ (since 2026-10-25; its head had no unlisted check before) | ✓ | ✓ (base) |
 
 > **Hosting unlisted/client-facing content at an unguessable URL** (security by obscurity, raw HTML
 > passthrough files, third-party-dependency leak vectors): see
@@ -143,6 +145,18 @@ Both fields accept the same value formats:
 |-----|------|---------|-------------|
 | `default_shape` | string | — | Fallback shape for pages with no `bloob-shape:` in frontmatter. Governs their **layout** and, through it, their **commentability** (see `docs/architecture/shapes.md` → "Comments — a shape behavior"). Only influences layout selection — body rendering (`renderFilescope`) never fires from the default. If the named shape has no `lib/visualizers/[name]/` folder yet, it silently falls through to `page.njk` (which is commentable). This lets you declare a future shape name without breaking the build. Optional — an undeclared page is a valid "undefined pile" state. Example: `default_shape: marble`. |
 
+#### Internal links
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `features.link_icons` | bool | `false` | Put the linked page's shape icon in front of internal links (the pre-2026-10-26 look, now without the pill). Off by default: internal links render as plain inline links with a hover pill. A page can also turn icons on for one part by wrapping it in a `data-link-icons` container. See `docs/architecture/theme-standards.md` → "Internal links". |
+
+#### Folds (`## > Heading`)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `features.foldable_headings` | bool | `true` | A heading that starts with `>` renders folded, one that starts with `^` renders open but foldable (the `foldable` shape, `lib/visualizers/foldable/schema.md`). `false` turns the markers off: they render as text. Theme look via `--fold-*` tokens in `main.css` (all optional). |
+
 **How to wire in a new theme:** No theme-level changes needed. Layout selection is handled entirely by the preprocessor — it reads the shape's `manifest.json.defaultLayout`, copies the shape's `layout.njk` into `src/_includes/layouts/`, and injects the `layout:` key into each page's frontmatter automatically.
 
 #### Shape identity registry (`_bloob-shapes.md`)
@@ -177,7 +191,7 @@ Documented in full in `docs/architecture/themes.md` → "Baseline Features Contr
 | `features.search` | `true` | Pagefind search |
 | `features.rss` | `true` | RSS feed |
 | `features.per_page_visualizers` | `false` | Load only the visualizer CSS/JS a page uses (TECH-DEBT #4). Set in `sites/<name>.yaml`, not `_bloob-settings.md`. Shapes opt in via `detect` in their `manifest.json`; unannotated shapes always load. **Run `node scripts/audit-visualizer-detection.js --src=src-<name>` against a real build before enabling on a new site.** On: melt, marbles. Off: buffbaby, alter-engineers. |
-| `features.sitemap` | `true` | sitemap.xml |
+| `features.show_in_search` | `quiet` | How the site shows up in search engines. `yes` = `sitemap.xml` + `robots.txt` from `themes/_base/pages/` (all themes except alter-engineers). `quiet` = no sitemap; pages are found only if something links to them. `no` = keep the whole site out of search: every rendered page gets `noindex,nofollow` (`_base/partials/robots-meta.njk`, included by every theme head), and the build appends `X-Robots-Tag: noindex, nofollow` for every path to `_headers` (`scripts/utils/search-headers.js`, build-site step 7.1), which also covers what no head renders: magic machines, raw HTML, PDFs, images. Unlisted pages are never listed in any mode. A bare `yes`/`no` read as `true`/`false` by an older YAML parser counts; any other value is `quiet`. Renamed from `features.invite_search_engines` (2026-10-25, same day it shipped). Settable in `sites/*.yaml` or `_bloob-settings.md` (the vault wins). On: marbles, buffbaby. melt held back (2026-10-25) until its page list is reviewed: it would announce `/bios-for-whitney-and-vicki/`, public but unlinked. Replaces the old `features.sitemap` / `features.robots_txt`, now ignored: every vault scaffold had them `true`, so they were never an active choice. |
 | `features.og_images` | `true` | OG preview image generation |
 | `features.tags` | `true` | Tag system |
 | `features.image_zoom` | `true` | PhotoSwipe click-to-zoom (see wiring guide below) |
@@ -459,13 +473,23 @@ Settings that apply to specific visualizers regardless of theme.
 | `quotes[].date` | string | — | Display date |
 | `quotes[].color` | string | — | Card color variant (`red`, `white`, `green`) |
 
-### `collection` code fence
+### `collection` code fence and `:::collection` block
 
 Full reference: `lib/visualizers/collection/schema.md`. Settings added since:
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | `placeholder` | string | `Search...` | Placeholder text for the collection's own filter input (added 2026-07-27) |
+| *(bullet list of links)* | list | none | A hand-written list in the block (`- [[PAGE]]`, `- [[PAGE\|Label]]`, `- [Title](marbles/PAGE.md)`, `- [Site](https://…)`) picks exactly which pages get a card, in that order. Replaces `source:` (added 2026-10-26) |
+| `show` | list | none | `image, subtitle, date, excerpt, tags` (or `all`): turns `display: cards` into post cards. Title is always shown. Without it the cards are unchanged (added 2026-10-26) |
+| `columns` | int 1-6 | theme ladder (3/2/1) | Card columns on wide screens; tablets get at most 2, phones 1. `1` lays a post card out with the picture beside the text (added 2026-10-26) |
+| `excerpt_length` | int or `"N sentences"` | `30` (words) | Length of the post-card excerpt (added 2026-10-26) |
+| `titles` | `page` / `link` | `page` | Card title: the page's own title, or the link text from the list (added 2026-10-26) |
+| `search` | | combined; **`off` for a hand-written list** | A curated list has no filter box unless `search:` asks for one (added 2026-10-26) |
+
+Post-card excerpts, dates and tags come from `_data/pagePreviews.json`, written by the
+preprocessor (excerpt: `excerpt:` or `description:` frontmatter, else the first prose of
+the page; date: `date_created`). It is build data and never served.
 
 The filter input reads the shared `--sv-*` search-surface tokens, so it matches the
 site-wide Pagefind bar in whatever theme is active.

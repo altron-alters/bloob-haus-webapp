@@ -3,6 +3,19 @@
 **Status:** Modular architecture with auto-discovery. Four activation methods including `:::` containers. `data-vis-raw` pipeline fully implemented (2026-03-23).
 **Location:** `docs/architecture/`
 **Updated:** 2026-07-20
+> **These three documents are a living triad, still growing.** `ontology.md` (what a shape *is*),
+> `shapes.md` (the contract), `visualizers.md` (the renderer standard) — read together, never one
+> alone. Most of what is written here has serious empirical roots, but **they can and do diverge
+> from each other and from the code**, and not every line should be trusted as settled. They are
+> ground for philosophical *and* practical conversation.
+>
+> **Standing invitation, to a person or an AI reading this:** if you notice a contradiction, or a
+> larger pattern nobody has named yet, **say so and propose a change to these docs in the same
+> session** — do not quietly route around it. Precedent, 2026-09-20: this document specified
+> `renderClosed(envelope, state)` while its own sealing rule said a closed state must be drawn
+> "from the envelope alone". The code had followed the rule; the signature was the slip; the doc
+> was corrected. That is the expected motion, in either direction.
+
 
 Visualizers are the core of Bloob Haus - "little machines" that transform text into visual/interactive experiences. This document describes how the visualizer system works.
 
@@ -136,7 +149,9 @@ needs a pure renderer.
 
 **Conforming** (`parser.js` + `renderer.js`): `card-preview`, `image-grid`, `image-text`,
 `photo-grid`, `quotes-stack`, `scene-nav`, `services`, `slideshow`, `testimonials`,
-`heading-and-paragraph`, **`collection`** (2026-07-27).
+`heading-and-paragraph`, **`collection`** (2026-07-27). `foldable` (2026-10-26) produces all
+of its markup at build time from pure functions too (`fold-headings.js`, `peek.js`); its
+`browser.js` only opens folds around a `#hash` target.
 
 **Not yet conforming, generates content** — `folder-preview`, `circular-nav`, `fridge-magnets`,
 `tags`, `graph`. Tracked as **TECH-DEBT #40**. Convert each when next touched; do not retrofit
@@ -479,6 +494,9 @@ export async function renderFilescope(settings, body) {
 
 ```
 lib/visualizers/                        ← Source of truth for all visualizer code
+├── _utils/                             ← Shared pure helpers (see "Shared helpers" below)
+│   ├── bg-color.js                     ← bg=/color= fence params → class or inline style
+│   └── ref-encoding.js                 ← safeDecode / encodeRef for shapes carrying image refs
 ├── checkbox-tracker/                   ← Runtime visualizer (auto-detect)
 │   ├── manifest.json                   ← Metadata, activation method, settings schema
 │   ├── schema.md                       ← Human + AI readable input documentation
@@ -535,6 +553,85 @@ eleventy.config.js                      ← addTransform for post-render HTML mo
 **Adding a new visualizer = adding a new folder in `lib/visualizers/`.** No changes to any other file needed — the bundler auto-discovers folders, writes a manifest, and templates auto-include from that manifest. If the visualizer needs preprocessing, it exports `preprocessHook` from `preprocess-hook.js` and it is called automatically.
 
 > **Dev workflow note:** `bundle-visualizers.js` only runs as part of the full build (`build-site.js`). After adding a new visualizer during a dev session, run `node scripts/bundle-visualizers.js` manually before expecting the JS bundle and `visualizers.json` manifest to be updated.
+
+## Two optional hooks in `index.js` (2026-10-26)
+
+Both added for the `foldable` shape; both are opt-in exports, so no other shape changes.
+
+- **`export function markdownItPlugin(md, { siteConfig })`**: for a shape that changes how
+  markdown itself renders rather than replacing a block. `eleventy.config.js` registers every
+  visualizer that exports one, after its own plugins (footnotes, attrs, `:::` containers), and
+  hands it the site config so a site can opt out with a feature flag. `foldable` uses it for
+  `## > Heading`. Prefer it over a regex pass in the preprocessor whenever the syntax has to
+  respect code blocks, blockquotes and `:::` boundaries: markdown-it has already parsed those.
+- **`export const transformOrder = <number>`**: build-time transforms run in ascending order
+  (default `0`, stable sort, so shapes without it keep their discovery order). Use it only when
+  a transform reads markup another shape's transform writes: `foldable` (`100`) fills its peek
+  row from the cards `collection` has drawn. Before this, transform order was `readdir` order,
+  which is alphabetical on macOS but not guaranteed on Linux CI.
+
+## Shared helpers — `lib/visualizers/_utils/`
+
+**Status: in use by 7 shapes across 2 modules (2026-08-15).**
+
+Pure helpers that more than one shape needs live in `_utils/`, not copied per shape and not
+imported shape-to-shape. It is a folder of functions, not a visualizer.
+
+**The underscore prefix is what marks a folder as "not a shape"**, mirroring the vault's `_bloob-*`
+system-file convention. `bundle-visualizers.js` skips underscore-prefixed directories — until
+2026-08-16 it did not, so `_utils` was enumerated as a visualizer and written into
+`visualizers.json` as a manifest-less entry, which this document defines as *always loaded*. A
+phantom always-loaded shape also skews `audit-visualizer-detection.js`. Pinned by
+`tests/build/visualizer-discovery.test.js`.
+
+| Module | Does | Used by |
+|---|---|---|
+| `bg-color.js` | `bg=` / `color=` fence params → CSS class or inline style | `folder-preview`, `heading-and-paragraph`, `image-text`, `services`, `slideshow`, `testimonials` |
+| `ref-encoding.js` | `safeDecode` / `encodeRef`: the stored-decoded / emitted-encoded contract | `scene-nav`, `garden`, `collection` (`safeDecode` only, for list targets) |
+
+### What belongs here
+
+**Pure functions only** — no DOM, no `fs`, no Node built-ins, no markup, no CSS. These files are
+inlined into **browser** bundles, so a Node import breaks the bundle at build time.
+
+The bar is a **shared contract**, not merely shared code. Both current modules exist because two
+shapes must agree on an answer, and a second copy would silently drift:
+
+- `bg-color.js` — six shapes must map `bg=green` to the same class, or a page mixes palettes.
+- `ref-encoding.js` — scene-nav and garden must agree on when a ref is decoded vs encoded, or one
+  shape's `%20` is another's literal space.
+
+Apply the Rule of Three, and prefer a **shape-local** helper until a *second shape* actually needs
+it. `encodeGotoRaw` stays in `scene-nav/decode.js` because no other shape has a `goto:` grammar;
+only the two functions garden also needed moved out.
+
+### Do NOT import shape-to-shape
+
+`garden/parser.js` importing `scene-nav/decode.js` would couple two unrelated shapes and make
+neither removable. If two shapes need the same thing, it goes in `_utils/` — that is the whole
+reason the folder exists.
+
+### The cost, stated plainly
+
+`shapes.md` describes a shape as **"a folder you can zip, share, fork"**, and the user-authored /
+marketplace direction depends on that being true. **A shape that imports from `_utils/` is no longer
+such a folder** — copy it out of this repo and it fails on a missing relative import.
+
+That is an acceptable trade for **built-in** shapes and a real constraint for third-party ones. When
+vault-authored shapes (`_bloob-shapes/`) actually ship, `_utils/` becomes a **platform API surface**
+and must be either provided by the runtime under a stable import specifier, or declared off-limits to
+third-party shapes. Decide that before the folder grows — it is cheap now at two modules and
+expensive at twenty. Tracked with the user-authored-shapes work in `shapes.md`.
+
+### The Node-side twin
+
+`scripts/utils/safe-decode.js` duplicates `ref-encoding.js`'s `safeDecode` **on purpose**. The
+pipeline (`scripts/**`) is Node-only and `lib/visualizers/**` is browser-bundled; neither may import
+the other. Two implementations, each documented as to why, is correct here — one shared copy is not
+reachable from both sides.
+
+---
+
 
 ---
 
