@@ -16,6 +16,7 @@ import nunjucks from "nunjucks";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { sitemapPages } from "../scripts/utils/sitemap-pages.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const THEMES = path.join(__dirname, "../themes");
@@ -24,16 +25,18 @@ const BASE_PAGES = path.join(THEMES, "_base/pages");
 /** Template body without its frontmatter, the way Eleventy hands it to Nunjucks. */
 function body(file, dir = BASE_PAGES) {
   const text = fs.readFileSync(path.join(dir, file), "utf-8");
-  return text.replace(/^---[\s\S]*?\n---\n/, "");
+  // \r?\n: on Windows the template is checked out with CRLF line endings.
+  return text.replace(/^---[\s\S]*?\r?\n---\r?\n/, "");
 }
 
 function render(file, ctx) {
   const env = new nunjucks.Environment();
   env.addFilter("dateToRfc3339", (d) => new Date(d).toISOString());
+  env.addFilter("sitemapPages", sitemapPages);
   return env.renderString(body(file), ctx);
 }
 
-const page = (url, data = {}) => ({ url, date: "2026-10-01", data });
+const page = (url, data = {}) => ({ url, date: "2026-10-01", data, outputPath: `_site${url}index.html` });
 const site = { url: "https://leons.bloob.haus" };
 
 describe("base sitemap.xml", () => {
@@ -54,6 +57,22 @@ describe("base sitemap.xml", () => {
   it("declares the sitemaps.org namespace (Google ignores a urlset without it)", () => {
     const xml = render("sitemap.njk", { site, collections: { all: [] } });
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+  });
+
+  it("lists the homepage and folder indexes (excluded from the tag list only)", () => {
+    const xml = render("sitemap.njk", {
+      site,
+      collections: {
+        all: [page("/", { eleventyExcludeFromCollections: ["tagList"] }), page("/projects/", { eleventyExcludeFromCollections: ["tagList"] })],
+      },
+    });
+    expect(xml).toContain("<loc>https://leons.bloob.haus/</loc>");
+    expect(xml).toContain("<loc>https://leons.bloob.haus/projects/</loc>");
+  });
+
+  it("escapes characters XML does not allow raw in a URL", () => {
+    const xml = render("sitemap.njk", { site, collections: { all: [page("/a-&-b/")] } });
+    expect(xml).toContain("<loc>https://leons.bloob.haus/a-&amp;-b/</loc>");
   });
 
   it("never lists an unlisted page", () => {
