@@ -156,3 +156,14 @@ describe("robots meta tag (partials/robots-meta.njk)", () => {
     }
   });
 });
+
+describe("404 pages stay out of the sitemap", () => {
+  it("every theme's 404 page is excluded from collections", () => {
+    const themes = fs.readdirSync(THEMES, { withFileTypes: true }).filter((d) => d.isDirectory());
+    for (const t of themes) {
+      const file = path.join(THEMES, t.name, "pages/404.njk");
+      if (!fs.existsSync(file)) continue;
+      expect(fs.readFileSync(file, "utf-8"), file).toMatch(/eleventyExcludeFromCollections:\s*true/);
+    }
+  });
+});
