@@ -1,0 +1,5 @@
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+/clients/*
+  X-Robots-Tag: noindex
