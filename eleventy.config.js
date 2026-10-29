@@ -16,7 +16,6 @@ import { formatDate } from "./scripts/utils/format-date.js";
 import { parseDateField, resolveDateLabel } from "./scripts/utils/date-field.js";
 import { derivePageId } from "./scripts/utils/page-id.js";
 import { smartTitleCase } from "./scripts/utils/smart-title-case.js";
-import { sitemapPages } from "./scripts/utils/sitemap-pages.js";
 import {
   detectVisualizers,
   renderAssetTags,
@@ -299,9 +298,6 @@ export default async function (eleventyConfig) {
   // still be reached at a different casing than it was generated with, and a
   // silently-null lookup would drop the crumb rather than fail loudly.
   // Returns null when nothing matches; callers fall back to the slug.
-  // Pages listed in sitemap.xml (themes/_base/pages/sitemap.njk).
-  eleventyConfig.addFilter("sitemapPages", sitemapPages);
-
   eleventyConfig.addFilter("lookupPage", function (collection, url) {
     if (!collection || !url) return null;
     const target = String(url).toLowerCase();

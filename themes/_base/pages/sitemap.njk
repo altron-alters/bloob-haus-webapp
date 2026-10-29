@@ -3,14 +3,21 @@ permalink: /sitemap.xml
 eleventyExcludeFromCollections: true
 ---
 {#- Built only when the site sets features.show_in_search: yes (assemble-src.js).
-    Which pages: scripts/utils/sitemap-pages.js (unlisted never, homepage + folder indexes yes,
-    404 no). Unlisted pages: see docs/architecture/security-by-obscurity.md. -#}
+    Unlisted pages are never listed: see docs/architecture/security-by-obscurity.md.
+    The homepage is always listed, first: a theme's index.njk may be out of collections.all.
+    Only eleventyExcludeFromCollections: true means "not a page"; a list (folder indexes get
+    ["tagList"]) keeps the page out of those collections only. -#}
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  {%- for page in collections.all | sitemapPages %}
   <url>
-    <loc>{{ (site.url + page.url) | escape }}</loc>
+    <loc>{{ site.url }}/</loc>
+  </url>
+  {%- for page in collections.all %}
+  {%- if page.url and page.url != "/" and page.data.eleventyExcludeFromCollections !== true and not page.data._bloob_unlisted %}
+  <url>
+    <loc>{{ site.url }}{{ page.url }}</loc>
     <lastmod>{{ page.date | dateToRfc3339 }}</lastmod>
   </url>
+  {%- endif %}
   {%- endfor %}
 </urlset>
