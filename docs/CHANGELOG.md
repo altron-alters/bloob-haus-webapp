@@ -14,6 +14,12 @@ Development session history and completed work.
 - **No third-party snippets, comments or visitor count on unlisted pages**, on every site.
 - **`scripts/compare-builds.js`**: head/body diff of two builds, used with a fixture vault per theme (the private vaults aren't reachable from the AE machine): zero body and title changes outside unlisted pages. (The sitemap homepage/folder-index fix landed upstream separately, 1789e33.)
 - **Windows:** the sitemap test's frontmatter regex assumed LF; fixed.
+- **Windows:** three tests that only failed on Windows fixed (sitemap CRLF regex, sharp file lock, stale `visualizers.json`); suite **1112/1112 on Windows**.
+- **Callout markers** (`> [!info]`) no longer leak into excerpts and descriptions.
+- **`structured-data` fence**: schema.org JSON-LD pasted as JSON only; the builder wraps, escapes and validates it (AE uses it).
+- **`unlisted_folders`**: every page inside a listed folder is always unlisted, no stub index (`/clients/` → 404), raw files get `X-Robots-Tag`. Also fixed graph.json listing `visibility: unlisted` pages (one rule, `isPageUnlisted`).
+- **Theme-owned `_headers`** composed with the magic-machine rules (AE: noindex on `*.pages.dev`).
+- **Upstream:** PRs #5 (SEO head/descriptions/unlisted guard/Windows), #6 (structured-data), #7 (unlisted_folders, fixes issue #8) open on LSanten/bloob-haus-webapp; not merged. Real-content `compare-builds` on leons/melt/buffbaby still owed.
 
 ### Session 71 — August 15, 2026
 **Worked on:** two link/encoding bugs on melt, both rooted in percent-encoding never being decoded. Suite 851 → **899 tests**.

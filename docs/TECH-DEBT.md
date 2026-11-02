@@ -17,7 +17,7 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 
 **IDs are stable and never reused** — code comments and other docs reference them by number
 (`#4`, `#40`, `#41` appear in `lib/visualizers/**` and `docs/architecture/visualizers.md`).
-**Next free ID: 49.**
+**Next free ID: 51.**
 
 ---
 
@@ -25,6 +25,8 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 
 | # | Item | Impact | How to check it's still real | Fix direction |
 |---|------|--------|------------------------------|---------------|
+| 49 | A content repo cloned on Windows with `core.autocrlf=true` has CRLF files, and subtitle extraction (`stripLeadingTitleHeading`) then finds no subtitle | Local Windows builds silently lose every subtitle the Linux CI build keeps (seen on AE, 2026-10-28) | On Windows: clone a vault with autocrlf on, build, and grep `_site` for `projects-single__subtitle` (or the theme's subtitle class); none = still real | Normalise `\r\n` → `\n` once when reading content in the preprocessor |
+| 50 | `buildSeoDescription` edge cases: truncating space-less text can split an emoji/surrogate pair; `&amp;` already in prose is escaped twice; `$$ … $$` / `$x$` math passes through raw | Odd text in Google snippets and link previews on those pages | `node -e` with `buildSeoDescription({ body: '😀'.repeat(200) })`, `{ body: 'Tom &amp; Jerry' }`, `{ body: '$x^2$ text' }` from `scripts/utils/seo-description.js` | `Array.from` for slicing; decode basic entities and drop math in `cleanInline` (page-excerpt.js) |
 | 7 | No error tracking (Sentry) | Blind to prod issues | Always true — nothing is wired | Add when there are users who'd report breakage |
 | 8 | No analytics | No usage insight | GoatCounter exists per-site via snippet fence; check `_bloob-settings.md` of a vault | Per-site opt-in already possible; see IDEAS "automated GoatCounter provisioning" |
 | 9 | Hugo output dirs still referenced in `preprocess-content.js` | Dead code | `grep -n "hugo\|public/" scripts/preprocess-content.js` | Delete the dead branches |

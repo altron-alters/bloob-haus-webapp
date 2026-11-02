@@ -9,11 +9,17 @@ Everything else is reference you consult on demand: `docs/CHANGELOG.md` for hist
 `docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
 long arc.
 
-**Last updated:** 2026-08-22 (S71)
+**Last updated:** 2026-11-02 (S72)
 
 ---
 
 ## Immediate Next Steps
+
+**SEO / privacy work from the AE fork (S72) — waiting on Leon.**
+- Review and merge PRs #5, #6, #7 on LSanten/bloob-haus-webapp. Before #5: run `node scripts/compare-builds.js` on real leons/melt/buffbaby builds (main vs branch); only a fixture vault was compared. Fork PRs can't run the preview (no secrets).
+- After merging: add `unlisted_folders: []` and the `structured-data` section to each vault's `_bloob-settings.md` (copy-in text in PRs #6, #7), and update each vault's handwritten "All Possible Settings" table.
+- Issue #8: check leons/melt for `visibility: unlisted` pages whose addresses were in `graph.json`.
+- AE go-live: plan `docs/superpowers/plans/2026-10-28-seo-go-live.md` (Task 10 copy approval) + the DNS plan doc for Stefan.
 
 **A visualizer inventory table (ontology / shapes).** 25 visualizers exist in `lib/visualizers/` and
 nothing lists them with their *type*. Leon, 2026-09-20: the docs "should probably start to make a
