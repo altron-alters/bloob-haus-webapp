@@ -21,18 +21,25 @@ layout: layouts/base.njk
       `date_updated:` may be a list — the LATEST entry wins, regardless of order.
       The updated pill is suppressed when it would duplicate the created pill.
 
-      Opt out per page via a ::: settings block:
-        show_date_created: false
-        show_date_updated: false
+      Shown on reading articles, HIDDEN on folder index pages by default — an
+      index is a room's front door, not a dated piece of writing. Either way a
+      ::: settings block decides, tri-state (shapes.md convention #5):
+        show_date_created: true | on | false | off
+        show_date_updated: true | on | false | off
+      `"" ~ value` (not `| string`) so an empty YAML value can't throw.
     #}
     {% set dcFmt = date_created | dateValue | dateFormat %}
     {% set duFmt = date_updated | dateValue | dateFormat %}
+    {% set sdc = ("" ~ shape_settings.show_date_created) | lower %}
+    {% set sdu = ("" ~ shape_settings.show_date_updated) | lower %}
+    {% set showCreated = true if sdc in ["true", "on"] else (false if sdc in ["false", "off"] else not is_folder) %}
+    {% set showUpdated = true if sdu in ["true", "on"] else (false if sdu in ["false", "off"] else not is_folder) %}
 
-    {% if dcFmt and shape_settings.show_date_created !== false %}
+    {% if dcFmt and showCreated %}
     <p class="article-date" data-pagefind-ignore>{{ date_created | dateLabel(date_created_text, "Written on") }} {{ dcFmt }}</p>
     {% endif %}
 
-    {% if duFmt and duFmt != dcFmt and shape_settings.show_date_updated !== false %}
+    {% if duFmt and duFmt != dcFmt and showUpdated %}
     <p class="article-date article-date--updated" data-pagefind-ignore>{{ date_updated | dateLabel(date_updated_text, "Updated on") }} {{ duFmt }}</p>
     {% endif %}
 
