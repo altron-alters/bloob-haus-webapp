@@ -40,6 +40,18 @@
      See docs/architecture/shapes.md -> Width preference. */
   --shape-width-wide:    1200px;
 
+  /* AE's site frame — the gutters of theme.min.css's .maxwidth, which the nav,
+     the footer and every project page already sit on. Mirrored here as a token
+     so shared shapes can line up with the logo. Breakpoints below. */
+  --site-gutter:         1.25rem;
+
+  /* Folder index pages (/resources/, /projects/) sit on that frame instead of
+     the default 1200px centred one, so the title, intro, search and cards all
+     start under the logo. Prose keeps the 820px article measure.
+     See lib/visualizers/article/styles.css → "Folder-index frame". */
+  --article-index-width:  none;
+  --article-index-gutter: var(--site-gutter);
+
   /* Article shape — AE brand colors */
   --article-title-color:    var(--accent-color);
   --article-subtitle-color: var(--accent-color);
@@ -58,6 +70,18 @@
   --article-h1-size:          1.5rem;                     /* 24px */
   --article-h2-size:          1.25rem;                    /* 20px */
   --article-h3-size:          1.0625rem;                  /* 17px */
+}
+
+/* --site-gutter follows theme.min.css's .maxwidth breakpoints exactly; if one
+   changes, change the other. Guarded by tests/alter-engineers-layout.test.js.
+   At 2560px+ .maxwidth stops padding and centres a 126.625rem frame instead. */
+@media only screen and (min-width: 768px)  { :root { --site-gutter: 3.75rem; } }
+@media only screen and (min-width: 1366px) { :root { --site-gutter: 8.875rem; } }
+@media only screen and (min-width: 2560px) {
+  :root {
+    --site-gutter: 0px;
+    --article-index-width: 126.625rem;
+  }
 }
 
 /* ============================================================
@@ -381,6 +405,11 @@ html { margin-top: 0 !important; }
     grid-template-columns: 1fr 280px;
     grid-template-rows: auto auto;
     column-gap: 3rem;
+    /* theme.min.css sets `gap: 14.75rem` (28rem at 2560px) for its old flex
+       layout. Resetting only column-gap left that as a 236px ROW gap under the
+       text, above the read-more row (display:none on desktop) — a blank band on
+       every project page, worst on ones without images. */
+    row-gap: 0;
     align-items: start;
   }
   .projects-single__text {
