@@ -777,6 +777,12 @@ html { margin-top: 0 !important; }
   padding-top: calc(var(--nav-height) + var(--spacing-md));
 }
 
+/* Project single — with a hero: the same breathing room between the photo and
+   the project name (Leon, 2026-11-03: it sat ~8px under the photo). */
+.projects-single__wrapper:not(.projects-single--no-hero) .projects-single__main-content {
+  padding-top: var(--spacing-md);
+}
+
 /* ============================================================
    PROJECT SINGLE — SUBTITLE
    Catching headline from ## H2 immediately after the H1 title.

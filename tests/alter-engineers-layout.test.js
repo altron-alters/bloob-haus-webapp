@@ -407,6 +407,36 @@ describe("AE More Projects carousel", () => {
   });
 });
 
+// ── 5. space between the hero photo and the project name ─────────────────────
+//
+// Leon, 2026-11-03: on a project WITH photos the name (the orange label from the
+// note's # heading) sat ~8px under the hero. Only the no-hero layout had a top
+// offset; the hero layout had none.
+
+describe("AE project pages with a hero photo", () => {
+  it("leave at least 2rem between the photo and the project name", async () => {
+    if (!browser) return;
+    const g = await measure(
+      `<div class="projects-single"><div class="projects-single__wrapper">
+         <div class="projects-single__hero" id="hero" style="height:400px"></div>
+         <div class="projects-single__main-content maxwidth">
+           <h1 class="projects-single__title" id="name">Campbell Library</h1>
+           <p class="projects-single__subtitle">Grant Funding Unlocks Full Electrification</p>
+         </div>
+       </div></div>`,
+      1440,
+      () => ({
+        gap: Math.round(
+          document.getElementById("name").getBoundingClientRect().top -
+            document.getElementById("hero").getBoundingClientRect().bottom,
+        ),
+        rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
+      }),
+    );
+    expect(g.gap).toBeGreaterThanOrEqual(2 * g.rem);
+  });
+});
+
 describe("AE project pages have no phantom row gap", () => {
   for (const vw of [1440, 2560]) {
     it(`the main container ends with its tallest column at ${vw}px`, async () => {
