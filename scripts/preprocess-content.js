@@ -36,6 +36,7 @@ import {
   applyFieldLinks,
   listFence,
   hasListFence,
+  asIndexPage,
 } from "./utils/field-links.js";
 import {
   resolveFolderIndexTemplate,
@@ -783,11 +784,14 @@ export async function preprocessContent({
     // field with `list: false`). Appended last, so it never feeds the excerpt or the
     // OG image; skipped when the author already placed a links-here list.
     if (fieldLinksOn) {
-      for (const { field, list } of fieldLinkTargets.listsFor(file.relativePath)) {
+      const lists = fieldLinkTargets.listsFor(file.relativePath);
+      for (const { field, list } of lists) {
         if (!hasListFence(processedContent, field)) {
           processedContent = `${processedContent.trimEnd()}\n\n${listFence(field, list)}\n`;
         }
       }
+      // ...which makes it an index page (header aligned with the cards, no date pills)
+      if (lists.length) outputFrontmatter.shape_settings = asIndexPage(outputFrontmatter.shape_settings);
     }
 
     // Reconstruct the file with frontmatter

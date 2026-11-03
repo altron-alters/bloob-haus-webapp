@@ -39,9 +39,13 @@ function render(ctx = {}) {
 }
 
 describe("article header — logo", () => {
-  it("shows the logo above the name, kept out of the photo lightbox", () => {
+  // no-optimize, not no-pswp: the image optimizer rebuilds an optimized <img>
+  // from its alt text only, which DROPPED .article-logo — a 510px PNG logo then
+  // lost its size cap (seen on Solas, 2026-11-03). no-optimize leaves the tag,
+  // classes and all, untouched (and keeps it out of the lightbox).
+  it("shows the logo above the name, untouched by the image optimizer", () => {
     const html = render({ logo: "/media/architect-logos/jayson.svg" });
-    expect(html).toContain('<img class="article-logo no-pswp" src="/media/architect-logos/jayson.svg" alt="Jayson Architecture">');
+    expect(html).toContain('<img class="article-logo no-optimize" src="/media/architect-logos/jayson.svg" alt="Jayson Architecture">');
     expect(html.indexOf("article-logo")).toBeLessThan(html.indexOf("article-title"));
   });
 

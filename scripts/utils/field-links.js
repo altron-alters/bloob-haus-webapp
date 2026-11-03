@@ -150,6 +150,17 @@ export function listFence(field, list = DEFAULT_LIST) {
   return lines.join("\n");
 }
 
+/**
+ * A note that gets the automatic list is a header above a card grid — an index
+ * page. Lay it out as one (`index_frame: on`: header aligned with the cards, no
+ * date pills) unless its author already chose, in a ::: settings block.
+ */
+export function asIndexPage(shapeSettings) {
+  const s = { ...(shapeSettings || {}) };
+  if (s.index_frame === undefined || s.index_frame === null || s.index_frame === "") s.index_frame = "on";
+  return s;
+}
+
 /** Has the author already placed a links-here list for this field? Then don't add one. */
 export function hasListFence(body, field) {
   const esc = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

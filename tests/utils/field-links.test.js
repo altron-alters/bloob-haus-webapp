@@ -28,6 +28,7 @@ import {
   hasListFence,
   readFieldLinkTargets,
   applyFieldLinks,
+  asIndexPage,
 } from "../../scripts/utils/field-links.js";
 
 // ── normalising names ────────────────────────────────────────────────────────
@@ -174,6 +175,26 @@ describe("listFence", () => {
   it("is detected when the author already placed one, so it is never added twice", () => {
     expect(hasListFence("text\n\n```collection\nsource: links-here=architect\n```\n", "architect")).toBe(true);
     expect(hasListFence("```collection\nsource: folder=projects\n```", "architect")).toBe(false);
+  });
+});
+
+// ── a target note with a list is an index page ───────────────────────────────
+//
+// A firm page is a header above a wide card grid — the shape of an index page.
+// So a note that gets the automatic list is laid out as one (index_frame: on →
+// header lines up with the cards, no "Written on" pill), unless its author said
+// otherwise in a ::: settings block.
+
+describe("asIndexPage", () => {
+  it("turns the index frame on for a note that lists pages", () => {
+    expect(asIndexPage({})).toEqual({ index_frame: "on" });
+    expect(asIndexPage(undefined)).toEqual({ index_frame: "on" });
+    expect(asIndexPage({ share_bar: false })).toEqual({ share_bar: false, index_frame: "on" });
+  });
+
+  it("leaves an author's own choice alone", () => {
+    expect(asIndexPage({ index_frame: "off" })).toEqual({ index_frame: "off" });
+    expect(asIndexPage({ index_frame: false })).toEqual({ index_frame: false });
   });
 });
 
