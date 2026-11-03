@@ -27,9 +27,17 @@ import { resolveWikiLinks } from "./utils/wiki-link-resolver.js";
 import { resolveMarkdownLinks } from "./utils/markdown-link-resolver.js";
 import {
   resolveAttachments,
+  resolveAttachmentRef,
   copyAttachments,
   extractFirstImage,
 } from "./utils/attachment-resolver.js";
+import {
+  readFieldLinkTargets,
+  applyFieldLinks,
+  listFence,
+  hasListFence,
+  asIndexPage,
+} from "./utils/field-links.js";
 import {
   resolveFolderIndexTemplate,
   renderFolderIndexTemplate,
@@ -176,6 +184,9 @@ export async function preprocessContent({
   console.log("\n--- Step 2: Filtering publishable files ---");
   let { published, excluded, config: filterConfig } = await filterPublishableFiles(contentDir, publishOptions);
   stats.filesExcluded = excluded.length;
+  // Every published path, kept before single-page mode narrows `published`: field links
+  // ask "is this target note built?" about notes the single page does not build itself.
+  const allPublishedPaths = new Set(published.map((f) => f.relativePath.replace(/\\/g, "/")));
 
   // Single-page mode: build only one file for fast dev/visualizer testing
   if (pageFilter) {
@@ -224,6 +235,21 @@ export async function preprocessContent({
   // Step 4.5: Read bloob-objects registry (once per build)
   console.log("\n--- Step 4.5: Reading bloob-objects registry ---");
   const bloobObjectsRegistry = await readBloobObjects(contentDir);
+
+  // Step 4.6: Field links (opt-in via field_links in _bloob-settings.md). Index the notes
+  // in each target folder — drafts included, so a draft's display name is still known —
+  // before any page is processed. See scripts/utils/field-links.js.
+  const fieldLinkConfig = siteConfig.field_links || {};
+  const fieldLinksOn = Object.keys(fieldLinkConfig).length > 0;
+  const fieldLinkTargets = fieldLinksOn
+    ? await readFieldLinkTargets({
+        config: fieldLinkConfig,
+        fileIndex,
+        contentDir,
+        isPublished: (rel) => allPublishedPaths.has(rel),
+        unlistedFolders,
+      })
+    : null;
 
   // Step 5: Clean and prepare output directories
   console.log("\n--- Step 5: Preparing output directories ---");
@@ -486,6 +512,27 @@ export async function preprocessContent({
       perPageLinks[pageInfo.url].redirect = resolvedRedirect;
     }
 
+    // Field links: resolve this page's configured fields to the notes they name.
+    // Templates read `field_links.<field>`; the graph node gets the linkable URLs
+    // (what `source: links-here=<field>` filters on), which also count as outgoing links.
+    if (fieldLinksOn) {
+      const { field_links: fieldLinks, graphRefs } = applyFieldLinks(frontmatter, fieldLinkTargets);
+      if (fieldLinks) outputFrontmatter.field_links = fieldLinks;
+      if (graphRefs && pageInfo && perPageLinks[pageInfo.url]) {
+        perPageLinks[pageInfo.url].field_links = graphRefs;
+        perPageLinks[pageInfo.url].outgoing.push(...Object.values(graphRefs).flat());
+      }
+    }
+
+    // A page's own `logo:` (e.g. an architect note): a vault path or [[wiki]] embed in
+    // frontmatter, which the body resolvers never see. Never hotlinked: an http(s) value
+    // is left alone, anything else must be a vault attachment.
+    if (typeof frontmatter.logo === "string" && !/^https?:\/\//i.test(frontmatter.logo)) {
+      const logoUrl = resolveAttachmentRef(frontmatter.logo, attachmentIndex);
+      if (logoUrl) outputFrontmatter.logo = logoUrl;
+      else console.warn(`[process] ⚠️  logo not found in the vault: ${frontmatter.logo} (${file.relativePath})`);
+    }
+
     // Store bloob icon path on graph node for use in pills and the connections graph.
     // - Specific image → resized icon at /assets/objects/bloob-icons/[type]-icon.png
     // - "default"      → /favicon.png (site's own favicon as fallback)
@@ -733,6 +780,20 @@ export async function preprocessContent({
       };
     }
 
+    // A note that field links point at lists the pages pointing to it (opt-out per
+    // field with `list: false`). Appended last, so it never feeds the excerpt or the
+    // OG image; skipped when the author already placed a links-here list.
+    if (fieldLinksOn) {
+      const lists = fieldLinkTargets.listsFor(file.relativePath);
+      for (const { field, list } of lists) {
+        if (!hasListFence(processedContent, field)) {
+          processedContent = `${processedContent.trimEnd()}\n\n${listFence(field, list)}\n`;
+        }
+      }
+      // ...which makes it an index page (header aligned with the cards, no date pills)
+      if (lists.length) outputFrontmatter.shape_settings = asIndexPage(outputFrontmatter.shape_settings);
+    }
+
     // Reconstruct the file with frontmatter
     const outputContent = matter.stringify(processedContent, outputFrontmatter);
 
@@ -746,6 +807,16 @@ export async function preprocessContent({
     console.log(
       `[process]   → Written to: ${path.relative(ROOT_DIR, outputPath)}`,
     );
+  }
+
+  // Field links: name every value that matched no note, once, so a vault keeper can add
+  // the missing note or alias. (Blanks like "N/A" are never reported.)
+  if (fieldLinksOn) {
+    for (const [field, values] of fieldLinkTargets.unmatched) {
+      if (!values.size) continue;
+      const folder = fieldLinkTargets.fields[field].folder;
+      console.warn(`[field-links] ⚠️  ${field}: no note in ${folder}/ matches: ${[...values].sort().join(" | ")}`);
+    }
   }
 
   // Step 7: Build tag index first (needed by graph builder for tag nodes)

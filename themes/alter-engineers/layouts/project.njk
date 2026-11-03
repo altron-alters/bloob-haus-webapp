@@ -100,7 +100,14 @@ body_class: "single single-projects"
           <a class="button-1">READ MORE </a>
         </div>
 
-        {% if role or owner or sqft or target or date_started or photo_credit %}
+        {#- ARCHITECT: `field_links.architect` comes from field links (_bloob-settings.md →
+            field_links: architect → architects/). Firm page public → linked name; firm note
+            not public → its display name; no match → the sheet text; blank/N/A → no row.
+            Without field links, the sheet text as written. -#}
+        {%- set archLinks = field_links.architect if (field_links and field_links.architect) else [] -%}
+        {%- set archRaw = ("" ~ (architect or "")) | trim -%}
+        {%- set showArchitect = archLinks.length > 0 or (archRaw and (archRaw | lower) not in ["n/a", "na", "none", "-", "tbd"]) -%}
+        {% if role or owner or sqft or target or date_started or photo_credit or showArchitect %}
         <dl class="project-meta">
           {% if date_started %}
           <div class="project-meta__row">
@@ -118,6 +125,12 @@ body_class: "single single-projects"
           <div class="project-meta__row">
             <dt class="label">OWNER</dt>
             <dd>{{ owner }}</dd>
+          </div>
+          {% endif %}
+          {% if showArchitect %}
+          <div class="project-meta__row">
+            <dt class="label">ARCHITECT</dt>
+            <dd>{% if archLinks.length %}{% for a in archLinks %}{% if a.href %}<a href="{{ a.href | url }}">{{ a.name }}</a>{% else %}{{ a.name or a.value }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ archRaw }}{% endif %}</dd>
           </div>
           {% endif %}
           {% if sqft %}
@@ -162,9 +175,14 @@ body_class: "single single-projects"
             <a href="{{ project.url }}" class="swiper-slide articles__content">
               {% if project.data.image %}
               <img class="articles__image no-zoom" src="{{ project.data.image }}" alt="{{ project.data.title }}">
+              {% else %}
+              {# No photo yet: same-size placeholder so the slide row stays even (main.css) #}
+              <div class="articles__image articles__image--placeholder" aria-hidden="true"></div>
               {% endif %}
               <div class="articles__inner-content">
                 <h3 class="articles__title">{{ project.data.title }}</h3>
+                {# Plain text: the slide is already a link, so no <a> may nest inside #}
+                {% if project.data.subtitle %}<p class="articles__subtitle">{{ project.data.subtitle | mdinline | striptags }}</p>{% endif %}
               </div>
               <div class="articles__read-more button-1">READ MORE</div>
             </a>
@@ -174,6 +192,8 @@ body_class: "single single-projects"
         </div>
       </div>
     </section>
+    {# Slides start under the title + hover-to-slide (re-inits theme.min.js's Swiper) #}
+    <script src="{{ '/assets/js/more-projects.js' | url }}" defer></script>
     {% endif %}
 
   </div>

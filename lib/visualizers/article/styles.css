@@ -55,6 +55,59 @@
   }
 }
 
+/* ── Folder-index frame ─────────────────────────────────────────────────────
+   A folder's index page (`is_folder` → .article-page--index) is a room's front
+   door, and its main content is usually a wide shape (a collection of cards).
+   The centred breakout above is right for a wide figure in the MIDDLE of a
+   reading article, but on an index page it gives the page two left edges: an
+   820px header centred above a 1200px grid (AE /resources/, 2026-11-02).
+
+   So on an index page the FRAME is the wide edge. The page widens to the wide
+   width, the header and prose start at the same x as the wide shape, and prose
+   keeps its reading measure (left-aligned, not stretched). The wide child fills
+   the frame instead of breaking out of it.
+
+   Tokens, all optional:
+     --article-index-width    frame width (border-box). Default: the wide width
+                              plus the page padding, so the wide child still gets
+                              exactly --shape-width-wide.
+     --article-index-gutter   frame side padding. Default: --spacing-md.
+     --article-index-measure  max line length of header + prose. Default: the
+                              reading column of an ordinary article.
+   A theme can pin the frame to its own site grid: AE sets
+   --article-index-width: none + --article-index-gutter to its nav's gutters.
+
+   Degradation: with no --shape-width-wide, the default frame resolves to
+   (--article-width − 2·spacing) + 2·spacing = --article-width and the measure to
+   the column's own content width, so an index page renders exactly like any
+   other article. Assumes border-box, which every theme sets globally.
+   Guarded by tests/shape-width.test.js → "folder-index frame". */
+.article-page--index {
+  max-width: var(
+    --article-index-width,
+    calc(
+      var(--shape-width-wide, calc(var(--article-width, 820px) - 2 * var(--spacing-md, 1.5rem)))
+      + 2 * var(--spacing-md, 1.5rem)
+    )
+  );
+  padding-left: var(--article-index-gutter, var(--spacing-md, 1.5rem));
+  padding-right: var(--article-index-gutter, var(--spacing-md, 1.5rem));
+}
+
+.article-page--index > .article-header > *,
+.article-page--index > .article-body > :not([data-width]) {
+  max-width: var(
+    --article-index-measure,
+    calc(var(--article-width, 820px) - 2 * var(--spacing-md, 1.5rem))
+  );
+}
+
+.article-page--index > .article-body > [data-width="wide"] {
+  width: auto;
+  margin-left: 0;
+  translate: none;
+}
+
 /* ── Header ─────────────────────────────────────────────────────────────── */
 .article-header {
   margin-bottom: var(--spacing-lg, 2rem);
@@ -88,6 +141,28 @@
   opacity: 0.72;
   margin: 0 0 0.75rem;
   line-height: 1.5;
+}
+
+/* Optional profile fields (`logo:`, `website:` frontmatter) — a firm or person page.
+   The logo is capped in both directions so a wide wordmark and a square mark both
+   sit at a sensible size above the name. */
+.article-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(260px, 70%);
+  max-height: 96px;
+  object-fit: contain;
+  margin-bottom: var(--spacing-sm, 1rem);
+}
+
+.article-website {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+
+.article-website a {
+  color: var(--accent-color, #555);
 }
 
 .article-author {

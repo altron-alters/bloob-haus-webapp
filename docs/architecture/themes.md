@@ -121,6 +121,14 @@ Themes must implement Tier 1. Tiers 2 and 3 are optional but should be documente
      that declares `width: wide` (collection does, by default) break out of the
      reading column. See shapes.md → "Width preference". */
   --shape-width-wide: 1200px;
+
+  /* OPTIONAL — folder-index frame. On a folder's index page the frame widens to
+     the wide width so the header lines up with the wide shape below it. Override
+     these only to pin that frame to your own site grid (AE does: its nav gutters).
+     See shapes.md → "On a folder index page, the frame is the wide edge". */
+  --article-index-width: none;      /* default: wide width + page padding */
+  --article-index-gutter: 2rem;     /* default: --spacing-md */
+  --article-index-measure: 756px;   /* default: the ordinary article column */
 }
 ```
 

@@ -150,6 +150,25 @@ describe('mergeBloobSettings — url: block', () => {
   });
 });
 
+describe('mergeBloobSettings — field_links (vault-first, off unless set)', () => {
+  it('is off when neither the vault nor the site yaml sets it', () => {
+    expect(mergeBloobSettings({}, {}).field_links).toEqual({});
+  });
+
+  it('reads the vault setting, shorthand expanded', () => {
+    const merged = mergeBloobSettings({}, { field_links: { architect: 'architects' } });
+    expect(merged.field_links).toEqual({ architect: { folder: 'architects', list: { display: 'cards' } } });
+  });
+
+  it('the vault wins over sites/*.yaml', () => {
+    const merged = mergeBloobSettings(
+      { field_links: { architect: 'firms' } },
+      { field_links: { architect: 'architects' } },
+    );
+    expect(merged.field_links.architect.folder).toBe('architects');
+  });
+});
+
 describe('parseGoatCounterCode', () => {
   const snippet = (url) => ({ 'goat-counter-tracking': `<script data-goatcounter="${url}" async src="//gc.zgo.at/count.js"></script>` });
 

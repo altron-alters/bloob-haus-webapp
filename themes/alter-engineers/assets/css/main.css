@@ -12,6 +12,7 @@
   --card-bg:      #ffffff;
   --color-mint:   #b6fad1;
   --color-orange: #e0643d;
+  --color-warm-white: #fdfcf0;  /* brand warm white (Alter brand tokens) */
 
   /* Shape */
   --border-radius:    0px;
@@ -40,6 +41,18 @@
      See docs/architecture/shapes.md -> Width preference. */
   --shape-width-wide:    1200px;
 
+  /* AE's site frame — the gutters of theme.min.css's .maxwidth, which the nav,
+     the footer and every project page already sit on. Mirrored here as a token
+     so shared shapes can line up with the logo. Breakpoints below. */
+  --site-gutter:         1.25rem;
+
+  /* Folder index pages (/resources/, /projects/) sit on that frame instead of
+     the default 1200px centred one, so the title, intro, search and cards all
+     start under the logo. Prose keeps the 820px article measure.
+     See lib/visualizers/article/styles.css → "Folder-index frame". */
+  --article-index-width:  none;
+  --article-index-gutter: var(--site-gutter);
+
   /* Article shape — AE brand colors */
   --article-title-color:    var(--accent-color);
   --article-subtitle-color: var(--accent-color);
@@ -58,6 +71,18 @@
   --article-h1-size:          1.5rem;                     /* 24px */
   --article-h2-size:          1.25rem;                    /* 20px */
   --article-h3-size:          1.0625rem;                  /* 17px */
+}
+
+/* --site-gutter follows theme.min.css's .maxwidth breakpoints exactly; if one
+   changes, change the other. Guarded by tests/alter-engineers-layout.test.js.
+   At 2560px+ .maxwidth stops padding and centres a 126.625rem frame instead. */
+@media only screen and (min-width: 768px)  { :root { --site-gutter: 3.75rem; } }
+@media only screen and (min-width: 1366px) { :root { --site-gutter: 8.875rem; } }
+@media only screen and (min-width: 2560px) {
+  :root {
+    --site-gutter: 0px;
+    --article-index-width: 126.625rem;
+  }
 }
 
 /* ============================================================
@@ -381,6 +406,11 @@ html { margin-top: 0 !important; }
     grid-template-columns: 1fr 280px;
     grid-template-rows: auto auto;
     column-gap: 3rem;
+    /* theme.min.css sets `gap: 14.75rem` (28rem at 2560px) for its old flex
+       layout. Resetting only column-gap left that as a 236px ROW gap under the
+       text, above the read-more row (display:none on desktop) — a blank band on
+       every project page, worst on ones without images. */
+    row-gap: 0;
     align-items: start;
   }
   .projects-single__text {
@@ -519,6 +549,45 @@ html { margin-top: 0 !important; }
   height: 14rem;
   object-fit: cover;
   display: block;
+}
+/* More Projects carousel (project.njk): natural 3:2 pictures instead of the
+   fixed 14rem-tall crop (2.25:1 at desktop), and slides aligned at the TOP —
+   theme.min.css bottom-aligns them, so a two-line title lifted its picture
+   above its neighbours. Slide offset + hover glide: assets/js/more-projects.js. */
+.articles.more-projects .articles__content {
+  align-self: flex-start;
+}
+.articles.more-projects .articles__image {
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+
+/* Section heading: a modest heading, smaller than the project's own headline
+   (it was 60–80px, bigger than the 48px headline above it). */
+.articles.more-projects .articles__main-title {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+/* Each slide: project name, then its subtitle (Leon, 2026-11-03). theme.min.css
+   gives the name a min-height (to even out one- and two-line names when only the
+   name showed); with a subtitle under it that became a ~60px hole. */
+.articles.more-projects .articles__title {
+  min-height: 0;
+  margin-bottom: 0.35rem;
+}
+.articles.more-projects .articles__subtitle {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* A slide without a photo (project.njk's More Projects carousel, collection's
+   slider): brand warm white with the purple AE mark (vector), same size as a
+   real image. Matches the no-photo card in visualizers/collection.css. */
+.articles .articles__image--placeholder {
+  background: var(--color-warm-white) url("/assets/images/ae-logo-mark-purple.svg") center / auto 40% no-repeat;
 }
 
 /* ============================================================
@@ -729,6 +798,12 @@ html { margin-top: 0 !important; }
   padding-top: calc(var(--nav-height) + var(--spacing-md));
 }
 
+/* Project single — with a hero: the same breathing room between the photo and
+   the project name (Leon, 2026-11-03: it sat ~8px under the photo). */
+.projects-single__wrapper:not(.projects-single--no-hero) .projects-single__main-content {
+  padding-top: var(--spacing-md);
+}
+
 /* ============================================================
    PROJECT SINGLE — SUBTITLE
    Catching headline from ## H2 immediately after the H1 title.
@@ -776,6 +851,22 @@ html { margin-top: 0 !important; }
 .tag-badge:hover {
   background-color: var(--accent-color);
   color: #ffffff;
+}
+
+/* All-tags page (/tags/, the shared tags-index.md): one badge per line with its
+   page count, no list bullets — the same chips as the project profiles. Scoped
+   above AE's restore-bullets rule (.article-body ul > li) and the shape's li. */
+.article-body ul.tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-left: 0;
+}
+.article-body ul.tag-list > li {
+  list-style: none;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-light);
 }
 
 /* ============================================================

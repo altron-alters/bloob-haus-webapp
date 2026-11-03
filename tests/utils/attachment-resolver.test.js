@@ -2,8 +2,33 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import { resolveAttachments, copyAttachments, extractFirstImage } from '../../scripts/utils/attachment-resolver.js';
+import { resolveAttachments, copyAttachments, extractFirstImage, resolveAttachmentRef } from '../../scripts/utils/attachment-resolver.js';
 import { createMockAttachmentIndex } from '../helpers/mock-index.js';
+
+// A single reference from FRONTMATTER (e.g. an architect note's `logo:`), which the
+// body resolvers never see. Same rules: vault path first, then basename (wiki form).
+describe('resolveAttachmentRef', () => {
+  const index = {
+    byBasename: { 'jayson.svg': '/media/architect-logos/jayson.svg' },
+    byVaultPath: { 'media/architect-logos/jayson.svg': '/media/architect-logos/jayson.svg' },
+  };
+
+  it('resolves a vault-relative path, with or without a leading slash', () => {
+    expect(resolveAttachmentRef('media/architect-logos/jayson.svg', index)).toBe('/media/architect-logos/jayson.svg');
+    expect(resolveAttachmentRef('/media/architect-logos/jayson.svg', index)).toBe('/media/architect-logos/jayson.svg');
+  });
+
+  it('resolves the wiki form by basename', () => {
+    expect(resolveAttachmentRef('[[jayson.svg]]', index)).toBe('/media/architect-logos/jayson.svg');
+    expect(resolveAttachmentRef('![[jayson.svg|200]]', index)).toBe('/media/architect-logos/jayson.svg');
+  });
+
+  it('returns null for anything it cannot find, or for nothing', () => {
+    expect(resolveAttachmentRef('media/missing.svg', index)).toBeNull();
+    expect(resolveAttachmentRef('', index)).toBeNull();
+    expect(resolveAttachmentRef(undefined, index)).toBeNull();
+  });
+});
 
 // Base index used by most tests. vaultPath entries enable path-aware resolution tests.
 const index = createMockAttachmentIndex([

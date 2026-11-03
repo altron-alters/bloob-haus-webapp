@@ -6,6 +6,8 @@ pagination:
   alias: tag
 permalink: /tags/{{ tag | slugify }}/
 eleventyExcludeFromCollections: true
+shape_settings:
+  index_frame: on
 eleventyComputed:
   title: "#{{ tag | replace('-', ' ') }}"
 ---
@@ -37,7 +39,13 @@ eleventyComputed:
   every theme's list had drifted apart. Worse, adding a content folder silently
   produced a bogus /tags/<folder>/ page. `tagList` is already exactly the real
   frontmatter tags, minus reserved meta-tags.
+
+  `index_frame: on` — a tag page is an index (a room by topic), so its header
+  lines up with the card grid like a folder index does. The "All tags" link
+  goes to tags-index.md (/tags/). Both added 2026-11-03.
 #}
+
+[← All tags]({{ "/tags/" | url }})
 
 ```collection
 source: "tag={{ tag }}"

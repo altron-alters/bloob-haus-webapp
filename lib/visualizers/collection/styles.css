@@ -67,6 +67,45 @@
   min-height: 0; /* reserved for filter chips */
 }
 
+/* ── Search status line ─────────────────────────────────────────────────────
+   "3 results · 1 tag", small and bold, hanging just under the input. It is
+   absolutely positioned inside .fp-search, so it takes no height and the
+   results never move when it appears (Leon, 2026-11-03). It sits in the gap
+   .fp-seo-wrapper already leaves between the bar and the grid. */
+.collection-visualizer .fp-search {
+  position: relative;
+}
+
+.collection-visualizer .fp-search-count {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin: 0;
+  padding-top: 0.3rem;
+  padding-left: var(--sv-count-indent, 1.4rem);
+  font-family: var(--font-body, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-light, #666);
+  pointer-events: none;
+}
+
+.collection-visualizer .fp-search-count:empty {
+  display: none;
+}
+
+/* ── Tag result cards ───────────────────────────────────────────────────────
+   Revealed by search when the query names a tag; a door to the tag page. The
+   picture slot is the no-photo panel with a large "#" in it. */
+.collection-visualizer .fp-card__tag-mark {
+  font-family: var(--font-heading, sans-serif);
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-color, #555);
+}
+
 /* ── Card grid ────────────────────────────────────────────────────────────── */
 
 .fp-cards {
@@ -516,8 +555,9 @@
   color: var(--text-light, #666);
 }
 
-/* No picture: a tinted panel, with the page's shape icon when it has one. */
-.collection-visualizer .fp-card--post .fp-card__image-wrap--placeholder {
+/* No picture: a tinted panel, with the page's shape icon when it has one.
+   Both card kinds (plain cards and post cards) centre it the same way. */
+.collection-visualizer .fp-card__image-wrap--placeholder {
   display: flex;
   align-items: center;
   justify-content: center;

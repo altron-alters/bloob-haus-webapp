@@ -118,6 +118,9 @@ export function buildGraph(perPageLinks, tagIndex = {}) {
         title: `#${slug}`,
         section: "tags",
         type: "tag",
+        // How many pages use the tag — the collection's tag result cards say
+        // "All N pages tagged …" (lib/visualizers/collection/resolve.js).
+        count: degree,
         nodeVal: 1 + Math.log(degree + 1) * 2,
       });
 

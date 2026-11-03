@@ -24,6 +24,8 @@ These settings work identically across every theme. They are part of the Bloob H
 |---------|------|---------|-------------|
 | `hide_nav` | bool | `false` | Hide the site navigation bar on this page |
 | `hide_footer` | bool | `false` | Hide the site footer on this page |
+| `logo` | vault path or `[[wikilink]]` | — | `bloob-shape: article`: an image shown above the title (a firm's or person's logo). Resolved from the vault by the preprocessor, never hotlinked (an `http(s)` value is passed through untouched). Added 2026-11-03 |
+| `website` | URL | — | `bloob-shape: article`: linked under the title by its bare domain, in a new tab. Only `http(s)` addresses render. Added 2026-11-03 |
 | `body_class` | string | — | Extra CSS class(es) added to `<body>` |
 | `background_image` | wikilink | site-wide `background_image` | Per-page override of the site background photo, e.g. `background_image: "[[photo.jpg]]"`. Resolved by `scripts/generate-background.js` → `site.backgroundImages`; the theme's `base.njk` picks the page value and falls back to the sitewide one. Requires a theme with a background-image system (melt today). |
 | `layout` | string | shape layout, or `layouts/page.njk` | Override Eleventy layout explicitly (rarely needed — prefer `bloob-shape`) |
@@ -105,6 +107,36 @@ Tags can be in frontmatter (`tags: [private]`) or inline in the body (`#private`
 > `.md`/`.njk` pages — raw `.html` files are passthrough-copied and rely on the obscured path alone.
 
 ### Site-Wide (top-level keys in `_bloob-settings.md`)
+
+#### Field links (`field_links:` block) — added 2026-11-03
+
+A frontmatter field whose **text** matches a note in a folder becomes a link to that note, and
+that note lists the pages pointing to it. Off unless a site sets it. Vault wins over
+`sites/*.yaml`. Code: `scripts/utils/field-links.js`. First user: alter-engineers
+(project `architect` text → firm notes in `architects/`).
+
+```yaml
+field_links:
+  architect: architects              # shorthand: link + a card list on each firm note
+# or, long form:
+field_links:
+  architect:
+    folder: architects
+    list:                            # collection settings for the list; `list: false` = none
+      display: cards
+      show_fields: building_type, location, sqft, services
+```
+
+- **Matching:** a target note answers to its `name`, `aliases` (Obsidian's own property),
+  `title` and filename. Case, punctuation and `&` / `+` / `and` are ignored; anything else is an
+  alias. Blanks and `N/A` / `none` / `-` / `TBD` mean "no value". A value that matches nothing is
+  named once in the build log.
+- **What a page gets:** `field_links.<field>` = `[{ value, name, href }]` for templates. `href`
+  is set only when the target is published **and** listed (a draft or unlisted note is never
+  linked from a public page); `name` is set whenever a note matched, drafts included.
+- **The list:** each target note gets a `collection` fence with `source: links-here=<field>`
+  appended, unless the author already placed one. The graph node of every linking page carries
+  `field_links.<field>` = target URLs, which is what that source reads.
 
 #### URL Contract (`url:` block)
 
@@ -450,8 +482,9 @@ Authored in a `::: settings` block in the page body, not in frontmatter — see
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | `share_bar` | bool | `true` | `false` hides the Copy link / Embed bar |
-| `show_date_created` | bool | `true` | `false` hides the "Written on" pill (added 2026-07-27) |
-| `show_date_updated` | bool | `true` | `false` hides the "Updated on" pill (added 2026-07-27) |
+| `show_date_created` | tri-state | `true`; **`false` on folder index pages** | `false`/`off` hides the "Written on" pill, `true`/`on` shows it (added 2026-07-27; index default + on/off added 2026-11-03) |
+| `show_date_updated` | tri-state | `true`; **`false` on folder index pages** | `false`/`off` hides the "Updated on" pill, `true`/`on` shows it (added 2026-07-27; index default + on/off added 2026-11-03) |
+| `index_frame` | tri-state | `on` for folder index pages, `off` otherwise | `on` lays the page out as an index: header and prose start at the same left edge as a wide shape below them (the theme decides how wide; see shapes.md → "On a folder index page, the frame is the wide edge"). Also hides the date pills by default. The shared tag pages set it. (added 2026-11-03) |
 
 **Date authoring — two conventions, both supported** (`scripts/utils/date-field.js`):
 

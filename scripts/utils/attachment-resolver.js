@@ -30,6 +30,29 @@ import { safeDecode } from "./safe-decode.js";
  *                    (e.g. "marbles/my-page.md") — enables path-aware resolution
  * @returns {{ content: string, resolved: Array, broken: Array }}
  */
+/**
+ * Resolve ONE attachment reference that lives outside the body — a frontmatter
+ * value such as an architect note's `logo:`. Accepts a vault-relative path
+ * ("media/logos/x.svg", leading slash optional) or the wiki form ("[[x.svg]]",
+ * "![[x.svg|200]]"). Vault path first, then basename — the same order the body
+ * resolver uses. Returns the URL, or null.
+ */
+export function resolveAttachmentRef(ref, attachmentIndex) {
+  if (ref === undefined || ref === null) return null;
+  let s = String(ref).trim();
+  if (!s) return null;
+  const wiki = s.match(/^!?\[\[([^\]|]+)(?:\|[^\]]*)?\]\]$/);
+  if (wiki) s = wiki[1].trim();
+  const decoded = safeDecode(s).replace(/\\/g, "/").replace(/^\/+/, "");
+  const { byBasename = {}, byVaultPath = {} } = attachmentIndex || {};
+  if (!wiki) {
+    const byPath = byVaultPath[decoded] || byVaultPath[decoded.toLowerCase()];
+    if (byPath) return byPath;
+  }
+  const base = path.basename(decoded);
+  return byBasename[base] || byBasename[base.toLowerCase()] || null;
+}
+
 export function resolveAttachments(content, attachmentIndex, { sourceVaultPath = null } = {}) {
   const { byBasename, byVaultPath } = attachmentIndex;
   const resolved = [];

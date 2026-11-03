@@ -59,7 +59,8 @@ File-scope use is also rendered at build time: `renderFilescope()` runs during p
 | `sort` | string | `alpha` | `alpha` or `reverse-alpha` |
 | `limit` | number | — | Max pages to show |
 | `show_fields` | string or list | — | Extra frontmatter fields to show on each card. Must be declared in `sites/[site].yaml` `graph.extra_fields`. Comma-separated: `building_type, location` |
-| `search` | string | combined (`off` for a hand-written list) | Default: metadata filter runs instantly, then Pagefind expands the result set (union). `basics` = metadata text-match only (no Pagefind). `off` = no search input. `fulltext` = alias for default combined mode. A hand-written list has no search input unless this is set. |
+| `search` | string | combined (`off` for a hand-written list) | Default: metadata filter runs instantly, then Pagefind expands the result set (union). `basics` = metadata text-match only (no Pagefind). `off` = no search input. `fulltext` = alias for default combined mode. A hand-written list has no search input unless this is set. While someone types, a small bold status line under the bar says how many results match (`3 results · 1 tag`, `No results`); it hangs below the input and never moves the results. |
+| `search_tags` | tri-state | `on` | **Tags as search results.** While someone types, a tag whose name contains the query (2+ characters, hyphens read as spaces) appears as its own card at the front of the grid ("#library — All 3 pages tagged library"), linking to its tag page. Only tags that pages in *this* collection use. Rendered at build time, hidden until searched. `off`/`false` turns it off. `display: cards` only, for now. Added 2026-11-03. |
 | `show` | string or list | none | `display: cards` only. Turns the cards into **post cards**: any of `image, subtitle, date, excerpt, tags` (or `all`). The title is always shown. Without `show` the cards render exactly as before. |
 | `columns` | number 1–6 | 3 / 2 / 1 ladder | Card columns on wide screens. Tablets still get at most 2 and phones 1. With post cards, `columns: 1` puts the picture beside the text. |
 | `excerpt_length` | number or `"N sentences"` | `30` words | Length of a post card's excerpt. |
@@ -77,11 +78,12 @@ File-scope use is also rendered at build time: `renderFilescope()` runs during p
 | `tag=sustainability` | All non-archived pages tagged `sustainability` |
 | `field:building_type=School` | All pages where the `building_type` field equals `School` |
 | `all` | All non-archived pages site-wide |
+| `links-here=architect` | All non-archived pages whose `architect` **field link** points to the page this collection is on (field links: `field_links` in `_bloob-settings.md`). `links-here` alone: any field. Added 2026-11-03 |
 
 Folder-index stubs (`/projects/`, `/projects/index/`) are always excluded.
 
-Phase 1: `folder=X`, `tag=X`, `field:KEY=VAL`, `all`, and a hand-written list (below).
-Deferred: `links-here`, `links-from`.
+Built: `folder=X`, `tag=X`, `field:KEY=VAL`, `links-here[=FIELD]`, `all`, and a hand-written list (below).
+Deferred: `links-here` over ordinary body links (it reads field links only today), `links-from`.
 
 ### Hand-written list
 

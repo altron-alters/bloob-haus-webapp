@@ -176,6 +176,38 @@ disable the breakout entirely. Guarded by `tests/shape-width.test.js`, which ass
 
 Spec: `docs/superpowers/specs/2026-07-28-shape-width-contract-design.md`.
 
+### On a folder index page, the frame is the wide edge (2026-11-02)
+
+The centred breakout is right for a wide figure in the *middle* of a reading article. On a
+folder's index page it is wrong: there the wide shape (a collection of cards) **is** the page,
+and an 820px header centred above a 1200px breakout gives the page two left edges. Seen on AE's
+`/resources/` and `/projects/`: header at x=328, cards at x=106, logo at x=142.
+
+So `article` marks index pages (`is_folder` → `.article-page--index`), and on those the page
+frame widens to the wide width: header, prose and the wide child start at one x, prose keeps
+its reading measure (left-aligned, not stretched), and the wide child fills the frame instead
+of breaking out of it. Reading articles are untouched.
+
+| Token (all optional) | Default | Meaning |
+|---|---|---|
+| `--article-index-width` | `--shape-width-wide` + page padding | frame width |
+| `--article-index-gutter` | `--spacing-md` | frame side padding |
+| `--article-index-measure` | the ordinary article column | max line length of header + prose |
+
+Degradation holds: with no `--shape-width-wide` the defaults resolve to an ordinary article
+column, so an index page renders exactly like any other article. A theme can pin the frame to its
+own site grid; AE sets `--article-index-width: none` and `--article-index-gutter` to the nav's
+`.maxwidth` gutters, so index pages line up with the logo, the menu and the footer. Guarded by
+`tests/shape-width.test.js` → "folder-index frame" (shared) and
+`tests/alter-engineers-layout.test.js` (AE).
+
+The trigger is "is an index page", not "contains a wide child": a reading article that ends in a
+related-posts collection should keep its centred column. Folder indexes are index pages by
+default; any other article page opts in (or a folder index opts out) with the tri-state shape
+setting `index_frame: on|off` (2026-11-03). The shared tag pages (`themes/_base/pages/tags.md`,
+and the all-tags page `tags-index.md` at `/tags/`) set it in their frontmatter, since they are
+indexes by topic rather than folders. Index pages also hide the date pills by default.
+
 ## Placement systems
 
 Content placement is a property of the shape. Different shapes use different placement systems; a shape declares which one(s) it supports. Authors and AI use whatever the shape provides.
