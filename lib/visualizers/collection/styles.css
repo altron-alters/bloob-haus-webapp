@@ -516,8 +516,9 @@
   color: var(--text-light, #666);
 }
 
-/* No picture: a tinted panel, with the page's shape icon when it has one. */
-.collection-visualizer .fp-card--post .fp-card__image-wrap--placeholder {
+/* No picture: a tinted panel, with the page's shape icon when it has one.
+   Both card kinds (plain cards and post cards) centre it the same way. */
+.collection-visualizer .fp-card__image-wrap--placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
