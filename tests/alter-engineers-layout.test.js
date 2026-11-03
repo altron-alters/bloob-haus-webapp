@@ -149,7 +149,8 @@ const NO_IMAGE = `
   <section class="articles">
     <div class="articles__image articles__image--placeholder" id="slide"></div>
     <img class="articles__image" id="photo" alt="">
-  </section>`;
+  </section>
+  <div id="mintProbe" style="background: color-mix(in srgb, var(--color-mint) 55%, var(--card-bg))"></div>`;
 
 describe("AE projects without a photo", () => {
   it("cards and carousel slides show the AE mark on mint, never an empty block", async () => {
@@ -166,20 +167,22 @@ describe("AE projects without a photo", () => {
           iconedImage: cs("iconed").backgroundImage,
           slideImage: cs("slide").backgroundImage,
           slideColor: cs("slide").backgroundColor,
+          mint: cs("mintProbe").backgroundColor,
           slideH: h("slide"),
           photoH: h("photo"),
         };
       });
-      // Leon, 2026-11-03: brand warm white (#FDFCF0) with the purple mark, as a
-      // vector — the 64px favicon was blurry at card size.
+      // Leon, 2026-11-03: mint panel (the warm white did not look good) with the
+      // purple mark as a vector; the 64px favicon was blurry at card size.
       const MARK = "/assets/images/ae-logo-mark-purple.svg";
       const WARM_WHITE = "rgb(253, 252, 240)";
       expect(s.bareImage).toContain(MARK);
       expect(s.bareImage).not.toContain("gradient"); // not the shared lavender panel
-      expect(s.bareColor).toBe(WARM_WHITE);
+      expect(s.bareColor).toBe(s.mint);
+      expect(s.bareColor).not.toBe(WARM_WHITE);
       expect(s.iconedImage).toBe("none"); // the page's own icon wins; no second mark
       expect(s.slideImage).toContain(MARK);
-      expect(s.slideColor).toBe(WARM_WHITE);
+      expect(s.slideColor).toBe(s.mint);
       expect(s.slideH).toBe(s.photoH); // a slide without a photo keeps the row even
     } finally {
       await page.close();

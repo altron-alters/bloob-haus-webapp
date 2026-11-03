@@ -12,7 +12,6 @@
   --card-bg:      #ffffff;
   --color-mint:   #b6fad1;
   --color-orange: #e0643d;
-  --color-warm-white: #fdfcf0;  /* brand warm white (Alter brand tokens) */
 
   /* Shape */
   --border-radius:    0px;
@@ -584,10 +583,10 @@ html { margin-top: 0 !important; }
 }
 
 /* A slide without a photo (project.njk's More Projects carousel, collection's
-   slider): brand warm white with the purple AE mark (vector), same size as a
+   slider): mint panel with the purple AE mark (vector), same size as a
    real image. Matches the no-photo card in visualizers/collection.css. */
 .articles .articles__image--placeholder {
-  background: var(--color-warm-white) url("/assets/images/ae-logo-mark-purple.svg") center / auto 40% no-repeat;
+  background: color-mix(in srgb, var(--color-mint) 55%, var(--card-bg)) url("/assets/images/ae-logo-mark-purple.svg") center / auto 40% no-repeat;
 }
 
 /* ============================================================
