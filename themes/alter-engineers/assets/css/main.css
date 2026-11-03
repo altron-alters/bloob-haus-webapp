@@ -12,6 +12,7 @@
   --card-bg:      #ffffff;
   --color-mint:   #b6fad1;
   --color-orange: #e0643d;
+  --color-warm-white: #fdfcf0;  /* brand warm white (Alter brand tokens) */
 
   /* Shape */
   --border-radius:    0px;
@@ -549,11 +550,23 @@ html { margin-top: 0 !important; }
   object-fit: cover;
   display: block;
 }
+/* More Projects carousel (project.njk): natural 3:2 pictures instead of the
+   fixed 14rem-tall crop (2.25:1 at desktop), and slides aligned at the TOP —
+   theme.min.css bottom-aligns them, so a two-line title lifted its picture
+   above its neighbours. Slide offset + hover glide: assets/js/more-projects.js. */
+.articles.more-projects .articles__content {
+  align-self: flex-start;
+}
+.articles.more-projects .articles__image {
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+
 /* A slide without a photo (project.njk's More Projects carousel, collection's
-   slider): mint panel with the AE mark, same size as a real image. Matches the
-   no-photo card in visualizers/collection.css. */
+   slider): brand warm white with the purple AE mark (vector), same size as a
+   real image. Matches the no-photo card in visualizers/collection.css. */
 .articles .articles__image--placeholder {
-  background: color-mix(in srgb, var(--color-mint) 55%, var(--card-bg)) url("/favicon.png") center / 4rem no-repeat;
+  background: var(--color-warm-white) url("/assets/images/ae-logo-mark-purple.svg") center / auto 40% no-repeat;
 }
 
 /* ============================================================

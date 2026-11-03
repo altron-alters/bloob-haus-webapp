@@ -27,17 +27,19 @@
   color: var(--text-color);
 }
 
-/* A card without a photo: mint panel with the AE mark (Leon, 2026-11-03),
-   instead of the shared lavender gradient. When the page's shape has its own
-   identity icon (an <img> inside the placeholder), that icon shows and the mark
-   stays off — :empty is what keeps the two from stacking. The More Projects
-   carousel uses the same treatment (main.css → .articles__image--placeholder). */
+/* A card without a photo: brand warm white with the purple AE mark (Leon,
+   2026-11-03), instead of the shared lavender gradient. The mark is the official
+   vector (04_Marketing/Logo/Logo Mark/svg), so it stays sharp at any size; it is
+   sized to the panel's height. When the page's shape has its own identity icon
+   (an <img> inside the placeholder), that icon shows and the mark stays off —
+   :empty is what keeps the two from stacking. The More Projects carousel uses
+   the same treatment (main.css → .articles__image--placeholder). */
 .collection-visualizer .fp-card__image-wrap--placeholder {
-  background: color-mix(in srgb, var(--color-mint) 55%, var(--card-bg));
+  background: var(--color-warm-white);
 }
 .collection-visualizer .fp-card__image-wrap--placeholder:empty {
-  background-image: url("/favicon.png");
+  background-image: url("/assets/images/ae-logo-mark-purple.svg");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 4rem;
+  background-size: auto 40%;
 }

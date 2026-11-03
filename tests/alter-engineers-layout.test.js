@@ -165,15 +165,21 @@ describe("AE projects without a photo", () => {
           bareColor: cs("bare").backgroundColor,
           iconedImage: cs("iconed").backgroundImage,
           slideImage: cs("slide").backgroundImage,
+          slideColor: cs("slide").backgroundColor,
           slideH: h("slide"),
           photoH: h("photo"),
         };
       });
-      expect(s.bareImage).toContain("favicon.png");
+      // Leon, 2026-11-03: brand warm white (#FDFCF0) with the purple mark, as a
+      // vector — the 64px favicon was blurry at card size.
+      const MARK = "/assets/images/ae-logo-mark-purple.svg";
+      const WARM_WHITE = "rgb(253, 252, 240)";
+      expect(s.bareImage).toContain(MARK);
       expect(s.bareImage).not.toContain("gradient"); // not the shared lavender panel
-      expect(s.bareColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(s.bareColor).toBe(WARM_WHITE);
       expect(s.iconedImage).toBe("none"); // the page's own icon wins; no second mark
-      expect(s.slideImage).toContain("favicon.png");
+      expect(s.slideImage).toContain(MARK);
+      expect(s.slideColor).toBe(WARM_WHITE);
       expect(s.slideH).toBe(s.photoH); // a slide without a photo keeps the row even
     } finally {
       await page.close();
@@ -199,6 +205,205 @@ describe("AE projects without a photo", () => {
     expect(a).not.toContain("--placeholder");
     expect(b).toContain("articles__image--placeholder");
     expect(b).not.toContain("<img");
+  });
+});
+
+// ── 4. the More Projects carousel ────────────────────────────────────────────
+//
+// Leon, 2026-11-03: the first image sat flush against the window edge, the
+// images were a wide 2.25:1 crop (fixed 14rem height), and moving the cursor
+// to the right should start the carousel sliding. themes/alter-engineers/
+// assets/js/more-projects.js re-initialises the Swiper theme.min.js created
+// (visualizers.md → browser.js ownership: destroy, then init with the full
+// config) with the slides starting under the "More Projects" title, and adds
+// an edge glide on hover. Images are 3:2.
+
+const SWIPER_JS = read(`themes/alter-engineers/assets/js/swiper-bundle.min.js`);
+const MORE_JS_PATH = "themes/alter-engineers/assets/js/more-projects.js";
+const CAROUSEL_STYLES = [
+  read(`${THEME}/theme.min.css`),
+  read(`${THEME}/swiper-bundle.min.css`),
+  read(`${THEME}/main.css`),
+]
+  .map((css) => `<style>${css}</style>`)
+  .join("\n");
+
+const IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'/%3E";
+const slide = (title, photo = true) => `
+  <a href="/projects/${title}/" class="swiper-slide articles__content">
+    ${photo ? `<img class="articles__image no-zoom" src="${IMG}" alt="">` : `<div class="articles__image articles__image--placeholder" aria-hidden="true"></div>`}
+    <div class="articles__inner-content"><h3 class="articles__title">${title}</h3></div>
+    <div class="articles__read-more button-1">READ MORE</div>
+  </a>`;
+
+const CAROUSEL = `
+  <section class="articles more-projects">
+    <div class="articles__wrapper">
+      <div class="articles__top-section maxwidth">
+        <h1 class="h1-medium articles__main-title" id="title">More <span> Projects </span></h1>
+        <div class="articles__buttons">
+          <div class="articles__prev-button"></div><div class="articles__next-button"></div>
+        </div>
+      </div>
+      <div class="swiper articles__repeater" id="articles-swiper">
+        <div class="swiper-wrapper articles__repeater-wrapper">
+          ${slide("Campbell Library")}
+          ${slide("Laney College Library and Learning Resource Center With A Long Name")}
+          ${slide("Bothin Classroom", false)}
+          ${slide("Willard Clubhouse")}
+          ${slide("Hildebrand Hall")}
+        </div>
+      </div>
+    </div>
+  </section>
+  <div style="height:600px"></div>`;
+
+// Exactly what theme.min.js does, so the script's destroy-and-reinit path runs.
+const LEGACY_INIT = `new Swiper("#articles-swiper",{grabCursor:!0,speed:500,spaceBetween:10,loop:!0,slidesPerView:1.6,
+  breakpoints:{768:{slidesPerView:1.63,spaceBetween:20},1366:{slidesPerView:2.46,spaceBetween:130},2560:{slidesPerView:2.45,spaceBetween:248}}});`;
+
+async function openCarousel(vw = 1440, { reducedMotion = "no-preference" } = {}) {
+  const page = await browser.newPage({ viewport: { width: vw, height: 900 } });
+  await page.emulateMedia({ reducedMotion });
+  await page.setContent(
+    `${CAROUSEL_STYLES}<body>${CAROUSEL}
+       <script>${SWIPER_JS}</script>
+       <script>${LEGACY_INIT}</script>
+       <script>${read(MORE_JS_PATH)}</script></body>`,
+    { waitUntil: "load" },
+  );
+  await page.waitForFunction(() => document.getElementById("articles-swiper").dataset.aeCarousel === "ready");
+  return page;
+}
+
+const translate = (page) => page.evaluate(() => document.getElementById("articles-swiper").swiper.getTranslate());
+
+describe("AE More Projects carousel", () => {
+  for (const vw of [1440, 1024, 390]) {
+    it(`the first slide starts under the "More Projects" title at ${vw}px`, async () => {
+      if (!browser) return;
+      const page = await openCarousel(vw);
+      try {
+        const g = await page.evaluate(() => ({
+          title: Math.round(document.getElementById("title").getBoundingClientRect().left),
+          first: Math.round(document.querySelector(".articles__content").getBoundingClientRect().left),
+          loop: document.getElementById("articles-swiper").swiper.params.loop,
+        }));
+        expect(g.first).toBe(g.title);
+        expect(g.loop).toBe(false); // a loop would show the last slide in the margin
+      } finally {
+        await page.close();
+      }
+    });
+  }
+
+  it("shows every image, and the no-photo panel, at a natural 3:2", async () => {
+    if (!browser) return;
+    const page = await openCarousel(1440);
+    try {
+      const ratios = await page.evaluate(() =>
+        [...document.querySelectorAll(".articles__image")].map((el) => {
+          const r = el.getBoundingClientRect();
+          return Math.round((r.width / r.height) * 100) / 100;
+        }),
+      );
+      for (const ratio of ratios) expect(ratio).toBeCloseTo(1.5, 1);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("keeps the pictures a steady size across the 1366px breakpoint", async () => {
+    if (!browser) return;
+    const heights = [];
+    for (const vw of [1024, 1330, 1440]) {
+      const page = await openCarousel(vw);
+      try {
+        heights.push(
+          await page.evaluate(() => Math.round(document.querySelector(".articles__image").getBoundingClientRect().height)),
+        );
+      } finally {
+        await page.close();
+      }
+    }
+    for (const h of heights) expect(h).toBeLessThanOrEqual(400);
+    // just below and just above 1366px should look like the same carousel
+    expect(Math.abs(heights[1] - heights[2])).toBeLessThan(60);
+  });
+
+  it("lines the images up along the top, whatever the title length", async () => {
+    if (!browser) return;
+    const page = await openCarousel(1440);
+    try {
+      const tops = await page.evaluate(() =>
+        [...document.querySelectorAll(".articles__image")].slice(0, 3).map((el) =>
+          Math.round(el.getBoundingClientRect().top),
+        ),
+      );
+      expect(new Set(tops).size).toBe(1);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("glides forward while the cursor is near the right edge, stops in the middle, glides back on the left", async () => {
+    if (!browser) return;
+    const page = await openCarousel(1440);
+    try {
+      const box = await page.locator("#articles-swiper").boundingBox();
+      const y = box.y + box.height / 2;
+      const start = await translate(page);
+
+      await page.mouse.move(box.x + box.width * 0.97, y);
+      await page.waitForTimeout(600);
+      const forward = await translate(page);
+      expect(forward).toBeLessThan(start - 50); // content moved left → next slides come in
+
+      await page.mouse.move(box.x + box.width * 0.5, y);
+      await page.waitForTimeout(150);
+      const held = await translate(page);
+      await page.waitForTimeout(300);
+      expect(await translate(page)).toBe(held);
+
+      await page.mouse.move(box.x + box.width * 0.03, y);
+      await page.waitForTimeout(600);
+      expect(await translate(page)).toBeGreaterThan(held + 50);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("never glides past either end", async () => {
+    if (!browser) return;
+    const page = await openCarousel(1440);
+    try {
+      const box = await page.locator("#articles-swiper").boundingBox();
+      const y = box.y + box.height / 2;
+      await page.mouse.move(box.x + box.width * 0.99, y);
+      await page.waitForTimeout(4000);
+      const b = await page.evaluate(() => {
+        const s = document.getElementById("articles-swiper").swiper;
+        return { t: s.getTranslate(), min: s.maxTranslate() };
+      });
+      expect(b.t).toBeGreaterThanOrEqual(b.min - 1);
+      expect(b.t).toBeLessThanOrEqual(b.min + 1); // it got all the way, and stopped
+    } finally {
+      await page.close();
+    }
+  }, 20_000);
+
+  it("does not glide for someone who asked for reduced motion", async () => {
+    if (!browser) return;
+    const page = await openCarousel(1440, { reducedMotion: "reduce" });
+    try {
+      const box = await page.locator("#articles-swiper").boundingBox();
+      const start = await translate(page);
+      await page.mouse.move(box.x + box.width * 0.97, box.y + box.height / 2);
+      await page.waitForTimeout(600);
+      expect(await translate(page)).toBe(start);
+    } finally {
+      await page.close();
+    }
   });
 });
 
