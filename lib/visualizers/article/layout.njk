@@ -11,10 +11,15 @@ layout: layouts/base.njk
 {% set isIndex = true if _indexFrame in ["true", "on"] else (false if _indexFrame in ["false", "off"] else (is_folder == true)) %}
 <article class="article-page{% if isIndex %} article-page--index{% endif %}" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
   <header class="article-header">
+    {# Optional profile fields (a firm, a person, a product): `logo` arrives as a site
+       URL (preprocess resolves the vault path / [[wiki]] form); `website` is linked
+       only when it is an http(s) address. Both render nothing when absent. #}
+    {% if logo %}<img class="article-logo no-pswp" src="{{ logo }}" alt="{{ title }}">{% endif %}
     {% if typeData and typeData.display_name %}<p class="article-type">{{ typeData.display_name }}</p>{% endif %}
     <h1 class="article-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
     {% if subtitle %}<p class="article-subtitle" data-pagefind-meta="subtitle[content]" content="{{ subtitle }}">{{ subtitle | mdinline | safe }}</p>{% endif %}
     {% if typeData and typeData.banner_text %}<p class="article-banner-text">{{ typeData.banner_text }}</p>{% endif %}
+    {% if website and r/^https?:\/\//i.test(website) %}<p class="article-website"><a href="{{ website }}" target="_blank" rel="noopener">{{ website | replace(r/^https?:\/\/(www\.)?/i, "") | replace(r/\/$/, "") }}</a></p>{% endif %}
     {% if author %}<p class="article-author">By {{ author }}</p>{% endif %}
     {% if byline %}<p class="article-byline">{{ byline }}</p>{% endif %}
 

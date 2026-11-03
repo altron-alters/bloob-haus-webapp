@@ -78,11 +78,12 @@ File-scope use is also rendered at build time: `renderFilescope()` runs during p
 | `tag=sustainability` | All non-archived pages tagged `sustainability` |
 | `field:building_type=School` | All pages where the `building_type` field equals `School` |
 | `all` | All non-archived pages site-wide |
+| `links-here=architect` | All non-archived pages whose `architect` **field link** points to the page this collection is on (field links: `field_links` in `_bloob-settings.md`). `links-here` alone: any field. Added 2026-11-03 |
 
 Folder-index stubs (`/projects/`, `/projects/index/`) are always excluded.
 
-Phase 1: `folder=X`, `tag=X`, `field:KEY=VAL`, `all`, and a hand-written list (below).
-Deferred: `links-here`, `links-from`.
+Built: `folder=X`, `tag=X`, `field:KEY=VAL`, `links-here[=FIELD]`, `all`, and a hand-written list (below).
+Deferred: `links-here` over ordinary body links (it reads field links only today), `links-from`.
 
 ### Hand-written list
 

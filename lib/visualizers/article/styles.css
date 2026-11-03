@@ -143,6 +143,28 @@
   line-height: 1.5;
 }
 
+/* Optional profile fields (`logo:`, `website:` frontmatter) — a firm or person page.
+   The logo is capped in both directions so a wide wordmark and a square mark both
+   sit at a sensible size above the name. */
+.article-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(260px, 70%);
+  max-height: 96px;
+  object-fit: contain;
+  margin-bottom: var(--spacing-sm, 1rem);
+}
+
+.article-website {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+
+.article-website a {
+  color: var(--accent-color, #555);
+}
+
 .article-author {
   font-size: 0.88rem;
   font-weight: 600;

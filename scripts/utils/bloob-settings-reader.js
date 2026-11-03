@@ -8,6 +8,7 @@ import fs from "fs-extra";
 import path from "path";
 import matter from "gray-matter";
 import { normalizeUnlistedFolders } from "./unlisted-folders.js";
+import { normalizeFieldLinksConfig } from "./field-links.js";
 
 const SETTINGS_FILENAME = "_bloob-settings.md";
 
@@ -282,6 +283,12 @@ export function mergeBloobSettings(siteConfig, bloobSettings) {
   // vault: _bloob-settings.md wins over sites/*.yaml.
   merged.unlisted_folders = normalizeUnlistedFolders(
     bloobSettings.unlisted_folders ?? siteConfig.unlisted_folders,
+  );
+
+  // Field links: a frontmatter field whose text matches a note in a folder becomes a link to
+  // it (scripts/utils/field-links.js). Owned by the vault; off ({}) unless a site sets it.
+  merged.field_links = normalizeFieldLinksConfig(
+    bloobSettings.field_links ?? siteConfig.field_links,
   );
 
   // Theme-specific settings — opaque bag passed through to site.theme_settings in templates
