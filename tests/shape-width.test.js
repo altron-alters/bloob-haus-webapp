@@ -225,14 +225,35 @@ async function geometry({ index, root = "" }, viewport = 1440) {
 }
 
 describe("folder-index frame", () => {
-  it("the article layout puts the hook class on folder index pages only", () => {
-    const layout = read("lib/visualizers/article/layout.njk");
+  /** The article layout up to and including its opening <article> tag → its class. */
+  function articleClass(ctx) {
+    const layout = read("lib/visualizers/article/layout.njk").replace(/^---[\s\S]*?---\s*/, "");
+    const end = layout.search(/<article class="article-page[^>]*>/);
     const opener = layout.match(/<article class="article-page[^>]*>/)[0];
     const env = new nunjucks.Environment(null, { autoescape: false });
-    expect(env.renderString(opener, { is_folder: true })).toContain(
-      'class="article-page article-page--index"',
-    );
-    expect(env.renderString(opener, {})).toContain('class="article-page"');
+    return env.renderString(layout.slice(0, end) + opener, ctx).match(/class="(article-page[^"]*)"/)[1];
+  }
+
+  it("the article layout puts the hook class on folder index pages only", () => {
+    expect(articleClass({ is_folder: true })).toBe("article-page article-page--index");
+    expect(articleClass({})).toBe("article-page");
+  });
+
+  // Tag pages are index pages too (a room by topic) but are not folders, so the
+  // frame is also a tri-state shape setting: index_frame on|off (shapes.md #5).
+  it("lets any article page opt in or out with index_frame", () => {
+    const cls = articleClass;
+    expect(cls({ shape_settings: { index_frame: "on" } })).toBe("article-page article-page--index");
+    expect(cls({ shape_settings: { index_frame: true } })).toBe("article-page article-page--index");
+    expect(cls({ is_folder: true, shape_settings: { index_frame: "Off" } })).toBe("article-page");
+    expect(cls({ is_folder: true, shape_settings: { index_frame: false } })).toBe("article-page");
+    expect(cls({ is_folder: true, shape_settings: { index_frame: null } })).toBe("article-page article-page--index");
+  });
+
+  it("the shared tag page declares itself an index page", () => {
+    const tags = read("themes/_base/pages/tags.md");
+    const front = tags.match(/^---\r?\n([\s\S]*?)\r?\n---/)[1];
+    expect(front).toMatch(/shape_settings:\s*\r?\n\s+index_frame:\s*on/);
   });
 
   it("a theme with no width opt-in renders an index page exactly like any article", async () => {

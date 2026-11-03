@@ -201,9 +201,12 @@ own site grid; AE sets `--article-index-width: none` and `--article-index-gutter
 `tests/shape-width.test.js` → "folder-index frame" (shared) and
 `tests/alter-engineers-layout.test.js` (AE).
 
-The trigger is "is a folder index", not "contains a wide child": a reading article that ends in a
-related-posts collection should keep its centred column. If a non-folder page ever needs the
-index frame, the place to add it is a `::: settings` key on `article`, not a second trigger.
+The trigger is "is an index page", not "contains a wide child": a reading article that ends in a
+related-posts collection should keep its centred column. Folder indexes are index pages by
+default; any other article page opts in (or a folder index opts out) with the tri-state shape
+setting `index_frame: on|off` (2026-11-03). The shared tag pages (`themes/_base/pages/tags.md`,
+and the all-tags page `tags-index.md` at `/tags/`) set it in their frontmatter, since they are
+indexes by topic rather than folders. Index pages also hide the date pills by default.
 
 ## Placement systems
 

@@ -2,9 +2,14 @@
 layout: layouts/base.njk
 ---
 {% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
-{# .article-page--index: a folder's index page. Its frame is the wide edge, so the
-   header lines up with a wide shape below it (styles.css → "Folder-index frame"). #}
-<article class="article-page{% if is_folder %} article-page--index{% endif %}" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
+{# .article-page--index: an index page (a folder's, by default). Its frame is the
+   wide edge, so the header lines up with a wide shape below it (styles.css →
+   "Folder-index frame"). Any article page can opt in or out with a tri-state
+   `index_frame: on|off` (shapes.md convention #5); the shared tag pages opt in.
+   `"" ~ value` (not `| string`) so an empty YAML value can't throw. #}
+{% set _indexFrame = ("" ~ shape_settings.index_frame) | lower %}
+{% set isIndex = true if _indexFrame in ["true", "on"] else (false if _indexFrame in ["false", "off"] else (is_folder == true)) %}
+<article class="article-page{% if isIndex %} article-page--index{% endif %}" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
   <header class="article-header">
     {% if typeData and typeData.display_name %}<p class="article-type">{{ typeData.display_name }}</p>{% endif %}
     <h1 class="article-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>
@@ -21,7 +26,7 @@ layout: layouts/base.njk
       `date_updated:` may be a list — the LATEST entry wins, regardless of order.
       The updated pill is suppressed when it would duplicate the created pill.
 
-      Shown on reading articles, HIDDEN on folder index pages by default — an
+      Shown on reading articles, HIDDEN on index pages (isIndex above) by default — an
       index is a room's front door, not a dated piece of writing. Either way a
       ::: settings block decides, tri-state (shapes.md convention #5):
         show_date_created: true | on | false | off
@@ -32,8 +37,8 @@ layout: layouts/base.njk
     {% set duFmt = date_updated | dateValue | dateFormat %}
     {% set sdc = ("" ~ shape_settings.show_date_created) | lower %}
     {% set sdu = ("" ~ shape_settings.show_date_updated) | lower %}
-    {% set showCreated = true if sdc in ["true", "on"] else (false if sdc in ["false", "off"] else not is_folder) %}
-    {% set showUpdated = true if sdu in ["true", "on"] else (false if sdu in ["false", "off"] else not is_folder) %}
+    {% set showCreated = true if sdc in ["true", "on"] else (false if sdc in ["false", "off"] else not isIndex) %}
+    {% set showUpdated = true if sdu in ["true", "on"] else (false if sdu in ["false", "off"] else not isIndex) %}
 
     {% if dcFmt and showCreated %}
     <p class="article-date" data-pagefind-ignore>{{ date_created | dateLabel(date_created_text, "Written on") }} {{ dcFmt }}</p>

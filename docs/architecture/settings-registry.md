@@ -452,6 +452,7 @@ Authored in a `::: settings` block in the page body, not in frontmatter — see
 | `share_bar` | bool | `true` | `false` hides the Copy link / Embed bar |
 | `show_date_created` | tri-state | `true`; **`false` on folder index pages** | `false`/`off` hides the "Written on" pill, `true`/`on` shows it (added 2026-07-27; index default + on/off added 2026-11-03) |
 | `show_date_updated` | tri-state | `true`; **`false` on folder index pages** | `false`/`off` hides the "Updated on" pill, `true`/`on` shows it (added 2026-07-27; index default + on/off added 2026-11-03) |
+| `index_frame` | tri-state | `on` for folder index pages, `off` otherwise | `on` lays the page out as an index: header and prose start at the same left edge as a wide shape below them (the theme decides how wide; see shapes.md → "On a folder index page, the frame is the wide edge"). Also hides the date pills by default. The shared tag pages set it. (added 2026-11-03) |
 
 **Date authoring — two conventions, both supported** (`scripts/utils/date-field.js`):
 
