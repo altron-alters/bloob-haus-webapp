@@ -16,6 +16,8 @@ import nunjucks from "nunjucks";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import MarkdownIt from "markdown-it";
+import markdownItAttrs from "markdown-it-attrs";
 import { selectBasePages } from "../scripts/assemble-src.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,23 +55,37 @@ describe("the all-tags page", () => {
     expect(front).toMatch(/^eleventyExcludeFromCollections: true$/m);
   });
 
-  it("renders one tight markdown list (no blank lines between tags)", () => {
-    const { body } = split(file);
-    const md = render(body, { collections: { tagList: ["a", "b"], a: [1], b: [1] } });
-    expect(md).toMatch(/- \[#a\]\(\/tags\/a\/\) · 1 page\r?\n- \[#b\]/);
+  // Rendered through nunjucks AND the site's markdown pipeline (markdown-it +
+  // markdown-it-attrs, as eleventy.config.js sets it up), so the assertions are
+  // about the HTML a visitor gets.
+  function toHtml(ctx) {
+    const md = new MarkdownIt({ html: true }).use(markdownItAttrs);
+    return md.render(render(split(file).body, ctx));
+  }
+
+  const TAGS = {
+    collections: {
+      tagList: ["energy-modeling", "library"],
+      "energy-modeling": [{}],
+      library: [{}, {}, {}],
+    },
+  };
+
+  it("renders one list, marked .tag-list, one item per tag", () => {
+    const html = toHtml(TAGS);
+    expect(html.match(/<ul\b/g)).toHaveLength(1);
+    expect(html).toContain('<ul class="tag-list">');
+    expect(html.match(/<li>/g)).toHaveLength(2);
+    expect(html).not.toContain("<p>"); // a tight list, not a paragraph per tag
   });
 
-  it("lists every tag as a link to its page, with how many pages use it", () => {
-    const { body } = split(file);
-    const md = render(body, {
-      collections: {
-        tagList: ["energy-modeling", "library"],
-        "energy-modeling": [{}],
-        library: [{}, {}, {}],
-      },
-    });
-    expect(md).toContain("- [#energy modeling](/tags/energy-modeling/) · 1 page");
-    expect(md).toContain("- [#library](/tags/library/) · 3 pages");
+  // Leon, 2026-11-03: the same tag style as on the project profiles. Every tag
+  // is a .tag-badge link (the class project pages use); the theme draws it —
+  // AE's badge adds the "#" itself, so the text is the bare tag name.
+  it("draws each tag as a .tag-badge link to its page, with its page count", () => {
+    const html = toHtml(TAGS);
+    expect(html).toContain('<a href="/tags/energy-modeling/" class="tag-badge">energy modeling</a> · 1 page');
+    expect(html).toContain('<a href="/tags/library/" class="tag-badge">library</a> · 3 pages');
   });
 
   it("says so when the site has no tags", () => {
