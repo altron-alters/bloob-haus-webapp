@@ -466,6 +466,64 @@ describe("AE More Projects carousel", () => {
   });
 });
 
+// ── 7. the ARCHITECT row on a project page ───────────────────────────────────
+//
+// Leon, 2026-11-03: every project page credits and links its architect. The
+// plain-text `architect` (from the Project Profiles sheet) is resolved by field
+// links (scripts/utils/field-links.js) into `field_links.architect`:
+//   firm page public   → the firm's name, linked to /architects/<slug>/
+//   firm note not public → the firm's display name, plain
+//   no firm note matches → the sheet text, plain
+//   blank / "N/A"      → no row
+// A site without field_links shows the sheet text, plain.
+
+describe("AE project page — ARCHITECT row", () => {
+  // from the ARCHITECT comment (the sets that decide the row) through the </dl>
+  const block = read("themes/alter-engineers/layouts/project.njk").match(
+    /{#- ARCHITECT[\s\S]*?<\/dl>\s*{% endif %}/,
+  )[0];
+  const env = new nunjucks.Environment(null, { autoescape: true });
+  env.addFilter("dateFormat", (s) => s);
+  env.addFilter("url", (s) => s);
+  const rows = (ctx) =>
+    [...env.renderString(block, ctx).matchAll(/<dt class="label">([^<]+)<\/dt>\s*<dd>([\s\S]*?)<\/dd>/g)].map(
+      (m) => [m[1], m[2].trim()],
+    );
+
+  it("links the firm when its page is public, right after OWNER", () => {
+    const r = rows({
+      owner: "City of Campbell",
+      architect: "Jayson Architecture",
+      field_links: { architect: [{ value: "Jayson Architecture", name: "Jayson Architecture", href: "/architects/jayson-architecture/" }] },
+    });
+    expect(r.map(([k]) => k)).toEqual(["OWNER", "ARCHITECT"]);
+    expect(r[1][1]).toBe('<a href="/architects/jayson-architecture/">Jayson Architecture</a>');
+  });
+
+  it("shows the firm's display name, plain, when its page is not public", () => {
+    const r = rows({
+      architect: "HY Architects",
+      field_links: { architect: [{ value: "HY Architects", name: "Hibser Yamauchi Architects", href: null }] },
+    });
+    expect(r).toEqual([["ARCHITECT", "Hibser Yamauchi Architects"]]);
+  });
+
+  it("shows the sheet text, plain, when no firm note matches", () => {
+    const r = rows({ architect: "Bartos", field_links: { architect: [{ value: "Bartos", name: null, href: null }] } });
+    expect(r).toEqual([["ARCHITECT", "Bartos"]]);
+  });
+
+  it("shows nothing for a blank or N/A architect", () => {
+    expect(rows({ architect: "N/A" })).toEqual([]);
+    expect(rows({ architect: "" })).toEqual([]);
+    expect(rows({ owner: "OUSD", architect: "n/a" }).map(([k]) => k)).toEqual(["OWNER"]);
+  });
+
+  it("shows the sheet text when the site has no field links at all", () => {
+    expect(rows({ architect: "Siegel and Strain Architects" })).toEqual([["ARCHITECT", "Siegel and Strain Architects"]]);
+  });
+});
+
 // ── 6. the all-tags page uses the project-profile tag style ──────────────────
 //
 // Leon, 2026-11-03: "use the same tag style in that list as we have on the
