@@ -10,6 +10,19 @@ function makePages(entries) {
   );
 }
 
+// ─── tag nodes ────────────────────────────────────────────────────────────────
+
+describe("buildGraph tag nodes", () => {
+  it("carry how many pages use the tag (collection's tag result cards show it)", () => {
+    const { nodes } = buildGraph(makePages([["/a/", "A"], ["/b/", "B"]]), {
+      library: { count: 2, pages: [{ url: "/a/" }, { url: "/b/" }] },
+      solo: { count: 1 },
+    });
+    expect(nodes.find((n) => n.id === "/tags/library/")).toMatchObject({ type: "tag", count: 2 });
+    expect(nodes.find((n) => n.id === "/tags/solo/")).toMatchObject({ type: "tag", count: 1 });
+  });
+});
+
 // ─── sectionFromUrl ───────────────────────────────────────────────────────────
 
 describe("sectionFromUrl", () => {
