@@ -2,7 +2,9 @@
 layout: layouts/base.njk
 ---
 {% set typeData = bloobObjects[bloob_object] if bloob_object and bloobObjects else null %}
-<article class="article-page" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
+{# .article-page--index: a folder's index page. Its frame is the wide edge, so the
+   header lines up with a wide shape below it (styles.css → "Folder-index frame"). #}
+<article class="article-page{% if is_folder %} article-page--index{% endif %}" {% if _bloob_unlisted %}data-pagefind-ignore{% else %}data-pagefind-body{% endif %}>
   <header class="article-header">
     {% if typeData and typeData.display_name %}<p class="article-type">{{ typeData.display_name }}</p>{% endif %}
     <h1 class="article-title">{{ (title_md if title_md else title) | mdinline | safe }}</h1>

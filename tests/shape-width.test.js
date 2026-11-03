@@ -19,6 +19,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import nunjucks from "nunjucks";
 import { resolveWidth, WIDTHS } from "../lib/visualizers/collection/renderer.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -168,6 +169,122 @@ describe("width contract in a real browser", () => {
     if (!browser) return;
     const r = await widths(true, 390);
     expect(r.wide).toBe(r.prose);
+    expect(r.overflows).toBe(false);
+  });
+});
+
+// ── the folder-index frame ───────────────────────────────────────────────────
+//
+// A folder's index page (is_folder → .article-page--index) is a room's front
+// door: its main content is a wide shape. Centring an 820px header above a
+// 1200px breakout gives the page TWO left edges — the bug Leon reported on AE's
+// /resources/ and /projects/ (2026-11-02): header at x=328, cards at x=106.
+//
+// On an index page the frame itself is the wide edge, so the header, the prose
+// and the wide child all start at one x. Prose keeps its reading measure.
+
+const SPACING = 24; // --spacing-md: 1.5rem in these fixtures
+const MEASURE = PROSE_WIDTH - 2 * SPACING;
+
+function buildIndexPage({ index, root }) {
+  return `<style>*,*::before,*::after{box-sizing:border-box}</style>
+    <style>:root { --article-width: ${PROSE_WIDTH}px; --spacing-md: 1.5rem; ${root} }</style>
+    <style>${read("lib/visualizers/article/styles.css")}</style>
+    <body style="margin:0">
+      <article class="article-page${index ? " article-page--index" : ""}">
+        <header class="article-header"><h1 class="article-title" id="title">Title</h1></header>
+        <div class="article-body">
+          <p id="prose">${"word ".repeat(300)}</p>
+          <div id="wide" data-width="wide">wide</div>
+        </div>
+      </article>
+    </body>`;
+}
+
+async function geometry({ index, root = "" }, viewport = 1440) {
+  const page = await browser.newPage({ viewport: { width: viewport, height: 900 } });
+  try {
+    await page.setContent(buildIndexPage({ index, root }), { waitUntil: "load" });
+    return await page.evaluate(() => {
+      const box = (sel) => {
+        const r = document.querySelector(sel).getBoundingClientRect();
+        return { x: Math.round(r.left), w: Math.round(r.width) };
+      };
+      return {
+        header: box(".article-header"),
+        title: box("#title"),
+        prose: box("#prose"),
+        wide: box("#wide"),
+        overflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      };
+    });
+  } finally {
+    await page.close();
+  }
+}
+
+describe("folder-index frame", () => {
+  it("the article layout puts the hook class on folder index pages only", () => {
+    const layout = read("lib/visualizers/article/layout.njk");
+    const opener = layout.match(/<article class="article-page[^>]*>/)[0];
+    const env = new nunjucks.Environment(null, { autoescape: false });
+    expect(env.renderString(opener, { is_folder: true })).toContain(
+      'class="article-page article-page--index"',
+    );
+    expect(env.renderString(opener, {})).toContain('class="article-page"');
+  });
+
+  it("a theme with no width opt-in renders an index page exactly like any article", async () => {
+    if (!browser) return;
+    for (const vw of [1440, 390]) {
+      const plain = await geometry({ index: false }, vw);
+      const index = await geometry({ index: true }, vw);
+      expect(index, `differs at ${vw}px`).toEqual(plain);
+    }
+  });
+
+  it("an opted-in theme puts header, prose and the wide child on ONE left edge", async () => {
+    if (!browser) return;
+    const r = await geometry({ index: true, root: "--shape-width-wide: 1200px;" });
+    expect(r.title.x).toBe(r.wide.x);
+    expect(r.prose.x).toBe(r.wide.x);
+    expect(r.wide.w).toBe(1200); // the wide shape still gets the width it asked for
+    expect(r.header.w).toBe(r.wide.w); // the header rule spans the whole frame
+    expect(r.overflows).toBe(false);
+  });
+
+  it("keeps prose and the title at reading measure inside the wide frame", async () => {
+    if (!browser) return;
+    const r = await geometry({ index: true, root: "--shape-width-wide: 1200px;" });
+    expect(r.prose.w).toBe(MEASURE);
+    expect(r.title.w).toBe(MEASURE);
+  });
+
+  it("does not change reading articles in the same theme (they keep the centred breakout)", async () => {
+    if (!browser) return;
+    const r = await geometry({ index: false, root: "--shape-width-wide: 1200px;" });
+    expect(r.wide.x).toBeLessThan(r.prose.x);
+    expect(r.prose.w).toBe(MEASURE);
+  });
+
+  it("lets a theme pin the frame to its own gutters (AE: the nav's .maxwidth edge)", async () => {
+    if (!browser) return;
+    const root =
+      "--shape-width-wide: 1200px; --article-index-width: none; --article-index-gutter: 142px;";
+    const r = await geometry({ index: true, root }, 1600);
+    expect(r.title.x).toBe(142);
+    expect(r.wide.x).toBe(142);
+    expect(r.wide.w).toBe(1600 - 2 * 142);
+    expect(r.prose.w).toBe(MEASURE);
+    expect(r.overflows).toBe(false);
+  });
+
+  it("never overflows and keeps one edge on a phone", async () => {
+    if (!browser) return;
+    const r = await geometry({ index: true, root: "--shape-width-wide: 1200px;" }, 390);
+    expect(r.title.x).toBe(r.wide.x);
+    expect(r.prose.x).toBe(r.wide.x);
     expect(r.overflows).toBe(false);
   });
 });
