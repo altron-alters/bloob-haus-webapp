@@ -168,6 +168,8 @@ body_class: "single single-projects"
               {% endif %}
               <div class="articles__inner-content">
                 <h3 class="articles__title">{{ project.data.title }}</h3>
+                {# Plain text: the slide is already a link, so no <a> may nest inside #}
+                {% if project.data.subtitle %}<p class="articles__subtitle">{{ project.data.subtitle | mdinline | striptags }}</p>{% endif %}
               </div>
               <div class="articles__read-more button-1">READ MORE</div>
             </a>

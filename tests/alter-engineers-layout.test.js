@@ -191,6 +191,7 @@ describe("AE projects without a photo", () => {
       /{% for project in collections\.projects %}[\s\S]*?{% endfor %}/,
     )[0];
     const env = new nunjucks.Environment(null, { autoescape: false });
+    env.addFilter("mdinline", (s) => s); // markdown → inline HTML; identity is enough here
     const html = env.renderString(loop, {
       page: { url: "/projects/c/" },
       collections: {
@@ -205,6 +206,28 @@ describe("AE projects without a photo", () => {
     expect(a).not.toContain("--placeholder");
     expect(b).toContain("articles__image--placeholder");
     expect(b).not.toContain("<img");
+  });
+
+  it("shows each project's subtitle as plain text (a slide is already a link)", () => {
+    const loop = read("themes/alter-engineers/layouts/project.njk").match(
+      /{% for project in collections\.projects %}[\s\S]*?{% endfor %}/,
+    )[0];
+    const env = new nunjucks.Environment(null, { autoescape: false });
+    env.addFilter("mdinline", (s) => s);
+    const html = env.renderString(loop, {
+      page: { url: "/projects/c/" },
+      collections: {
+        projects: [
+          { url: "/projects/a/", data: { title: "A", subtitle: 'Grant <em>funding</em> via <a href="/x/">the city</a>' } },
+          { url: "/projects/b/", data: { title: "B" } },
+        ],
+      },
+    });
+    const [a, b] = html.split('class="swiper-slide').slice(1);
+    expect(a).toContain('<p class="articles__subtitle">Grant funding via the city</p>');
+    // no link nested inside the slide's own <a>
+    expect(a.match(/<p class="articles__subtitle">[\s\S]*?<\/p>/)[0]).not.toMatch(/<a\b/);
+    expect(b).not.toContain("articles__subtitle");
   });
 });
 
@@ -232,7 +255,7 @@ const IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width=
 const slide = (title, photo = true) => `
   <a href="/projects/${title}/" class="swiper-slide articles__content">
     ${photo ? `<img class="articles__image no-zoom" src="${IMG}" alt="">` : `<div class="articles__image articles__image--placeholder" aria-hidden="true"></div>`}
-    <div class="articles__inner-content"><h3 class="articles__title">${title}</h3></div>
+    <div class="articles__inner-content"><h3 class="articles__title">${title}</h3><p class="articles__subtitle">A headline about ${title}</p></div>
     <div class="articles__read-more button-1">READ MORE</div>
   </a>`;
 
@@ -331,6 +354,42 @@ describe("AE More Projects carousel", () => {
     expect(Math.abs(heights[1] - heights[2])).toBeLessThan(60);
   });
 
+  // Leon, 2026-11-03: "More Projects" was 60px, bigger than the project's own
+  // 48px headline; and each slide should show the project's subtitle.
+  it("keeps the 'More Projects' heading a modest section heading", async () => {
+    if (!browser) return;
+    const page = await openCarousel(1440);
+    try {
+      const px = await page.evaluate(() =>
+        parseFloat(getComputedStyle(document.getElementById("title")).fontSize),
+      );
+      expect(px).toBeLessThanOrEqual(36);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("puts each slide's subtitle right under its title", async () => {
+    if (!browser) return;
+    const page = await openCarousel(1440);
+    try {
+      const g = await page.evaluate(() => {
+        // the title TEXT's bottom, not its box: theme.min.css gives the box a
+        // min-height, which is exactly the gap this guards against
+        const range = document.createRange();
+        range.selectNodeContents(document.querySelector(".articles__title"));
+        const t = range.getBoundingClientRect();
+        const s = document.querySelector(".articles__subtitle").getBoundingClientRect();
+        return { gap: Math.round(s.top - t.bottom), shown: s.height > 0 };
+      });
+      expect(g.shown).toBe(true);
+      expect(g.gap).toBeGreaterThanOrEqual(0);
+      expect(g.gap).toBeLessThan(16); // no leftover min-height between them
+    } finally {
+      await page.close();
+    }
+  });
+
   it("lines the images up along the top, whatever the title length", async () => {
     if (!browser) return;
     const page = await openCarousel(1440);
@@ -404,6 +463,37 @@ describe("AE More Projects carousel", () => {
     } finally {
       await page.close();
     }
+  });
+});
+
+// ── 6. the all-tags page uses the project-profile tag style ──────────────────
+//
+// Leon, 2026-11-03: "use the same tag style in that list as we have on the
+// project profiles". The shared tags-index.md emits .tag-badge links in a
+// .tag-list; AE draws them as its mint chips, without list bullets.
+
+describe("AE all-tags page", () => {
+  it("draws tags as the mint project-profile badges, in a list without bullets", async () => {
+    if (!browser) return;
+    const g = await measure(
+      `<article class="article-page"><div class="article-body">
+         <ul class="tag-list"><li id="li"><a href="/tags/library/" class="tag-badge" id="badge">library</a> · 12 pages</li></ul>
+       </div></article>`,
+      1440,
+      () => {
+        const b = getComputedStyle(document.getElementById("badge"));
+        return {
+          bullet: getComputedStyle(document.getElementById("li")).listStyleType,
+          bg: b.backgroundColor,
+          transform: b.textTransform,
+          hash: getComputedStyle(document.getElementById("badge"), "::before").content,
+        };
+      },
+    );
+    expect(g.bullet).toBe("none");
+    expect(g.bg).toBe("rgb(182, 250, 209)"); // --color-mint, as on project profiles
+    expect(g.transform).toBe("uppercase");
+    expect(g.hash).toBe('"#"');
   });
 });
 

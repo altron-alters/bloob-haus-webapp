@@ -562,6 +562,27 @@ html { margin-top: 0 !important; }
   aspect-ratio: 3 / 2;
 }
 
+/* Section heading: a modest heading, smaller than the project's own headline
+   (it was 60–80px, bigger than the 48px headline above it). */
+.articles.more-projects .articles__main-title {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+/* Each slide: project name, then its subtitle (Leon, 2026-11-03). theme.min.css
+   gives the name a min-height (to even out one- and two-line names when only the
+   name showed); with a subtitle under it that became a ~60px hole. */
+.articles.more-projects .articles__title {
+  min-height: 0;
+  margin-bottom: 0.35rem;
+}
+.articles.more-projects .articles__subtitle {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 /* A slide without a photo (project.njk's More Projects carousel, collection's
    slider): brand warm white with the purple AE mark (vector), same size as a
    real image. Matches the no-photo card in visualizers/collection.css. */
@@ -830,6 +851,22 @@ html { margin-top: 0 !important; }
 .tag-badge:hover {
   background-color: var(--accent-color);
   color: #ffffff;
+}
+
+/* All-tags page (/tags/, the shared tags-index.md): one badge per line with its
+   page count, no list bullets — the same chips as the project profiles. Scoped
+   above AE's restore-bullets rule (.article-body ul > li) and the shape's li. */
+.article-body ul.tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-left: 0;
+}
+.article-body ul.tag-list > li {
+  list-style: none;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-light);
 }
 
 /* ============================================================
