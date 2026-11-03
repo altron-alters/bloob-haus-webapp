@@ -26,3 +26,18 @@
   font-weight: 700;
   color: var(--text-color);
 }
+
+/* A card without a photo: mint panel with the AE mark (Leon, 2026-11-03),
+   instead of the shared lavender gradient. When the page's shape has its own
+   identity icon (an <img> inside the placeholder), that icon shows and the mark
+   stays off — :empty is what keeps the two from stacking. The More Projects
+   carousel uses the same treatment (main.css → .articles__image--placeholder). */
+.collection-visualizer .fp-card__image-wrap--placeholder {
+  background: color-mix(in srgb, var(--color-mint) 55%, var(--card-bg));
+}
+.collection-visualizer .fp-card__image-wrap--placeholder:empty {
+  background-image: url("/favicon.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 4rem;
+}

@@ -26,6 +26,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import nunjucks from "nunjucks";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -123,6 +124,83 @@ const PROJECT_PAGE = `
       <div class="project-meta__row"><dt class="label">BUILDING SQUARE FOOTAGE</dt><dd>3600</dd></div>
     </dl>
   </div>`;
+
+// ── 3. projects without a photo get an on-brand placeholder ─────────────────
+//
+// Leon, 2026-11-03: an imageless project showed an empty lavender block on the
+// Projects grid and a bare title (no picture at all) in the "More Projects"
+// carousel. Both now show a mint panel with the AE mark. A page whose shape has
+// its own identity icon shows that icon instead — never both.
+
+const CARD_STYLES = [
+  read(`${THEME}/theme.min.css`),
+  read(`${THEME}/main.css`),
+  read("lib/visualizers/collection/styles.css"),
+  read(`${THEME}/visualizers/collection.css`),
+]
+  .map((css) => `<style>${css}</style>`)
+  .join("\n");
+
+const NO_IMAGE = `
+  <div class="collection-visualizer"><div class="fp-cards">
+    <a class="fp-card"><div class="fp-card__image-wrap fp-card__image-wrap--placeholder" id="bare"></div></a>
+    <a class="fp-card"><div class="fp-card__image-wrap fp-card__image-wrap--placeholder" id="iconed"><img class="fp-card__placeholder-icon" src="/icon.png" alt=""></div></a>
+  </div></div>
+  <section class="articles">
+    <div class="articles__image articles__image--placeholder" id="slide"></div>
+    <img class="articles__image" id="photo" alt="">
+  </section>`;
+
+describe("AE projects without a photo", () => {
+  it("cards and carousel slides show the AE mark on mint, never an empty block", async () => {
+    if (!browser) return;
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    try {
+      await page.setContent(`${CARD_STYLES}<body>${NO_IMAGE}</body>`, { waitUntil: "load" });
+      const s = await page.evaluate(() => {
+        const cs = (id) => getComputedStyle(document.getElementById(id));
+        const h = (id) => Math.round(document.getElementById(id).getBoundingClientRect().height);
+        return {
+          bareImage: cs("bare").backgroundImage,
+          bareColor: cs("bare").backgroundColor,
+          iconedImage: cs("iconed").backgroundImage,
+          slideImage: cs("slide").backgroundImage,
+          slideH: h("slide"),
+          photoH: h("photo"),
+        };
+      });
+      expect(s.bareImage).toContain("favicon.png");
+      expect(s.bareImage).not.toContain("gradient"); // not the shared lavender panel
+      expect(s.bareColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(s.iconedImage).toBe("none"); // the page's own icon wins; no second mark
+      expect(s.slideImage).toContain("favicon.png");
+      expect(s.slideH).toBe(s.photoH); // a slide without a photo keeps the row even
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("the More Projects carousel emits a placeholder for a project without an image", () => {
+    const loop = read("themes/alter-engineers/layouts/project.njk").match(
+      /{% for project in collections\.projects %}[\s\S]*?{% endfor %}/,
+    )[0];
+    const env = new nunjucks.Environment(null, { autoescape: false });
+    const html = env.renderString(loop, {
+      page: { url: "/projects/c/" },
+      collections: {
+        projects: [
+          { url: "/projects/a/", data: { title: "A", image: "/a.jpg" } },
+          { url: "/projects/b/", data: { title: "B" } },
+        ],
+      },
+    });
+    const [a, b] = html.split('class="swiper-slide').slice(1);
+    expect(a).toContain('<img class="articles__image');
+    expect(a).not.toContain("--placeholder");
+    expect(b).toContain("articles__image--placeholder");
+    expect(b).not.toContain("<img");
+  });
+});
 
 describe("AE project pages have no phantom row gap", () => {
   for (const vw of [1440, 2560]) {

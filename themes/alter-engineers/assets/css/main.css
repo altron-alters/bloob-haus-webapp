@@ -549,6 +549,12 @@ html { margin-top: 0 !important; }
   object-fit: cover;
   display: block;
 }
+/* A slide without a photo (project.njk's More Projects carousel, collection's
+   slider): mint panel with the AE mark, same size as a real image. Matches the
+   no-photo card in visualizers/collection.css. */
+.articles .articles__image--placeholder {
+  background: color-mix(in srgb, var(--color-mint) 55%, var(--card-bg)) url("/favicon.png") center / 4rem no-repeat;
+}
 
 /* ============================================================
    UNIVERSAL BUTTON CLASS

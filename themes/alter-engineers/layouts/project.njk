@@ -162,6 +162,9 @@ body_class: "single single-projects"
             <a href="{{ project.url }}" class="swiper-slide articles__content">
               {% if project.data.image %}
               <img class="articles__image no-zoom" src="{{ project.data.image }}" alt="{{ project.data.title }}">
+              {% else %}
+              {# No photo yet: same-size placeholder so the slide row stays even (main.css) #}
+              <div class="articles__image articles__image--placeholder" aria-hidden="true"></div>
               {% endif %}
               <div class="articles__inner-content">
                 <h3 class="articles__title">{{ project.data.title }}</h3>
