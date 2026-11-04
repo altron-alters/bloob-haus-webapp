@@ -1,0 +1,28 @@
+/* Alter Engineers — award-badge overrides: light-green seal on the purple tab,
+   the tab hangs off the bottom-right edge of the project hero photo. */
+.award-badges {
+  --award-tab-seal: var(--color-mint);
+}
+
+.award-badges--hero {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 0;
+  transform: translateY(50%);
+  z-index: 11;
+  max-width: calc(100% - 2.5rem);
+}
+
+/* Room for the half of the tab that hangs below the photo */
+.projects-single__wrapper:has(.award-badges--hero) .projects-single__main-content {
+  padding-top: calc(var(--spacing-md) + 2.5rem);
+}
+
+.award-badges--top {
+  margin-bottom: var(--spacing-sm);
+}
+.award-badges--top .award-badge--tab { display: inline-grid; }
+
+@media (max-width: 768px) {
+  .award-badges--hero { right: 1rem; max-width: calc(100% - 2rem); }
+}

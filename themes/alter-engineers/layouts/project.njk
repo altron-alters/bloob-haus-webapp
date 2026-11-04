@@ -64,12 +64,21 @@ body_class: "single single-projects"
         </div>
         <h2 class="h2-medium projects-single__counter"></h2>
       </div>
+      {#- Awards + certifications: purple tab hanging off the hero's bottom edge.
+          Frontmatter `awards:` / `certifications:` lists → award-badge visualizer. -#}
+      {% if awards or certifications %}
+      <div class="award-badge-slot" data-style="tab" data-placement="hero" data-awards="{{ awards | dump | escape }}" data-certifications="{{ certifications | dump | escape }}"></div>
+      {% endif %}
     </div>
     {% endif %}
 
     {# Main content — data-pagefind-body scopes indexing to this element;
        section + tag filters enable collection search: fulltext scoping. #}
     <div class="projects-single__main-content maxwidth" data-pagefind-body data-pagefind-filter="section:projects">
+
+      {% if not heroImages.length and (awards or certifications) %}
+      <div class="award-badge-slot" data-style="tab" data-placement="top" data-awards="{{ awards | dump | escape }}" data-certifications="{{ certifications | dump | escape }}"></div>
+      {% endif %}
 
       {% if title %}
       <h1 class="projects-single__title">{{ title }}</h1>
