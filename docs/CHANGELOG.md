@@ -6,6 +6,14 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 73 — November 2-3, 2026 (from the AE fork)
+**Worked on:** go-live content review for alterengineers.com, plus merging a parallel UI session. Suite 1112 → **1237 tests**.
+
+- **Unknown `website_status` hides the page** (status_field mode): only public/published/unlisted/archived publish, case-insensitive; anything else is hidden with a warning naming the file (a `::warning` annotation on GitHub Actions); the build never fails. Upstream PR #10 (open).
+- **Merged `ui-fixes`** (fork PR #1, a parallel session): field links (`field_links`, a field's text links to a note that lists who points to it; AE architect firm pages), collection search match count + tag result cards, `/tags/` all-tags page and `index_frame`, article index frame and date-pill defaults, shape-icon placeholder cards; AE: ARCHITECT row, More Projects carousel, no-photo panel (back to mint, sharp vector mark).
+- **Upstream:** Leon merged PRs #4-#7. Syncing the fork with upstream was attempted and ABORTED: 85 upstream commits, 8 conflicts (search redesign overlaps the UI session's tag cards; article links lose underlines on every site; preprocess + settings reader). Needs its own session.
+- Not in this repo but done this session: the Project Profiles sheet sync/sidebar (tool hub repo), AE vault review rounds 1-2, Cloudflare Pages keeps removed pages at the edge up to a week (noted in AE next-steps).
+
 ### Session 72 — October 28, 2026 (from the AE fork)
 **Worked on:** SEO for the alterengineers.com go-live, built on upstream's `show_in_search` (spec `docs/superpowers/specs/2026-10-20-seo-go-live-design.md`, plan `docs/superpowers/plans/2026-10-28-seo-go-live.md`).
 
