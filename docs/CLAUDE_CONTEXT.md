@@ -104,7 +104,7 @@ Bloob Haus transforms Obsidian markdown vaults into hosted static websites using
 - Per-file `exclude_files` list in site YAML config
 - Multi-site build isolation (src/ cleaned between builds, repo-switch detection)
 - Reserved directory filtering (media, assets, etc. excluded from section nav)
-- Test suite: 1237 tests across 72 files (Vitest), co-located visualizer tests
+- Test suite: 1275 tests across 74 files (Vitest), co-located visualizer tests
 - Validation report with `--strict` flag for CI (fails build on broken links)
 
 **Build pipeline:**

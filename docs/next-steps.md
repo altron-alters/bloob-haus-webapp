@@ -9,7 +9,7 @@ Everything else is reference you consult on demand: `docs/CHANGELOG.md` for hist
 `docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
 long arc.
 
-**Last updated:** 2026-11-04 (S73)
+**Last updated:** 2026-11-04 (S74)
 
 ---
 
@@ -17,7 +17,8 @@ long arc.
 
 **From the AE fork (S72-S73).**
 - **Sync the fork with upstream** (`git merge upstream/main`): 85 commits and 8 conflicts as of 2026-11-04 (CHANGELOG S73). The real decision is search: upstream's redesign has its own tag results, the fork has the UI session's tag cards. Do it with Leon present; check `.github/workflows/deploy-alter-engineers.yml` survives.
-- **Upstream PR #10** (unknown status hidden) open on LSanten/bloob-haus-webapp.
+- **Upstream PR #10** (unknown status hidden) and **PR #11** (`carousel` + `award-badge`) open on LSanten/bloob-haus-webapp. The AE GitHub account can't push to upstream directly; shared work goes up as PRs from `altron-alters` branches.
+- **`award-badge` card hook** (TECH-DEBT #51): cards are matched by class name; replace with a shared card attribute when collection/card-preview are next touched.
 - **Upstream PR for the shared half of `ui-fixes`** (field links, search count + tag cards, tags pages, index frame): not opened, waiting on Leon's go. Fold into the sync decision above.
 - PRs #5-#7 merged: add `unlisted_folders: []` and the `structured-data` section to each vault's `_bloob-settings.md` (copy-in text in PRs #6, #7) and the handwritten "All Possible Settings" tables; issue #8: check leons/melt for `visibility: unlisted` pages that were in `graph.json`.
 - AE go-live status: `C:/ae-dev/docs/next-steps.md` (outside this repo).

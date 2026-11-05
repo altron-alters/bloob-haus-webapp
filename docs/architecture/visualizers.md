@@ -147,7 +147,7 @@ needs a pure renderer.
 
 ### Conformance status
 
-**Conforming** (`parser.js` + `renderer.js`): `card-preview`, `image-grid`, `image-text`,
+**Conforming** (`parser.js` + `renderer.js`): `award-badge` and `carousel` (2026-11-04), `card-preview`, `image-grid`, `image-text`,
 `photo-grid`, `quotes-stack`, `scene-nav`, `services`, `slideshow`, `testimonials`,
 `heading-and-paragraph`, **`collection`** (2026-07-27). `foldable` (2026-10-26) produces all
 of its markup at build time from pure functions too (`fold-headings.js`, `peek.js`); its
@@ -305,6 +305,11 @@ interactive experience
 **When to use:** When you need client-side interactivity, state persistence, or dynamic behavior. Standard markdown syntax (like `- [ ]` for checkboxes) is handled by markdown-it plugins, not by visualizers.
 
 ### Container (`:::`) Visualizers
+
+> **Two images notes (2026-11-04).** `optimizeImages` runs *before* the visualizer transforms, so an
+> `<img>` a renderer emits is never resized. A shape that shows vault photos should lift the
+> optimizer's markup out of the rendered section instead (`carousel/index.js`, `image-text`).
+> Frontmatter-driven shapes use a **layout slot** instead of `:::` (`award-badge`, see DECISIONS 2026-11-04).
 
 **Status: Implemented — `image-grid` and `testimonials` are live. `card-preview`, `musings`, `slideshow` are next.**
 

@@ -6,6 +6,15 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 74 — November 4, 2026 (from the AE fork)
+**Worked on:** Regency Ballroom page, two new shared visualizers, AE meeting follow-ups. Suite 1237 → **1275 tests**.
+
+- **`carousel`** (`::: carousel`): captioned photo sets (image line + optional caption lines). No-JS scroll-snap row; `browser.js` adds the centred-large / neighbours-small look, arrows, keys. Reuses the optimizer's `<picture>` markup from the rendered section (optimizeImages runs before visualizer transforms), so photos ship resized with transparency kept.
+- **`award-badge`**: `awards:` / `certifications:` frontmatter lists, one positional line each (NAME, LEVEL, YEAR, PLACE, LINK). Awards draw as a ribbon rosette ("ASHRAE", "1st"), certifications as a level-coloured plaque ("LEED", "GOLD"). A layout drops a slot carrying the frontmatter; cards from `collection`/`card-preview` get icon seals via graph.json (opt-in through `graph.extra_fields`).
+- **AE:** badge tab on the project hero, icons in each card's bottom-right corner (index, homepage, More Projects), plaque metal tokens.
+- **Upstream:** PR #11 (carousel + award-badge) open on LSanten/bloob-haus-webapp; the AE account can't push there directly.
+- Not in this repo: Regency rewrite + carousels, architect logos re-cut from the partner-strip SVGs (they were 156×55 frames with a small raster inside), meeting decisions applied in the AE vault; sign-off artifact trimmed to open items.
+
 ### Session 73 — November 2-3, 2026 (from the AE fork)
 **Worked on:** go-live content review for alterengineers.com, plus merging a parallel UI session. Suite 1112 → **1237 tests**.
 

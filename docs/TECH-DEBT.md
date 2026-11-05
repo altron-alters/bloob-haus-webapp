@@ -17,7 +17,7 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 
 **IDs are stable and never reused** — code comments and other docs reference them by number
 (`#4`, `#40`, `#41` appear in `lib/visualizers/**` and `docs/architecture/visualizers.md`).
-**Next free ID: 51.**
+**Next free ID: 52.**
 
 ---
 
@@ -25,6 +25,7 @@ There is no Status column on purpose. If it's here, it's a candidate. If it's fi
 
 | # | Item | Impact | How to check it's still real | Fix direction |
 |---|------|--------|------------------------------|---------------|
+| 51 | `award-badge` decorates other shapes' cards by matching their markup | `decorateCards` regex-matches `<a class="fp-card…" href>` (collection) and `<a class="projects__container…" href>` (card-preview). If either shape renames those classes or reorders attributes, card icons silently disappear (no error) | `npx vitest run lib/visualizers/award-badge` passes against fixture markup only; on a real build: `curl -s localhost:8080/projects/ \| grep -c award-badges--card` (AE: ≥1 while Regency is public) | Give card-rendering shapes a shared, documented hook (e.g. a `data-page-id` on every card) and match that instead of class names |
 | 49 | A content repo cloned on Windows with `core.autocrlf=true` has CRLF files, and subtitle extraction (`stripLeadingTitleHeading`) then finds no subtitle | Local Windows builds silently lose every subtitle the Linux CI build keeps (seen on AE, 2026-10-28) | On Windows: clone a vault with autocrlf on, build, and grep `_site` for `projects-single__subtitle` (or the theme's subtitle class); none = still real | Normalise `\r\n` → `\n` once when reading content in the preprocessor |
 | 50 | `buildSeoDescription` edge cases: truncating space-less text can split an emoji/surrogate pair; `&amp;` already in prose is escaped twice; `$$ … $$` / `$x$` math passes through raw | Odd text in Google snippets and link previews on those pages | `node -e` with `buildSeoDescription({ body: '😀'.repeat(200) })`, `{ body: 'Tom &amp; Jerry' }`, `{ body: '$x^2$ text' }` from `scripts/utils/seo-description.js` | `Array.from` for slicing; decode basic entities and drop math in `cleanInline` (page-excerpt.js) |
 | 7 | No error tracking (Sentry) | Blind to prod issues | Always true — nothing is wired | Add when there are users who'd report breakage |

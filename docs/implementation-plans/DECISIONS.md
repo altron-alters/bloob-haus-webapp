@@ -156,6 +156,18 @@ Track major architectural and technical decisions with their rationale.
 
 ---
 
+### Frontmatter-driven badges: a layout slot, plus graph-driven card decoration (2026-11-04)
+
+**Context:** Awards and certifications are facts about a whole page, so they live in frontmatter, but build-time visualizer transforms only see rendered HTML.
+
+**Decision:** The `award-badge` shape has two entry points. (1) A layout writes `<div class="award-badge-slot" data-awards="{{ awards | dump | escape }}">`; the transform replaces it. (2) For cards drawn by other shapes, the transform reads `graph.json` (fields exposed via `graph.extra_fields`) and inserts icons after each matching card's opening `<a>` (`transformOrder: 50`, after collection/card-preview).
+
+**Why:** no Eleventy-config change and no shape-to-shape imports; opt-in by config, so other sites are untouched. The cost is markup coupling to `.fp-card` / `.projects__container` (TECH-DEBT #51).
+
+**Same family:** `carousel` reuses the image optimizer's output by lifting it from the rendered section, like `image-text`, because `optimizeImages` runs before visualizer transforms.
+
+---
+
 ## How to Add Decisions
 
 When making a significant technical or architectural decision:
