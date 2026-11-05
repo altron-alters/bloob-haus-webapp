@@ -13,6 +13,7 @@ Development session history and completed work.
 - **`award-badge`**: `awards:` / `certifications:` frontmatter lists, one positional line each (NAME, LEVEL, YEAR, PLACE, LINK). Awards draw as a ribbon rosette ("ASHRAE", "1st"), certifications as a level-coloured plaque ("LEED", "GOLD"). A layout drops a slot carrying the frontmatter; cards from `collection`/`card-preview` get icon seals via graph.json (opt-in through `graph.extra_fields`).
 - **AE:** badge tab on the project hero, icons in each card's bottom-right corner (index, homepage, More Projects), plaque metal tokens.
 - **Upstream:** PR #11 (carousel + award-badge) open on LSanten/bloob-haus-webapp; the AE account can't push there directly.
+- **Nov 5 follow-ups:** `collection` `source: links-here` counts body links (backlinks as cards; AE architect notes now carry the block visibly). Carousel: natural layout (one height, own shapes) by default, Obsidian `|611` sizing, `loop=true`, smooth centring, zoom hint. Fixes: theme visualizer overrides no longer clobber shared CSS (dev watcher), srcset URLs with spaces encoded (images fell back to big PNGs), AE lightbox on white. Badges left-aligned.
 - Not in this repo: Regency rewrite + carousels, architect logos re-cut from the partner-strip SVGs (they were 156×55 frames with a small raster inside), meeting decisions applied in the AE vault; sign-off artifact trimmed to open items.
 
 ### Session 73 — November 2-3, 2026 (from the AE fork)
