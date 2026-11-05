@@ -1022,3 +1022,12 @@ html { margin-top: 0 !important; }
 .musings #mycursor::after {
   content: none;
 }
+
+/* ============================================================
+   LIGHTBOX (PhotoSwipe) — zoomed images sit on white, so mostly
+   transparent PNGs (posters, diagrams, logos) stay readable on the
+   dark lightbox backdrop. Opaque photos cover it completely.
+   ============================================================ */
+.pswp__img {
+  background-color: var(--bg-color);
+}
