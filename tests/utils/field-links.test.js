@@ -176,6 +176,12 @@ describe("listFence", () => {
     expect(hasListFence("text\n\n```collection\nsource: links-here=architect\n```\n", "architect")).toBe(true);
     expect(hasListFence("```collection\nsource: folder=projects\n```", "architect")).toBe(false);
   });
+
+  it("a plain `links-here` list (any link) also counts, so no duplicate list is appended", () => {
+    expect(hasListFence("```collection\nsource: links-here\ndisplay: cards\n```", "architect")).toBe(true);
+    expect(hasListFence("```collection\nsource: links-here\n```", "architect")).toBe(true);
+    expect(hasListFence("```collection\nsource: links-here=owner\n```", "architect")).toBe(false);
+  });
 });
 
 // ── a target note with a list is an index page ───────────────────────────────

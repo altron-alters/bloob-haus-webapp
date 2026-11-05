@@ -164,7 +164,8 @@ export function asIndexPage(shapeSettings) {
 /** Has the author already placed a links-here list for this field? Then don't add one. */
 export function hasListFence(body, field) {
   const esc = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp("```collection[\\s\\S]*?links-here\\s*=\\s*" + esc + "\\b[\\s\\S]*?```").test(
+  // `links-here=<field>`, or a plain `links-here` (any link, which includes this field)
+  return new RegExp("```collection[^`]*?links-here(?:\\s*=\\s*" + esc + "\\b|[ \\t]*(?:\\r?\\n|$))[\\s\\S]*?```").test(
     String(body || ""),
   );
 }
