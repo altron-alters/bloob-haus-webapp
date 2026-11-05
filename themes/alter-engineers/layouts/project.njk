@@ -182,6 +182,9 @@ body_class: "single single-projects"
             {% for project in collections.projects %}
             {% if project.url !== page.url %}
             <a href="{{ project.url }}" class="swiper-slide articles__content">
+              {% if project.data.awards or project.data.certifications %}
+              <div class="award-badge-slot" data-style="icon" data-placement="card" data-awards="{{ project.data.awards | dump | escape }}" data-certifications="{{ project.data.certifications | dump | escape }}"></div>
+              {% endif %}
               {% if project.data.image %}
               <img class="articles__image no-zoom" src="{{ project.data.image }}" alt="{{ project.data.title }}">
               {% else %}

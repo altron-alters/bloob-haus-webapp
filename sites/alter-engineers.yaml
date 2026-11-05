@@ -33,3 +33,5 @@ graph:
       - services
       - target
       - tags
+      - awards
+      - certifications

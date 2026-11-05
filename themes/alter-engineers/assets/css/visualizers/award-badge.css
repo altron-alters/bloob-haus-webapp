@@ -26,3 +26,10 @@
 @media (max-width: 768px) {
   .award-badges--hero { right: 1rem; max-width: calc(100% - 2rem); }
 }
+
+/* Certification plaques take the colour of their level, like the real wall plaques.
+   White lettering; the purple brand seal stays for "Certified" and anything unknown. */
+.award-badges .award-seal--level-platinum { --award-seal-fill: var(--color-plaque-platinum); --award-seal-ink: var(--bg-color); }
+.award-badges .award-seal--level-gold     { --award-seal-fill: var(--color-plaque-gold);     --award-seal-ink: var(--bg-color); }
+.award-badges .award-seal--level-silver   { --award-seal-fill: var(--color-plaque-silver);   --award-seal-ink: var(--bg-color); }
+.award-badges .award-seal--level-bronze   { --award-seal-fill: var(--color-plaque-bronze);   --award-seal-ink: var(--bg-color); }

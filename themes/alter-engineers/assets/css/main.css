@@ -12,6 +12,11 @@
   --card-bg:      #ffffff;
   --color-mint:   #b6fad1;
   --color-orange: #e0643d;
+  /* Certification plaque metals (award-badge visualizer: LEED and similar plaques) */
+  --color-plaque-platinum: #7d8794;
+  --color-plaque-gold:     #b8913a;
+  --color-plaque-silver:   #9aa1a9;
+  --color-plaque-bronze:   #9a6b3f;
 
   /* Shape */
   --border-radius:    0px;
