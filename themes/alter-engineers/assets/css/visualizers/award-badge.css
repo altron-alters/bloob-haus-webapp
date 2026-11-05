@@ -1,12 +1,13 @@
 /* Alter Engineers — award-badge overrides: light-green seal on the purple tab,
-   the tab hangs off the bottom-right edge of the project hero photo. */
+   the tab hangs off the bottom-left edge of the project hero photo (left-aligned with
+   the title below it); the photo's prev/next buttons move to the right to make room. */
 .award-badges {
   --award-tab-seal: var(--color-mint);
 }
 
 .award-badges--hero {
   position: absolute;
-  right: 1.25rem;
+  left: 0;
   bottom: 0;
   transform: translateY(50%);
   z-index: 11;
@@ -23,8 +24,19 @@
 }
 .award-badges--top .award-badge--tab { display: inline-grid; }
 
+/* Line the tab up with the title column below the photo */
+.projects-single__hero .award-badges--hero { left: var(--site-gutter, 1.25rem); }
+.projects-single__hero:has(.award-badges--hero) .projects-single__buttons-container {
+  left: auto;
+  right: 1.25rem;
+}
+
+/* Cards: line the icons up with the card text */
+.fp-card { --award-card-inset: var(--spacing-sm, 1rem); }
+.articles__content { --award-card-inset: 0px; }
+
 @media (max-width: 768px) {
-  .award-badges--hero { right: 1rem; max-width: calc(100% - 2rem); }
+  .award-badges--hero { max-width: calc(100% - 2rem); }
 }
 
 /* Certification plaques take the colour of their level, like the real wall plaques.
