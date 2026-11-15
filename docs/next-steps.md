@@ -9,7 +9,7 @@ Everything else is reference you consult on demand: `docs/CHANGELOG.md` for hist
 `docs/TECH-DEBT.md` when choosing what to work on, `docs/implementation-plans/ROADMAP.md` for the
 long arc.
 
-**Last updated:** 2026-11-04 (S74)
+**Last updated:** 2026-11-15 (S75)
 
 ---
 
@@ -17,11 +17,11 @@ long arc.
 
 **From the AE fork (S72-S73).**
 - **Sync the fork with upstream** (`git merge upstream/main`): 85 commits and 8 conflicts as of 2026-11-04 (CHANGELOG S73). The real decision is search: upstream's redesign has its own tag results, the fork has the UI session's tag cards. Do it with Leon present; check `.github/workflows/deploy-alter-engineers.yml` survives.
-- **Upstream PR #10** (unknown status hidden) and **PR #11** (`carousel` + `award-badge`) open on LSanten/bloob-haus-webapp. The AE GitHub account can't push to upstream directly; shared work goes up as PRs from `altron-alters` branches.
+- **Upstream PR #10** (unknown status hidden), **PR #11** (`carousel` + `award-badge`) and **PR #15** (`favicon.ico`) open on LSanten/bloob-haus-webapp. The AE GitHub account can't push to upstream directly; shared work goes up as PRs from `altron-alters` branches.
 - **`award-badge` card hook** (TECH-DEBT #51): cards are matched by class name; replace with a shared card attribute when collection/card-preview are next touched.
 - **Upstream PR for the shared half of `ui-fixes`** (field links, search count + tag cards, tags pages, index frame): not opened, waiting on Leon's go. Fold into the sync decision above.
 - PRs #5-#7 merged: add `unlisted_folders: []` and the `structured-data` section to each vault's `_bloob-settings.md` (copy-in text in PRs #6, #7) and the handwritten "All Possible Settings" tables; issue #8: check leons/melt for `visibility: unlisted` pages that were in `graph.json`.
-- AE go-live status: `C:/ae-dev/docs/next-steps.md` (outside this repo).
+- AE go-live status: `C:/ae-dev/docs/next-steps.md` (outside this repo). **alterengineers.com is live on this builder since 2026-11-14**; the remaining WordPress exit (domain transfer, cancel plan) is in the AE vault note "How the website works".
 
 **A visualizer inventory table (ontology / shapes).** 25 visualizers exist in `lib/visualizers/` and
 nothing lists them with their *type*. Leon, 2026-09-20: the docs "should probably start to make a
@@ -67,6 +67,8 @@ Two things it left open:
 10. **Cheap high-leverage Phase-2 task, still open:** the canonical `schema.md` template + AI/MCP schema URLs (TECH-DEBT #36).
 
 ## What's Done
+
+- **alterengineers.com live on bloob haus; shared `favicon.ico`** (2026-11-14/15, S75). AE hosting moved to an AE-owned Cloudflare account, DNS moved off WordPress.com with email intact, the website switched to the Pages project. Every theme now also gets a `favicon.ico` (PNG-in-ICO, no new dependency). Suite 1275 → **1292**. See CHANGELOG S75.
 
 - **Percent-encoding fixed end to end: transclusions, the scene-nav builder round-trip, and a build-killing crash** (2026-08-15, S71). Markdown-style embeds with a space in the filename (`![x](A%20B.md)`) silently produced a "Could not embed" placeholder — the target was never decoded before the file-index lookup — while the wiki form worked; fixing it *inside* the transclusion handler also made **nested** markdown-style embeds work for the first time and taught it `#heading` specifiers. The scene-nav builder's "Copy ::: block" emitted literal spaces, so a pasted block showed broken links in Obsidian; refs are now emitted percent-encoded, and `goto:` keeps its verbatim guarantee **except** for spaces in a markdown-link target — **wiki-links are never re-encoded**, since spaces are legal in Obsidian's own syntax. That contradicted `shapes.md` convention #4, which conflated a decoded *model* (correct) with literal-space *emission* (never argued for); amended, with the requirement baked into the canonical `schema.md` Builder template. Separately, a literal `%` in **any** filename (`50% off flyer.png`) threw `URIError` and killed the whole build from 13 unguarded `decodeURIComponent` sites across 10 files — all now route through `scripts/utils/safe-decode.js`. Suite 851 → **909**; melt's rendered output byte-identical throughout. Garden's attribute tokenizer gained quote awareness in the same session, which also fixed a **lossy round-trip in garden's own serializer** (`bg:"my backdrop.png"` read back as `"my`); `safeDecode`/`encodeRef` now live in `lib/visualizers/_utils/ref-encoding.js`, shared by scene-nav and garden — and `_utils/` is now a **documented pattern** (`visualizers.md` → "Shared helpers"), with the underscore convention actually enforced by the bundler. New debt #48 (`ken-burns-zoom` has no manifest, so it always loads). See CHANGELOG S71 + DECISIONS 2026-08-15.
 

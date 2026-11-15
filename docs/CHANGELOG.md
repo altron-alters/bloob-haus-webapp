@@ -6,6 +6,15 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 75 — November 12-15, 2026 (from the AE fork)
+**Worked on:** alterengineers.com go-live (DNS + website moved off WordPress.com), plus one shared builder fix. Suite 1275 → **1292 tests**.
+
+- **`favicon.ico` generated for every theme** (`generate-favicons.js`): 32+48 px PNG-in-ICO packed by hand (`buildIco()`, no new dependency), regenerated when missing even with an unchanged source hash, passed through to the site root. Tools that fetch `/favicon.ico` without reading the page got a 404. Upstream **PR #15** (from `altron-alters:favicon-ico`).
+- **AE hosting moved** to a new Cloudflare account owned by ace@alterengineers.com: Pages project `alter-engineers` recreated there (direct upload, same pages.dev address), new account API token + account ID in the fork's GitHub secrets; vault push → rebuild verified end to end.
+- **AE go-live (2026-11-14):** nameservers switched to Cloudflare (all 16 records copied 1:1 and compared before the switch; email tested both ways), then alterengineers.com + www added to the Pages project, `*` wildcard dropped, www→root 301 rule, Always Use HTTPS. Sitemap submitted in Search Console (24 pages).
+- Not in this repo: WordPress short links (`/tool-hub`, `/skill-hub`, …) recreated as unlisted `redirect:` notes in the AE vault; vault note "How the website works" documents the push → GitHub → Cloudflare chain, keys, DNS and the WordPress exit timeline.
+- Noticed, not fixed: upstream `main` has one failing test (`tests/visualizer-editor/render-note.test.js` › "draws a marble note…"), not present on the fork.
+
 ### Session 74 — November 4, 2026 (from the AE fork)
 **Worked on:** Regency Ballroom page, two new shared visualizers, AE meeting follow-ups. Suite 1237 → **1275 tests**.
 
