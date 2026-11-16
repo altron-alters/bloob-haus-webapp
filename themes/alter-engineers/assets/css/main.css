@@ -347,6 +347,11 @@ html { margin-top: 0 !important; }
   object-fit: cover;
 }
 
+/* A little more air above the logo (2026-11-16). The logo box is vertically centred in a
+   fixed-height bar, so top padding nudges the logo down without changing the bar height. */
+.header-navigation-bar__desktop-logo,
+.header-navigation-bar__mobile-logo { padding-top: 6px; }
+
 /* Nav logo sizing — PhotoSwipe wraps the img in <picture><a>, so target by container */
 .header-navigation-bar__desktop-logo img,
 .header-navigation-bar__desktop-logo picture img {
