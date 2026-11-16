@@ -347,6 +347,22 @@ html { margin-top: 0 !important; }
   object-fit: cover;
 }
 
+/* Homepage project cards (card-preview default zig-zag), 2026-11-16: the photo
+   alternates sides, so each card rises into the empty half of the row above it.
+   Only the photo and the title take clicks, so the overlapping link boxes never steal
+   a click meant for the card underneath. Wide screens only (side-by-side layout). */
+@media only screen and (min-width: 1366px) {
+  /* card-preview/browser.js measures each pair and sets margin-top per card. */
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__top-content { gap: 0; }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__container,
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__inner-container { pointer-events: none; }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__image,
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__content { pointer-events: auto; }
+}
+
+/* "ARTICLES" (folder-preview slider-cards) as a real section heading, like "Our Team". */
+.articles__heading { font-family: var(--font-heading); margin: 0; }
+
 /* A little more air above the logo (2026-11-16). The logo box is vertically centred in a
    fixed-height bar, so top padding nudges the logo down without changing the bar height. */
 .header-navigation-bar__desktop-logo,
