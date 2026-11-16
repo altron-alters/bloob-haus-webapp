@@ -219,15 +219,15 @@
 }
 
 /* ── zoom=slowly-in | slowly-out — slow Ken Burns on the image ── */
-/* Runs once over 30s and holds. browser.js adds --zoom-waiting until the section is in
+/* Runs once over 20s (1 → 1.2) and holds. browser.js adds --zoom-waiting until the section is in
    view; without JS it simply starts at page load. */
-@keyframes image-text-zoom-in  { from { transform: scale(1);    } to { transform: scale(1.15); } }
-@keyframes image-text-zoom-out { from { transform: scale(1.15); } to { transform: scale(1);    } }
+@keyframes image-text-zoom-in  { from { transform: scale(1);   } to { transform: scale(1.2); } }
+@keyframes image-text-zoom-out { from { transform: scale(1.2); } to { transform: scale(1);   } }
 
 .image-text--zoom-slowly-in .image-text__image,
 .image-text--zoom-slowly-out .image-text__image {
   transform-origin: 50% 40%;
-  animation: 30s cubic-bezier(0.25, 0.1, 0.35, 1) both;
+  animation: 20s cubic-bezier(0.2, 0.45, 0.4, 1) both;
   will-change: transform;
 }
 .image-text--zoom-slowly-in  .image-text__image { animation-name: image-text-zoom-in; }
