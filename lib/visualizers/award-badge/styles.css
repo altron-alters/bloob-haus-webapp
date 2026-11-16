@@ -73,3 +73,7 @@
 .award-badges--card { position: absolute; bottom: 10px; left: var(--award-card-inset, 14px); z-index: 2; pointer-events: none; }
 .award-badges--card .award-badge__icon { filter: drop-shadow(0 0 1px var(--card-bg, var(--bg-color))) drop-shadow(0 1px 2px color-mix(in srgb, var(--text-color) 25%, transparent)); }
 .award-badges--card .award-badge__icon { pointer-events: auto; }
+
+/* placement=inline: in the flow of a card's text column, under the title (card-preview). */
+.award-badges--inline { margin-top: 0.5rem; pointer-events: none; }
+.award-badges--inline .award-badge__icon { pointer-events: auto; }
