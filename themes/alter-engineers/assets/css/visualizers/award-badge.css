@@ -5,11 +5,13 @@
   --award-tab-seal: var(--color-mint);
 }
 
+/* Hangs a FIXED 2.75rem below the photo (about half of a one-award tab), so the room
+   reserved under the photo is right for any number of awards: extra rows grow upward
+   into the photo instead of down over the title (2026-11-17). */
 .award-badges--hero {
   position: absolute;
   left: 0;
-  bottom: 0;
-  transform: translateY(50%);
+  bottom: -2.75rem;
   z-index: 11;
   max-width: calc(100% - 2.5rem);
 }
