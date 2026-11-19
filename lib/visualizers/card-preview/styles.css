@@ -145,3 +145,69 @@
 .projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__title { color: var(--bg-color); }
 .projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__info { color: var(--color-mint, #b6fad1); }
 .projects--mosaic .projects__top-content > .projects__container:nth-child(n) .award-badges--inline { position: absolute; left: 0.6rem; bottom: calc(100% + 0.5rem); margin: 0; }
+
+/* ── steps: two columns, the right one set lower, so cards descend left/right ──
+   Photo on top, title / subtitle / seals / VIEW PROJECT under it. The offset is a
+   margin pair (down by --steps-offset, and the same amount back at the bottom), so each
+   grid row keeps its own height and a right card simply hangs into the next row beside
+   the next left card. Phones: one column. */
+.projects--steps { --steps-offset: 11rem; }
+.projects--steps .projects__top-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.75rem;
+}
+@media (min-width: 768px) {
+  .projects--steps .projects__top-content {
+    grid-template-columns: 1fr 1fr;
+    column-gap: clamp(2rem, 5vw, 5rem);
+    row-gap: 2.5rem;
+    padding-bottom: var(--steps-offset);
+  }
+  .projects--steps .projects__top-content > .projects__container:nth-child(even) {
+    margin-top: var(--steps-offset);
+    margin-bottom: calc(-1 * var(--steps-offset));
+  }
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n).hidden { display: none; }
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__inner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: auto;
+  gap: 0;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__image {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-mint, #b6fad1) 45%, var(--card-bg));
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n):hover .projects__image img { transform: scale(1.03); }
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__content {
+  width: auto;
+  padding-top: 1.1rem;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__title { padding: 0 0 0.35rem; }
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__subtitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--text-light, var(--text-color));
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__read-more { margin-top: 0.8rem; }
+.projects--steps .projects__more-projects { margin-top: var(--spacing-md, 2rem); }
