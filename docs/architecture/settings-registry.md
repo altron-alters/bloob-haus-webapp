@@ -528,6 +528,15 @@ Award seals on these cards sit under the title (`award-badges--inline`).
 |---------|------|---------|-------------|
 | `zoom` | `slowly-in` / `slowly-out` | none | Slow Ken Burns zoom on the image (30s, 1 → 1.15 scale, holds at the end). Starts when the section scrolls into view; off for reduced-motion users |
 
+### `::: testimonials` container: `title` (added 2026-11-19)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `title` | string | `Testimonials` | Section heading, rendered as `h1.section-title` (sized by a theme's `--section-title-size` token; AE defines it) |
+
+`::: carousel` (2026-11-19): on phones every photo is one height (55% of the width) and at
+most 74% wide, so the neighbours peek in; neighbours shrink toward the top edge, so tops line up.
+
 ### `::: image-grid` container (added 2026-11-16)
 
 Name and title cells accept `**bold**` and `*italic*`. Photos fade in and grow slightly once

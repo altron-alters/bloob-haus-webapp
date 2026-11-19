@@ -43,7 +43,7 @@
    measures the slide's transformed box, so a slide that animates its own transform makes
    the snap point move mid-scroll and the photo twitches into place. */
 .carousel .carousel__slide > * {
-  transform-origin: 50% 50%;
+  transform-origin: 50% 0;   /* neighbours shrink toward the top edge: tops line up */
   transition: transform 0.4s ease, opacity 0.4s ease;
 }
 .carousel.is-ready .carousel__slide { cursor: pointer; }
@@ -156,7 +156,7 @@
 }
 .carousel.carousel--natural .carousel__slide {
   flex: 0 0 auto;
-  width: min(calc(var(--carousel-height) * var(--slide-aspect)), 90cqi);
+  width: min(calc(var(--carousel-h, var(--carousel-height)) * var(--slide-aspect)), var(--carousel-max, 90cqi));
 }
 .carousel.carousel--natural .carousel__media {
   width: 100%;
@@ -166,7 +166,7 @@
 .carousel.carousel--natural .carousel__slide:not([style*="--slide-aspect"]) { width: auto; }
 .carousel.carousel--natural .carousel__slide:not([style*="--slide-aspect"]) .carousel__media {
   width: auto;
-  height: var(--carousel-height);
+  height: var(--carousel-h, var(--carousel-height));
   aspect-ratio: auto;
 }
 .carousel.carousel--natural .carousel__slide:not([style*="--slide-aspect"]) .carousel__media img { width: auto; }
@@ -210,3 +210,17 @@
 .carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item:hover::after,
 .carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item:focus-visible::before,
 .carousel.is-ready .carousel__slide.is-active .carousel__media > a.pswp-gallery__item:focus-visible::after { opacity: 1; }
+
+/* ---------- phones: one height for every photo, wider teasers ----------
+   The natural layout sizes photos from --carousel-height (the source photo's pixels), so on
+   a phone a landscape photo hits the width cap and a portrait one towers over it, leaving
+   thin slits at the sides. Here every photo is the same height (a share of the width) and
+   no photo is wider than --carousel-max, so the neighbours peek in clearly. */
+@media (max-width: 600px) {
+  .carousel.carousel--natural {
+    --carousel-h: min(var(--carousel-height), 55cqi);
+    --carousel-max: 74cqi;
+    --carousel-side-shift: 0%;
+    --carousel-side-scale: 0.88;
+  }
+}

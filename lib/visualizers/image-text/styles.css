@@ -204,7 +204,9 @@
   .image-text__wrapper {
     flex-direction: column;
     direction: ltr;
-    top: 0 !important;
+    /* The photo rises into the section above, like the project photos do (2026-11-19).
+       Was top: 0 !important, which flattened it on phones. */
+    top: -2.5rem !important;
   }
 
   .image-text__image {
