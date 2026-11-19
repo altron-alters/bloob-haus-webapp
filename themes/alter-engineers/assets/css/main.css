@@ -364,24 +364,48 @@ html { margin-top: 0 !important; }
    a click meant for the card underneath. Wide screens only (side-by-side layout). */
 @media only screen and (min-width: 1366px) {
   /* card-preview/browser.js measures each pair and sets margin-top per card. */
-  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__top-content { gap: 0; }
-  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__container,
-  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__inner-container { pointer-events: none; }
-  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__image,
-  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__content { pointer-events: auto; }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__top-content { gap: 0; }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__container,
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__inner-container { pointer-events: none; }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__image,
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__content { pointer-events: auto; }
+
+  /* Much closer cards (2026-11-19): how far a card can rise is set by photo and title
+     heights, so make both smaller. Photos crop to at most 19rem tall; VIEW PROJECT (hidden
+     until hover) no longer takes space and appears just under the text on hover. */
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__image {
+    height: auto;
+    max-height: 19rem;
+    overflow: hidden;
+  }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__image img {
+    display: block;
+    height: auto;
+    max-height: 19rem;
+    object-fit: cover;
+  }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__content { position: relative; }
+  .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__read-more {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 0.6rem;
+    z-index: 3;
+    white-space: nowrap;
+  }
 }
 
 /* Zig-zag cards, 2026-11-19: subtitle under the title, VIEW PROJECT close under it
    (theme.min.css: 1.125–2rem under the title, then 1.875rem above the button). */
-.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__title { padding-bottom: 0.4rem; }
-.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__subtitle {
+.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__title { padding-bottom: 0.4rem; }
+.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__subtitle {
   margin: 0;
   font-family: var(--font-body);
   font-size: 1.05rem;
   line-height: 1.4;
   color: var(--text-light);
 }
-.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__read-more { margin-top: 0.9rem; }
+.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic):not(.projects--steps) .projects__read-more { margin-top: 0.9rem; }
 
 /* The first card's photo rises into the purple hero: a white frame around it keeps it
    from melting into the purple (the frame is invisible on the white below). */
