@@ -75,7 +75,18 @@
   --article-h1-size:          1.5rem;                     /* 24px */
   --article-h2-size:          1.25rem;                    /* 20px */
   --article-h3-size:          1.0625rem;                  /* 17px */
+
+  /* Section titles ("Our Team", "Our Services", "Testimonials", "Articles"...): the same
+     ladder theme.min.css gives h1, as a token so any section title can use it.
+     Breakpoints below (2026-11-19). */
+  --section-title-size: 4rem;
+  --section-title-line: 5rem;
 }
+@media only screen and (min-width: 768px)  { :root { --section-title-size: 3.75rem; --section-title-line: 4.125rem; } }
+@media only screen and (min-width: 1366px) { :root { --section-title-size: 5rem;    --section-title-line: 5.5625rem; } }
+@media only screen and (max-width: 768px)  { :root { --section-title-size: 2.5rem;  --section-title-line: 3.25rem; } }
+@media only screen and (max-width: 480px)  { :root { --section-title-size: 1.75rem; --section-title-line: 2.25rem; } }
+h1, .section-title { font-size: var(--section-title-size); line-height: var(--section-title-line); }
 
 /* --site-gutter follows theme.min.css's .maxwidth breakpoints exactly; if one
    changes, change the other. Guarded by tests/alter-engineers-layout.test.js.
@@ -360,6 +371,33 @@ html { margin-top: 0 !important; }
   .projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__content { pointer-events: auto; }
 }
 
+/* Zig-zag cards, 2026-11-19: subtitle under the title, VIEW PROJECT close under it
+   (theme.min.css: 1.125–2rem under the title, then 1.875rem above the button). */
+.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__title { padding-bottom: 0.4rem; }
+.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__subtitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--text-light);
+}
+.projects:not(.projects--grid):not(.projects--list):not(.projects--mosaic) .projects__read-more { margin-top: 0.9rem; }
+
+/* The first card's photo rises into the purple hero: a white frame around it keeps it
+   from melting into the purple (the frame is invisible on the white below). */
+.projects .projects__top-content > .projects__container:first-child .projects__image {
+  box-shadow: 0 0 0 10px var(--bg-color);
+}
+@media (max-width: 767px) {
+  .projects .projects__top-content > .projects__container:first-child .projects__image { box-shadow: 0 0 0 6px var(--bg-color); }
+}
+
+/* Phones: the Our Solutions photo rises 2.5rem into this section (image-text styles), so
+   leave room under MORE PROJECTS for it (theme.min.css had 2.125rem). */
+@media (max-width: 767px) {
+  .projects .projects__wrapper { padding-bottom: 4.25rem; }
+}
+
 /* "ARTICLES" (folder-preview slider-cards) as a real section heading, like "Our Team". */
 .articles__heading { font-family: var(--font-heading); margin: 0; }
 
@@ -478,7 +516,9 @@ html { margin-top: 0 !important; }
 }
 
 /* Headings inside project body text */
-.projects-single__text h2 { font-size: 2rem; font-weight: 800; margin-top: 2rem; margin-bottom: 0.4rem; }
+/* Body section headings: was 2rem/800 everywhere, too loud next to 1.1rem body text,
+   especially on phones (2026-11-19). ~21px on a phone up to ~26px on desktop. */
+.projects-single__text h2 { font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.6rem); line-height: 1.25; font-weight: 700; margin-top: 2rem; margin-bottom: 0.4rem; }
 .projects-single__text h3 { font-size: 1.1rem;  margin-top: 1.5rem; margin-bottom: 0.35rem; }
 .projects-single__text h4 { font-size: 1rem;    margin-top: 1.25rem; margin-bottom: 0.3rem; }
 .projects-single__text h2:first-child,
@@ -600,6 +640,10 @@ html { margin-top: 0 !important; }
   min-height: 0;
   margin-bottom: 0.35rem;
 }
+/* READ MORE sits right under the subtitle (2026-11-19): theme.min.css gives it a
+   1.875rem top margin and lets the text block stretch to the slide's full height. */
+.articles.more-projects .articles__inner-content { flex: 0 0 auto; height: auto !important; }
+.articles.more-projects .articles__read-more { margin-top: 0.75rem; }
 .articles.more-projects .articles__subtitle {
   margin: 0;
   color: #ffffff;
