@@ -1120,3 +1120,21 @@ html { margin-top: 0 !important; }
 .pswp__img {
   background-color: var(--bg-color);
 }
+
+/* card-preview more_link (homepage "SEE ALL PROJECTS →" to /projects/, 2026-11-19): the
+   same purple chip with mint text as the old MORE PROJECTS toggle, swapping on hover. */
+.projects__all-projects a {
+  display: inline-block;
+  padding: 0 0.3125rem;
+  color: var(--color-mint);
+  background: linear-gradient(to right, var(--color-mint) 50%, var(--accent-color) 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+  transition: all 0.3s ease-out;
+  cursor: pointer;
+}
+.projects__all-projects a:hover {
+  background-position: left bottom;
+  color: var(--accent-color);
+}
+.projects--steps .projects__all-projects { margin-top: 0; }
