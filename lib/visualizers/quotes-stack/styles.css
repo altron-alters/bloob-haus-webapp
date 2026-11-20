@@ -1,1 +1,16 @@
-/* Musings Visualizer — no overrides needed; theme.min.css handles all layout. */
+/* Musings / quotes-stack — layout comes from theme.min.css (.musings*). Additions below. */
+
+/* Section heading (YAML `title:`, default "Musings"): white, in flow, like "Our Team". */
+.musings__heading {
+  color: var(--bg-color);
+  font-family: var(--font-heading);
+  padding-bottom: 1.25rem;
+}
+@media only screen and (min-width: 768px)  { .musings__heading { padding-bottom: 2.5rem; } }
+@media only screen and (min-width: 1366px) { .musings { padding-top: 5rem; } .musings__heading { padding-bottom: 3rem; } }
+@media only screen and (min-width: 2560px) { .musings { padding-top: 9.375rem; } .musings__heading { padding-bottom: 5rem; } }
+
+/* Narrower cards: easier line length to read. */
+.musings__container-mobile { max-width: 34rem; margin: 0 auto; }
+@media only screen and (min-width: 1366px) { .musings__container-desktop { max-width: 34rem; } }
+@media only screen and (min-width: 2560px) { .musings__container-desktop { max-width: 46rem; } }

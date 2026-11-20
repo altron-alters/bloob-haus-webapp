@@ -504,12 +504,44 @@ Settings that apply to specific visualizers regardless of theme.
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
+| `title` | string | `Musings` | Section heading above the cards (white, like "Our Team"). Added 2026-11-16 |
 | `limit` | int | `null` (show all) | Max cards visible before "MORE MUSINGS" button |
 | `infinite_scroll` | bool | `true` | When `false`, Swiper stops at the last card instead of looping. Swiper is always rendered; this only controls `loop`. |
 | `quotes[].quote` | string | — | Quote text |
 | `quotes[].name` | string | — | Speaker name |
 | `quotes[].date` | string | — | Display date |
 | `quotes[].color` | string | — | Card color variant (`red`, `white`, `green`) |
+
+### `::: card-preview` container (added 2026-11-16)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `limit` | int | all | Cards visible before "MORE PROJECTS" |
+| `show_more` | bool | `false` | Adds the "MORE PROJECTS" toggle |
+| `style` | `zigzag` / `steps` / `grid` / `list` / `mosaic` | `zigzag` | Layout. `steps` (2026-11-19, AE homepage): two columns of cards (photo on top, title/subtitle/seals under), the right column set `--steps-offset` (14rem) lower, roomy gaps so cards descend left/right; one column on phones. `grid`: 2-up cards, photo on top. `list`: ruled rows, thumbnail left, with subtitle. `mosaic`: photo tiles with the title on a purple band, first tile full width. The three new styles add a "building type · location" line from graph.json |
+
+Award seals on these cards sit under the title (`award-badges--inline`).
+
+### `::: image-text` container: `zoom` (added 2026-11-16)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `zoom` | `slowly-in` / `slowly-out` | none | Slow Ken Burns zoom on the image (30s, 1 → 1.15 scale, holds at the end). Starts when the section scrolls into view; off for reduced-motion users |
+
+### `::: testimonials` container: `title` (added 2026-11-19)
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `title` | string | `Testimonials` | Section heading, rendered as `h1.section-title` (sized by a theme's `--section-title-size` token; AE defines it) |
+
+`::: carousel` (2026-11-19): on phones every photo is one height (55% of the width) and at
+most 74% wide, so the neighbours peek in; neighbours shrink toward the top edge, so tops line up.
+
+### `::: image-grid` container (added 2026-11-16)
+
+Name and title cells accept `**bold**` and `*italic*`. Photos fade in and grow slightly once
+in view and loaded. Shape-rendered photos (image-grid, image-text) use a resized 1200w WebP
+(`lib/visualizers/_utils/optimized-src.js`), created on first build if missing.
 
 ### `collection` code fence and `:::collection` block
 

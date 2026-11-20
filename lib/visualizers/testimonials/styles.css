@@ -178,3 +178,9 @@
 @media only screen and (min-width: 2560px) {
   .testimonials__name { margin-top: 3.75rem; }
 }
+
+/* 2026-11-19: title is a real section heading (h1.section-title, sized by the theme token
+   --section-title-size); source line white on its orange chip (two classes so it beats
+   the bg-pair heading colour). */
+.testimonials .testimonials__title { font-family: var(--font-heading); font-weight: 500; margin: 0; padding: 0; color: var(--pair-title, var(--accent-color)); }
+.testimonials .testimonials__name { color: var(--bg-color); }

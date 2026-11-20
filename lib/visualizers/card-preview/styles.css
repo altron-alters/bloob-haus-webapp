@@ -1,0 +1,213 @@
+/*
+ * card-preview — alternative layouts (style=grid | list | mosaic).
+ * The default (zigzag) layout is still owned by the theme (theme.min.css .projects rules);
+ * nothing here applies unless a .projects--<style> class is present.
+ * Tokens only. The wrapper keeps the theme's .projects__wrapper side padding.
+ */
+
+/* ── shared for all three ─────────────────────────────────────── */
+.projects--grid .projects__top-content,
+.projects--list .projects__top-content,
+.projects--mosaic .projects__top-content {
+  top: 0;
+  padding-top: var(--spacing-lg, 4rem);
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n),
+.projects--list .projects__top-content > .projects__container:nth-child(n),
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n).hidden,
+.projects--list .projects__top-content > .projects__container:nth-child(n).hidden,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n).hidden { display: none; }
+
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__inner-container,
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__inner-container,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__inner-container {
+  width: auto;
+  gap: 0;
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__image,
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__image,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__image {
+  width: 100%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-mint, #b6fad1) 45%, var(--card-bg));
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__image img,
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__image img,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n):hover .projects__image img,
+.projects--list .projects__top-content > .projects__container:nth-child(n):hover .projects__image img,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n):hover .projects__image img { transform: scale(1.04); }
+
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__content,
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__content,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__content { width: auto; }
+
+.projects__info {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-light);
+  margin: 0 0 0.35rem;
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__title,
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__title,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__title {
+  padding: 0;
+  font-size: clamp(1.25rem, 1.6vw, 1.6rem);
+  line-height: 1.2;
+  color: var(--accent-color);
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__read-more,
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__read-more,
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__read-more { display: none; }
+.projects--grid .projects__more-projects,
+.projects--list .projects__more-projects,
+.projects--mosaic .projects__more-projects { margin-top: var(--spacing-lg, 4rem); }
+
+/* ── grid: 2-up cards, image on top ───────────────────────────── */
+.projects--grid .projects__top-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+}
+@media (min-width: 768px) {
+  .projects--grid .projects__top-content { grid-template-columns: 1fr 1fr; gap: 3.5rem 2.5rem; }
+}
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__inner-container { display: flex; flex-direction: column; align-items: stretch; }
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__image { aspect-ratio: 3 / 2; height: auto; }
+.projects--grid .projects__top-content > .projects__container:nth-child(n) .projects__content { padding-top: 1.1rem; border-top: 3px solid var(--color-mint, #b6fad1); margin-top: 0; }
+.projects--grid .projects__top-content > .projects__container:nth-child(n):hover .projects__title { text-decoration: underline; text-underline-offset: 4px; }
+
+/* ── list: compact ruled rows, thumbnail left ─────────────────── */
+.projects--list .projects__top-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--accent-color);
+}
+.projects--list .projects__top-content > .projects__container:nth-child(n) { border-bottom: 1px solid var(--accent-color); }
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__inner-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .projects--list .projects__top-content > .projects__container:nth-child(n) .projects__inner-container { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 2.5rem; padding: 1.75rem 0; }
+}
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__image { aspect-ratio: 16 / 9; height: auto; }
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__content { display: flex; flex-direction: column; align-items: flex-start; }
+.projects--list .projects__top-content > .projects__container:nth-child(n) .award-badges--inline { order: 5; }
+.projects--list .projects__top-content > .projects__container:nth-child(n) .projects__subtitle {
+  margin: 0.5rem 0 0;
+  color: var(--text-light);
+  font-size: 1rem;
+  line-height: 1.45;
+  max-width: 38rem;
+}
+.projects--list .projects__top-content > .projects__container:nth-child(n):hover { background: color-mix(in srgb, var(--color-mint, #b6fad1) 22%, transparent); }
+
+/* ── mosaic: photo tiles, title on a purple band ──────────────── */
+.projects--mosaic .projects__top-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .projects--mosaic .projects__top-content { grid-template-columns: repeat(6, 1fr); gap: 1.25rem; }
+  .projects--mosaic .projects__top-content > .projects__container:nth-child(n) { grid-column: span 2; }
+  .projects--mosaic .projects__top-content > .projects__container:nth-child(n):first-child { grid-column: 1 / -1; }
+  .projects--mosaic .projects__top-content > .projects__container:nth-child(n):first-child .projects__image { aspect-ratio: 21 / 9; }
+}
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__inner-container { position: relative; }
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__image { aspect-ratio: 4 / 3; height: auto; }
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__content {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-width: calc(100% - 2rem);
+  background: var(--accent-color);
+  padding: 0.8rem 1.1rem 0.9rem;
+}
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__title { color: var(--bg-color); }
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .projects__info { color: var(--color-mint, #b6fad1); }
+.projects--mosaic .projects__top-content > .projects__container:nth-child(n) .award-badges--inline { position: absolute; left: 0.6rem; bottom: calc(100% + 0.5rem); margin: 0; }
+
+/* ── steps: two columns, the right one set lower, so cards descend left/right ──
+   Photo on top, title / subtitle / seals / VIEW PROJECT under it. The offset is a
+   margin pair (down by --steps-offset, and the same amount back at the bottom), so each
+   grid row keeps its own height and a right card simply hangs into the next row beside
+   the next left card. Phones: one column. */
+.projects--steps { --steps-offset: 14rem; }
+.projects--steps .projects__top-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3.5rem;
+}
+@media (min-width: 768px) {
+  .projects--steps .projects__top-content {
+    grid-template-columns: 1fr 1fr;
+    column-gap: clamp(3rem, 8vw, 8.5rem);
+    row-gap: 6rem;
+    padding-bottom: var(--steps-offset);
+  }
+  .projects--steps .projects__top-content > .projects__container:nth-child(even) {
+    margin-top: var(--steps-offset);
+    margin-bottom: calc(-1 * var(--steps-offset));
+  }
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n).hidden { display: none; }
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__inner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: auto;
+  gap: 0;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__image {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-mint, #b6fad1) 45%, var(--card-bg));
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n):hover .projects__image img { transform: scale(1.03); }
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__content {
+  width: auto;
+  padding-top: 1.1rem;
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__title { padding: 0 0 0.35rem; }
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__subtitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--text-light, var(--text-color));
+}
+.projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__read-more { margin-top: 0.8rem; }
+.projects--steps .projects__more-projects { margin-top: var(--spacing-md, 2rem); }
