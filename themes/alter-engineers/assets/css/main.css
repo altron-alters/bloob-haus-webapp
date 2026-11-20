@@ -1138,3 +1138,8 @@ html { margin-top: 0 !important; }
   color: var(--accent-color);
 }
 .projects--steps .projects__all-projects { margin-top: 0; }
+/* Room under the link before the next section's photo rises into this one. */
+.projects__all-projects { margin-bottom: 4rem; }
+@media (max-width: 767px) {
+  .projects__all-projects { margin-bottom: 2.5rem; }
+}
