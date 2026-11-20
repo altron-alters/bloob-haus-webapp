@@ -211,3 +211,7 @@
 }
 .projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__read-more { margin-top: 0.8rem; }
 .projects--steps .projects__more-projects { margin-top: var(--spacing-md, 2rem); }
+
+/* more_link: a real "see all" link under the cards (any style). */
+.projects__all-projects { text-align: center; margin-top: var(--spacing-md, 2rem); }
+.projects__all-projects a { text-decoration: none; }
