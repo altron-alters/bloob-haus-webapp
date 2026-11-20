@@ -518,7 +518,7 @@ Settings that apply to specific visualizers regardless of theme.
 |---------|------|---------|-------------|
 | `limit` | int | all | Cards visible before "MORE PROJECTS" |
 | `show_more` | bool | `false` | Adds the "MORE PROJECTS" toggle |
-| `style` | `zigzag` / `steps` / `grid` / `list` / `mosaic` | `zigzag` | Layout. `steps` (2026-11-19, AE homepage): two columns of cards (photo on top, title/subtitle/seals under), the right column set `--steps-offset` (11rem) lower so cards descend left/right; one column on phones. `grid`: 2-up cards, photo on top. `list`: ruled rows, thumbnail left, with subtitle. `mosaic`: photo tiles with the title on a purple band, first tile full width. The three new styles add a "building type · location" line from graph.json |
+| `style` | `zigzag` / `steps` / `grid` / `list` / `mosaic` | `zigzag` | Layout. `steps` (2026-11-19, AE homepage): two columns of cards (photo on top, title/subtitle/seals under), the right column set `--steps-offset` (14rem) lower, roomy gaps so cards descend left/right; one column on phones. `grid`: 2-up cards, photo on top. `list`: ruled rows, thumbnail left, with subtitle. `mosaic`: photo tiles with the title on a purple band, first tile full width. The three new styles add a "building type · location" line from graph.json |
 
 Award seals on these cards sit under the title (`award-badges--inline`).
 
