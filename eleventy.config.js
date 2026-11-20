@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "
 import { execSync } from "child_process";
 import sharp from "sharp";
 import { join, relative, basename, extname } from "path";
+import { sweepEmptyFiles } from "./scripts/utils/sweep-empty-files.js";
 import taskLists from "markdown-it-task-lists";
 import markdownItContainer from "markdown-it-container";
 import markdownItAttrs from "markdown-it-attrs";
@@ -507,6 +508,11 @@ export default async function (eleventyConfig) {
   // serving them. On first encounter sharp processes the image; subsequent builds skip sharp
   // entirely (passthrough already copied the cached file to _site/media/optimized/).
   const MEDIA_CACHE_DIR = `${SRC}/media/optimized`;
+  // A build killed mid-write can leave a 0-byte file in the cache, and the cache treats any
+  // existing file as done, so that size of the image stays blank forever (seen 2026-11-19:
+  // a 1620w WebP, picked by high-density screens). Drop empty files so they are regenerated.
+  const emptyRemoved = sweepEmptyFiles(MEDIA_CACHE_DIR);
+  if (emptyRemoved) console.log("[image] Removed " + emptyRemoved + " empty cached image file(s); they will be regenerated.");
 
   if (mediaConfig.optimize !== false)
     eleventyConfig.addTransform("optimizeImages", async function (content) {
