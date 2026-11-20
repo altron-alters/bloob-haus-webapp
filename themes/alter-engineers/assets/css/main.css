@@ -1138,6 +1138,25 @@ html { margin-top: 0 !important; }
   color: var(--accent-color);
 }
 .projects--steps .projects__all-projects { margin-top: 0; }
+/* Steps cards → SEE ALL PROJECTS, tight (2026-11-20). theme.min.css lifts the cards with
+   position:relative + top:-Xrem, which leaves X of empty space under them; give it back
+   with the same negative margin at each of its breakpoints. */
+.projects--steps .projects__top-content { margin-bottom: -1.875rem; }
+@media only screen and (min-width: 768px)  { .projects--steps .projects__top-content { margin-bottom: -6.25rem; } }
+@media only screen and (min-width: 1366px) { .projects--steps .projects__top-content { margin-bottom: -3.3125rem; } }
+@media only screen and (min-width: 2560px) { .projects--steps .projects__top-content { margin-bottom: -6.25rem; } }
+/* Desktop: VIEW PROJECT is invisible until hover (theme.min.css), so it takes no space;
+   on hover it shows over the bottom-left corner of the photo. */
+@media only screen and (min-width: 1024px) {
+  .projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__content { position: relative; }
+  .projects--steps .projects__top-content > .projects__container:nth-child(n) .projects__read-more {
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    margin: 0 0 0.75rem 0.75rem;
+    z-index: 2;
+  }
+}
 /* Room under the link before the next section's photo rises into this one. */
 .projects__all-projects { margin-bottom: 4rem; }
 @media (max-width: 767px) {
