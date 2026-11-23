@@ -162,6 +162,10 @@
     grid-template-columns: 1fr 1fr;
     column-gap: clamp(3rem, 8vw, 8.5rem);
     row-gap: 6rem;
+  }
+  /* Room for the lowered right card only when the LAST visible card is a right one; with an
+     odd number of cards the last is on the left and the room would be an empty gap. */
+  .projects--steps .projects__top-content:has(> .projects__container:nth-child(even):last-child) {
     padding-bottom: var(--steps-offset);
   }
   .projects--steps .projects__top-content > .projects__container:nth-child(even) {

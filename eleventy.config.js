@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync } from "fs";
+import { readdirSync, readFileSync, existsSync, mkdirSync, copyFileSync, statSync } from "fs";
 import { execSync } from "child_process";
 import sharp from "sharp";
 import { join, relative, basename, extname } from "path";
@@ -635,8 +635,11 @@ export default async function (eleventyConfig) {
           });
 
           // Ensure generated files are also in _site/ for the current build.
-          // Always overwrite — passthrough copy can race with sharp and create 0-byte
-          // placeholders in _site/ before the real file is fully written to the cache.
+          // Overwrite when _site's copy is missing or a different size: passthrough copy can
+          // race with sharp and leave a 0-byte placeholder in _site/ before the real file is
+          // fully written to the cache. Skip identical copies: re-copying every cached image
+          // on every build collided with Eleventy's own passthrough copy of the same files
+          // (Windows EBUSY, dev server would not start; 2026-11-23).
           const siteOptDir = join(outputDir, "media/optimized");
           mkdirSync(siteOptDir, { recursive: true });
           for (const images of Object.values(metadata)) {
@@ -646,7 +649,14 @@ export default async function (eleventyConfig) {
               // Use img.outputPath (the actual written file) rather than a reconstructed path.
               // Reconstructed paths can miss on Windows if the cache dir is missing.
               const cachedFile = img.outputPath || join(MEDIA_CACHE_DIR, basename);
-              if (existsSync(cachedFile)) copyFileSync(cachedFile, siteFile);
+              if (!existsSync(cachedFile)) continue;
+              try {
+                if (existsSync(siteFile) && statSync(siteFile).size === statSync(cachedFile).size) continue;
+                copyFileSync(cachedFile, siteFile);
+              } catch (e) {
+                // A busy file means the passthrough copy is writing it right now; that copy wins.
+                if (e.code !== "EBUSY" && e.code !== "EPERM") throw e;
+              }
             }
           }
 
