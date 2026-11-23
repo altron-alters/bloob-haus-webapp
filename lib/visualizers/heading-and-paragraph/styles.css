@@ -75,3 +75,34 @@
 @media only screen and (min-width: 2560px) {
   .heading-and-paragraph__paragraph { font-size: 1.375rem; line-height: 2.125rem; }
 }
+
+/* ── With a callout quote (2026-11-23) ───────────────────────────
+   Left column: heading + quote. Right column: the body, larger so it reads easily. */
+.heading-and-paragraph--with-quote .heading-and-paragraph__paragraph {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.heading-and-paragraph__quote {
+  margin: 0 0 2rem;
+  padding: 0.1rem 0 0.1rem 1.1rem;
+  border-left: 4px solid var(--pair-title, var(--accent-color));
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: clamp(1.3rem, 1rem + 1.2vw, 1.9rem);
+  line-height: 1.3;
+  color: var(--pair-title, var(--accent-color));
+}
+.heading-and-paragraph__quote p { margin: 0; font: inherit; color: inherit; }
+
+@media only screen and (min-width: 1024px) {
+  .heading-and-paragraph--with-quote .heading-and-paragraph__wrapper { align-items: flex-start; gap: 4rem; }
+  .heading-and-paragraph__lead { width: 50%; }
+  .heading-and-paragraph__quote { margin: 0.5rem 0 0; max-width: 34rem; }
+  .heading-and-paragraph--with-quote .heading-and-paragraph__paragraph { width: 42%; padding-top: 0.6rem; }
+}
+@media only screen and (min-width: 1366px) {
+  .heading-and-paragraph--with-quote .heading-and-paragraph__paragraph { font-size: 1.25rem; line-height: 1.6; }
+}
+@media only screen and (min-width: 2560px) {
+  .heading-and-paragraph--with-quote .heading-and-paragraph__paragraph { font-size: 1.5rem; line-height: 1.6; }
+}

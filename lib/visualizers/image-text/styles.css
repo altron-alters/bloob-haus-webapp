@@ -11,6 +11,10 @@
 
 .image-text {
   color: #fff;
+  /* Contain the last child's bottom margin: without this the CONTACT US paragraph's 8px
+     margin escaped the section and the page background showed as a thin band under it
+     (seen on phones and tablets, 2026-11-23). */
+  display: flow-root;
 }
 
 @media only screen and (min-width: 768px) {
