@@ -1138,11 +1138,14 @@ html { margin-top: 0 !important; }
   color: var(--accent-color);
 }
 .projects--steps .projects__all-projects { margin-top: 0; }
+@media only screen and (min-width: 1024px) { .projects--steps .projects__all-projects { margin-top: 2.5rem; } }
 /* Steps cards → SEE ALL PROJECTS, tight (2026-11-20). theme.min.css lifts the cards with
    position:relative + top:-Xrem, which leaves X of empty space under them; give it back
    with the same negative margin at each of its breakpoints. */
-.projects--steps .projects__top-content { margin-bottom: -1.875rem; }
-@media only screen and (min-width: 768px)  { .projects--steps .projects__top-content { margin-bottom: -6.25rem; } }
+/* Phones and tablets (<1024px): no negative margin: VIEW PROJECT shows in flow there, and the link would sit on
+   top of it (2026-11-23). The space the lift leaves is the gap we want. */
+.projects--steps .projects__top-content { margin-bottom: 0; }
+@media only screen and (min-width: 1024px) { .projects--steps .projects__top-content { margin-bottom: -6.25rem; } }
 @media only screen and (min-width: 1366px) { .projects--steps .projects__top-content { margin-bottom: -3.3125rem; } }
 @media only screen and (min-width: 2560px) { .projects--steps .projects__top-content { margin-bottom: -6.25rem; } }
 /* Desktop: VIEW PROJECT is invisible until hover (theme.min.css), so it takes no space;
@@ -1160,5 +1163,7 @@ html { margin-top: 0 !important; }
 /* Room under the link before the next section's photo rises into this one. */
 .projects__all-projects { margin-bottom: 4rem; }
 @media (max-width: 767px) {
-  .projects__all-projects { margin-bottom: 2.5rem; }
+  /* Phones: left-aligned like the other buttons on the page (2026-11-23). */
+  /* Two classes: the shared card-preview stylesheet (text-align: center) loads after this one. */
+  .projects .projects__all-projects { margin-bottom: 2.5rem; text-align: left; }
 }
