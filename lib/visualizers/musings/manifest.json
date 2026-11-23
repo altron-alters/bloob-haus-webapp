@@ -1,0 +1,12 @@
+{
+  "name": "musings",
+  "type": "hybrid",
+  "activation": "container",
+  "trigger": "musings",
+  "description": "Transforms a ::: musings container (category lines + \"quote\" - Name - Date list items) into a voices wall: filterable quote mosaic on desktop, swipeable deck on phones, optional show-more and an opt-in Technical musings fold.",
+  "detect": {
+    "selectors": [
+      ".musings-wall"
+    ]
+  }
+}

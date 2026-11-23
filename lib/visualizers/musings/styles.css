@@ -1,0 +1,196 @@
+/* musings — voices wall. Token-based: works in any theme that declares the token contract.
+   Card tones read shape tokens (--musings-tone-<name>-bg / -fg) that this file never sets, so a
+   theme maps its palette with a plain rule in main.css (this file loads after main.css; setting
+   the tokens here would beat the theme). Fallbacks derive from the token contract. */
+
+.musings-wall {
+  background: var(--pair-bg, var(--musings-bg, transparent));
+  color: var(--pair-text, var(--text-color, #1a1a1a));
+  font-family: var(--font-body, system-ui, sans-serif);
+  padding-top: var(--musings-padding-top, var(--spacing-lg, 4rem));
+  padding-bottom: var(--musings-padding-bottom, var(--spacing-lg, 4rem));
+}
+
+.musings-wall__inner {
+  max-width: var(--max-width, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--site-gutter, 1.25rem);
+  padding-right: var(--site-gutter, 1.25rem);
+}
+
+.musings-wall__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 32px;
+  margin-bottom: 28px;
+}
+
+.musings-wall__title {
+  margin: 0;
+  font-family: var(--font-heading, inherit);
+  color: var(--pair-title, var(--accent-color, #5b5dd3));
+  text-wrap: balance;
+}
+
+.musings-wall__intro {
+  margin: 8px 0 0;
+  max-width: 52ch;
+  flex-basis: 100%;
+  order: 1;
+}
+
+.musings-wall__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.musings-wall__filters[hidden] { display: none; }
+
+.musings-wall__filter,
+.musings-wall__more,
+.musings-wall__deck-btn {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  min-height: 44px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border: 2px solid var(--accent-color, #5b5dd3);
+  border-radius: var(--border-radius-sm, 0);
+  background: transparent;
+  color: var(--accent-color, #5b5dd3);
+  cursor: pointer;
+}
+.musings-wall__filter[aria-pressed="true"],
+.musings-wall__more,
+.musings-wall__deck-btn:hover {
+  background: var(--accent-color, #5b5dd3);
+  color: #ffffff;
+}
+.musings-wall__filter:focus-visible,
+.musings-wall__more:focus-visible,
+.musings-wall__deck-btn:focus-visible,
+.musings-wall__technical-toggle:focus-visible {
+  outline: 3px solid var(--musings-focus, var(--text-color, #1a1a1a));
+  outline-offset: 2px;
+}
+
+.musings-wall__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--musings-col-min, 260px)), 1fr));
+  grid-auto-flow: dense;
+  gap: var(--musings-gap, 16px);
+}
+
+.musings-wall__card {
+  margin: 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 200px;
+  border-radius: var(--border-radius, 0);
+}
+.musings-wall__card[hidden] { display: none; }
+.musings-wall__card--wide { grid-column: span 2; }
+
+.musings-wall__card--accent { background: var(--musings-tone-accent-bg, var(--accent-color, #5b5dd3)); color: var(--musings-tone-accent-fg, #ffffff); }
+.musings-wall__card--mint   { background: var(--musings-tone-mint-bg, color-mix(in srgb, var(--accent-color, #5b5dd3) 16%, var(--card-bg, #ffffff))); color: var(--musings-tone-mint-fg, var(--text-color, #1a1a1a)); }
+.musings-wall__card--paper  { background: var(--musings-tone-paper-bg, var(--card-bg, #ffffff)); color: var(--musings-tone-paper-fg, var(--text-color, #1a1a1a)); border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12)); }
+.musings-wall__card--warm   { background: var(--musings-tone-warm-bg, color-mix(in srgb, var(--accent-color, #5b5dd3) 34%, var(--card-bg, #ffffff))); color: var(--musings-tone-warm-fg, var(--text-color, #1a1a1a)); }
+.musings-wall__card--ink    { background: var(--musings-tone-ink-bg, var(--text-color, #1a1a1a)); color: var(--musings-tone-ink-fg, var(--bg-color, #ffffff)); }
+
+.musings-wall__quote { margin: 0; padding: 0; border: 0; }
+.musings-wall__quote p {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.38;
+  font-weight: 500;
+}
+.musings-wall__card--wide .musings-wall__quote p { font-size: 1.4rem; line-height: 1.3; }
+
+.musings-wall__caption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+.musings-wall__name { font-weight: 700; }
+.musings-wall__tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  padding: 2px 8px;
+}
+
+.musings-wall__deck-nav { display: none; }
+
+.musings-wall__more {
+  display: block;
+  margin-top: 24px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.musings-wall__more[hidden] { display: none; }
+
+.musings-wall__technical {
+  margin-top: 40px;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+  padding-top: 20px;
+}
+.musings-wall__technical-toggle {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--pair-title, var(--accent-color, #5b5dd3));
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.musings-wall__technical-count { font-weight: 400; opacity: 0.8; }
+.musings-wall__grid--technical { margin-top: 16px; }
+
+/* Phones: the wall becomes a swipeable deck (CSS only; browser.js adds the buttons). */
+@media (max-width: 640px) {
+  .musings-wall__grid:not(.musings-wall__grid--technical) {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    gap: 12px;
+    padding-bottom: 4px;
+  }
+  .musings-wall__grid:not(.musings-wall__grid--technical)::-webkit-scrollbar { display: none; }
+  .musings-wall__grid:not(.musings-wall__grid--technical) .musings-wall__card {
+    flex: 0 0 86%;
+    scroll-snap-align: start;
+    min-height: 280px;
+  }
+  .musings-wall__grid--technical { grid-template-columns: minmax(0, 1fr); }
+  .musings-wall__card--wide { grid-column: auto; }
+  .musings-wall__card--wide .musings-wall__quote p { font-size: 1.2rem; }
+  .musings-wall__deck-nav:not([hidden]) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .musings-wall__count {
+    margin-right: auto;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .musings-wall__grid { scroll-behavior: auto; }
+}
