@@ -1,0 +1,24 @@
+{#- Client notes: a hidden note button for client sites (themes/_base/assets/js/client-notes.js).
+
+    Switched on per site in sites/<site>.yaml:
+      client_notes:
+        client: alter-engineers                 # the client id in the post office's lib/clients.ts
+        post_office: https://post-office.bloob.haus
+
+    Without that block this emits nothing. With it, a few inline lines load the button module only
+    when there is a reason to: the secret link (?notes), a pass just handed back in the #fragment, or
+    a pass already kept in this browser. Every other visitor downloads nothing extra and sees
+    nothing. Include it before </body> in a theme's base layout. -#}
+{%- set cn = site.client_notes if site and site.client_notes else null -%}
+{%- if cn and cn.client and cn.post_office %}
+<script>
+(function () {
+  var client = {{ cn.client | dump | replace("<", "\\u003c") | safe }};
+  var postOffice = {{ cn.post_office | dump | replace("<", "\\u003c") | safe }};
+  var stored = null;
+  try { stored = localStorage.getItem("bloob-client-pass:" + client); } catch (e) {}
+  if (!stored && location.hash.indexOf("bloob-pass=") < 0 && !/[?&]notes(=|&|$)/.test(location.search)) return;
+  import({{ "/assets/js/client-notes.js" | url | dump | safe }}).then(function (m) { m.start({ client: client, postOffice: postOffice }); });
+})();
+</script>
+{%- endif %}
