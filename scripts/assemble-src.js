@@ -574,6 +574,8 @@ export default {
   embeds: ${JSON.stringify(embeds)},
   snippets: ${JSON.stringify(snippets)},
   analytics: ${JSON.stringify(config.analytics || {})},
+  // Hidden note button for client sites (themes/_base/partials/client-notes.njk); null = off.
+  client_notes: ${JSON.stringify(config.client_notes || null)},
 };
 `;
 

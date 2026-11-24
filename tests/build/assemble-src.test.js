@@ -259,3 +259,12 @@ describe('theme asset copy skips visualizer overrides (regression: AE award-badg
     expect(isThemeAssetCopied(assets, path.join(assets, 'css', 'visualizers-extra.css'))).toBe(true);
   });
 });
+
+describe('site.js carries client_notes (sites/*.yaml → partials/client-notes.njk)', () => {
+  it('passes the client_notes block through, null when a site has none', async () => {
+    const fsMod = await import('fs');
+    const src = fsMod.readFileSync(new URL('../../scripts/assemble-src.js', import.meta.url), 'utf-8');
+    // site.js is a template literal written to disk; the field must be in it or the partial never sees the setting.
+    expect(src).toContain('client_notes: ${JSON.stringify(config.client_notes || null)}');
+  });
+});
