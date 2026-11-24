@@ -1,0 +1,136 @@
+/* Client notes: the hidden note button (themes/_base/assets/js/client-notes.js).
+   Uses the theme token contract (docs/architecture/themes.md) with neutral fallbacks, so it reads
+   as part of whatever site it lands on. Only loaded for someone holding a note pass. */
+
+.client-notes {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-color, #1d1d1f);
+}
+
+.client-notes__open {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color, #d0d0d7);
+  background: var(--card-bg, #fff);
+  color: var(--text-color, #1d1d1f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease;
+}
+.client-notes__open:hover { transform: scale(1.05); }
+
+.client-notes__panel {
+  width: min(22rem, calc(100vw - 2rem));
+  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #d0d0d7);
+  background: var(--card-bg, #fff);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+.client-notes__panel[hidden] { display: none; }
+
+.client-notes__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.client-notes__head h2 { margin: 0; font-size: 14px; font-weight: 600; font-family: inherit; color: inherit; text-transform: none; letter-spacing: normal; }
+
+.client-notes button { font: inherit; color: inherit; }
+.client-notes__close,
+.client-notes__link {
+  background: none;
+  border: 0;
+  padding: 2px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.client-notes__link { text-decoration: underline; opacity: 0.8; }
+.client-notes__close:hover,
+.client-notes__link:hover { opacity: 1; }
+
+.client-notes form { margin: 12px 0 0; display: grid; gap: 10px; }
+.client-notes__kinds { display: flex; flex-wrap: wrap; gap: 4px 12px; border: 0; margin: 0; padding: 0; font-size: 12px; }
+.client-notes__kinds label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.client-notes__kinds input,
+.client-notes__trail input { accent-color: var(--accent-color, #5b5dd3); margin: 0; }
+
+.client-notes textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 70px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #d0d0d7);
+  background: var(--bg-color, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+}
+.client-notes textarea:focus { outline: 2px solid var(--accent-color, #5b5dd3); outline-offset: 1px; }
+
+.client-notes__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+.client-notes__who { min-width: 0; overflow-wrap: anywhere; opacity: 0.85; }
+.client-notes__point {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #d0d0d7);
+  background: var(--bg-color, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.client-notes__picked { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
+.client-notes__picked[hidden] { display: none; }
+.client-notes__trail { display: flex; align-items: flex-start; gap: 6px; font-size: 11px; opacity: 0.8; cursor: pointer; }
+.client-notes__trail input { margin-top: 2px; }
+
+.client-notes__send { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.client-notes__status { margin: 0; font-size: 12px; }
+.client-notes__send button[type="submit"] {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 16px;
+  background: var(--accent-color, #5b5dd3);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.client-notes__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Pointing mode */
+.client-notes-pointing, .client-notes-pointing * { cursor: crosshair !important; }
+.client-notes-pick {
+  position: fixed;
+  z-index: 2147483001;
+  pointer-events: none;
+  border: 2px solid var(--accent-color, #5b5dd3);
+  border-radius: 6px;
+  background: rgba(91, 93, 211, 0.08);
+}
+.client-notes-hint {
+  position: fixed;
+  z-index: 2147483002;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--text-color, #1d1d1f);
+  color: var(--bg-color, #fff);
+  font: 13px/1.3 var(--font-body, system-ui, sans-serif);
+  pointer-events: none;
+}
