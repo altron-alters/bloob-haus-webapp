@@ -35,3 +35,10 @@ graph:
       - tags
       - awards
       - certifications
+
+# Hidden note button for the AE team (themes/_base/partials/client-notes.njk). Nobody sees it until
+# they open https://alterengineers.com/?notes and sign in with an @alterengineers.com Google account.
+# Notes go to Leon's post office inbox. Client rules live in bloob-haus-cloud app/src/lib/clients.ts.
+client_notes:
+  client: alter-engineers
+  post_office: https://post-office.bloob.haus

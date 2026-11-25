@@ -305,6 +305,24 @@ Canonical author-facing scaffold: `themes/_base/_bloob-settings.template.md`. De
 
 These are shared pipeline features that every theme **must** wire in. The pipeline generates the correct HTML (e.g. `<a class="pswp-gallery__item">` wrappers on images) but the theme controls whether the client-side library loads. A theme that omits these will silently produce non-functional output.
 
+### `client_notes` — hidden note button for client sites (added 2026-11-24)
+
+Infrastructure setting, top level of `sites/<site>.yaml` (not `_bloob-settings.md`):
+
+```yaml
+client_notes:
+  client: alter-engineers                 # id in bloob-haus-cloud app/src/lib/clients.ts
+  post_office: https://post-office.bloob.haus
+```
+
+Wiring: `{% include "partials/client-notes.njk" %}` before `</body>` in the theme's base layout
+(done for alter-engineers, marbles-pouch, melt, warm-kitchen). Without the block the partial emits
+nothing. With it, public visitors still load nothing: the module (`themes/_base/assets/js/client-notes.js`)
+loads only for `?notes` (the secret link), a pass in the `#fragment`, or a pass kept in the browser.
+Only people whose verified Google email the post office allows for that client get a pass. Spec:
+`bloob-haus-cloud/docs/superpowers/specs/2026-11-23-client-notes-design.md`. Guarded by
+`tests/client-notes-partial.test.js` and `tests/client-notes.test.js`.
+
 ### `features.image_zoom` — PhotoSwipe click-to-zoom
 
 The image optimizer (`eleventy.config.js`) automatically wraps `/media/` images in `<a class="pswp-gallery__item" data-pswp-*="...">`. The theme must load the PhotoSwipe library to activate them.
