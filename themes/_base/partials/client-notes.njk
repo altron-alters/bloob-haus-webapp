@@ -15,10 +15,21 @@
 (function () {
   var client = {{ cn.client | dump | replace("<", "\\u003c") | safe }};
   var postOffice = {{ cn.post_office | dump | replace("<", "\\u003c") | safe }};
+  var hash = location.hash;
+  if (hash.indexOf("bloob-pass=") >= 0) {
+    // Take the pass out of the address bar now, before analytics or anything else reads the URL;
+    // the module gets the original hash below.
+    var rest = new URLSearchParams(hash.slice(1));
+    ["bloob-pass", "email", "exp"].forEach(function (k) { rest.delete(k); });
+    var left = rest.toString();
+    history.replaceState(history.state, "", location.pathname + location.search + (left ? "#" + left : ""));
+  }
   var stored = null;
   try { stored = localStorage.getItem("bloob-client-pass:" + client); } catch (e) {}
-  if (!stored && location.hash.indexOf("bloob-pass=") < 0 && !/[?&]notes(=|&|$)/.test(location.search)) return;
-  import({{ "/assets/js/client-notes.js" | url | dump | safe }}).then(function (m) { m.start({ client: client, postOffice: postOffice }); });
+  if (!stored && hash.indexOf("bloob-pass=") < 0 && !/[?&]notes(=|&|$)/.test(location.search)) return;
+  import({{ "/assets/js/client-notes.js" | url | dump | safe }})
+    .then(function (m) { m.start({ client: client, postOffice: postOffice, hash: hash }); })
+    .catch(function () {});
 })();
 </script>
 {%- endif %}

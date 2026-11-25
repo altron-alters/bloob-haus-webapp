@@ -41,3 +41,14 @@ describe("client notes loader", () => {
     expect(html).not.toContain('a"</script>');
   });
 });
+
+describe("the pass leaves the address bar before anything else can read it (GoatCounter etc.)", () => {
+  it("wipes the pass params synchronously, before the module import, and hands the hash over", () => {
+    const html = render({ client_notes: { client: "alter-engineers", post_office: "https://post-office.bloob.haus" } });
+    const wipe = html.indexOf("history.replaceState");
+    const load = html.indexOf("import(");
+    expect(wipe).toBeGreaterThan(-1);
+    expect(wipe).toBeLessThan(load);
+    expect(html).toContain("hash:");
+  });
+});

@@ -89,12 +89,13 @@ function forget(client) {
   try { localStorage.removeItem(storageKey(client)); } catch { /* nothing to do */ }
 }
 
-/** Entry point, from partials/client-notes.njk. */
-export function start({ client, postOffice }) {
-  const { pass, rest } = readPassFromHash(location.hash);
-  if (location.hash.includes("bloob-pass=")) {
+/** Entry point, from partials/client-notes.njk. `hash` is the fragment as the page arrived: the
+ *  partial has already taken the pass out of the address bar, before anything else could read it. */
+export function start({ client, postOffice, hash = location.hash }) {
+  const { pass, rest } = readPassFromHash(hash);
+  if (hash.includes("bloob-pass=")) {
     if (pass) writeStored(client, pass);
-    history.replaceState(history.state, "", location.pathname + location.search + rest);
+    if (location.hash.includes("bloob-pass=")) history.replaceState(history.state, "", location.pathname + location.search + rest);
   }
 
   const search = new URLSearchParams(location.search);
