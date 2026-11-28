@@ -6,6 +6,13 @@ Development session history and completed work.
 
 ## Session Log
 
+### Session 76 — November 23, 2026 (from the AE fork)
+**Worked on:** new shared `musings` shape (voices wall). Suite **1325 tests** (19 new).
+
+- **`musings`** (`::: musings`): plain category lines + `- "quote" - Name - Date` list items (Obsidian-readable; name and date optional, any spaced dash, straight or curly quotes). Pure renderer: a filterable mosaic (auto-fill columns, long quotes span two), cards cycling five tone tokens, `limit=` folds the rest behind "More musings", categories named "technical" (or listed in `technical=`) go in a native `<details>` "Technical musings" fold. Phones: CSS scroll-snap deck; `browser.js` adds prev/next + counter. Without JS every card shows. Tone tokens are read, never set, so a theme maps its palette from `main.css`. The older ` ```quotes-stack ` fence is unchanged.
+- **AE:** Alter palette for the musings tones (purple, mint, white, orange, ink on warm white). The homepage switches when the vault's `index.md` block moves from the quotes-stack fence to `::: musings`.
+- Design came from a claude.ai Design canvas (5 concepts); Leon picked the voices wall, asked for the technical section, show-more and a mobile flip-through.
+
 ### Session 75 — November 12-15, 2026 (from the AE fork)
 **Worked on:** alterengineers.com go-live (DNS + website moved off WordPress.com), plus one shared builder fix. Suite 1275 → **1292 tests**.
 

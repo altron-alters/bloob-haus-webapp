@@ -1167,3 +1167,20 @@ html { margin-top: 0 !important; }
   /* Two classes: the shared card-preview stylesheet (text-align: center) loads after this one. */
   .projects .projects__all-projects { margin-bottom: 2.5rem; text-align: left; }
 }
+
+/* Musings shape (voices wall, ::: musings), 2026-11-23: Alter palette for the card tones on a
+   warm white section. The shape reads these tokens but never sets them (see its schema.md). */
+.musings-wall {
+  --musings-tone-accent-bg: var(--accent-color);
+  --musings-tone-accent-fg: #ffffff;
+  --musings-tone-mint-bg: var(--color-mint);
+  --musings-tone-mint-fg: #1c1c2e;
+  --musings-tone-paper-bg: #ffffff;
+  --musings-tone-paper-fg: #1c1c2e;
+  --musings-tone-warm-bg: var(--color-orange);
+  --musings-tone-warm-fg: #ffffff;
+  --musings-tone-ink-bg: #1c1c2e;
+  --musings-tone-ink-fg: #fdfcf0;
+  --musings-bg: #fdfcf0;
+}
+.musings-wall__quote p { font-family: var(--font-body); }

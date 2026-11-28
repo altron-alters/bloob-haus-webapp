@@ -147,7 +147,7 @@ needs a pure renderer.
 
 ### Conformance status
 
-**Conforming** (`parser.js` + `renderer.js`): `award-badge` and `carousel` (2026-11-04), `card-preview`, `image-grid`, `image-text`,
+**Conforming** (`parser.js` + `renderer.js`): `musings` (2026-11-23), `award-badge` and `carousel` (2026-11-04), `card-preview`, `image-grid`, `image-text`,
 `photo-grid`, `quotes-stack`, `scene-nav`, `services`, `slideshow`, `testimonials`,
 `heading-and-paragraph`, **`collection`** (2026-07-27). `foldable` (2026-10-26) produces all
 of its markup at build time from pure functions too (`fold-headings.js`, `peek.js`); its
@@ -311,7 +311,7 @@ interactive experience
 > optimizer's markup out of the rendered section instead (`carousel/index.js`, `image-text`).
 > Frontmatter-driven shapes use a **layout slot** instead of `:::` (`award-badge`, see DECISIONS 2026-11-04).
 
-**Status: Implemented — `image-grid` and `testimonials` are live. `card-preview`, `musings`, `slideshow` are next.**
+**Status: Implemented — `image-grid`, `testimonials`, `card-preview`, `carousel`, `musings` (2026-11-23) and others are live.**
 
 Container visualizers are activated by `:::` fenced divs (via `markdownItContainer`, already configured). Unlike code fences which contain YAML config, `:::` containers contain **actual authored content** — images, links, tables, blockquotes. This makes them Obsidian-native: `![[image.jpg]]` shows a real preview, `[[wiki-link]]` is clickable and tracked in the backlink graph.
 
